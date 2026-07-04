@@ -17,7 +17,7 @@
                 <span class="text-xs text-yellow-400 font-semibold"><i class="fas fa-thumbtack mr-1"></i>Pinned</span>
             @endif
         </div>
-        <h1 class="text-3xl font-bold text-white" style="font-family: 'Playfair Display', serif;">
+        <h1 class="text-xl sm:text-3xl font-bold text-white" style="font-family: 'Playfair Display', serif;">
             {{ $announcement->title }}
         </h1>
     </div>
@@ -31,7 +31,7 @@
             <i class="fas fa-arrow-left mr-2"></i> Back to Announcements
         </a>
 
-        <div class="bg-white rounded-xl shadow-md p-8">
+        <div class="bg-white rounded-xl shadow-md p-4 sm:p-8">
 
             {{-- Small image above content --}}
             @if($announcement->image)
@@ -40,7 +40,7 @@
                     style="max-height: 220px; width: 100%; object-position: center;">
             @endif
 
-            <div class="flex items-center gap-4 text-sm text-gray-400 mb-6 pb-6 border-b border-gray-100">
+            <div class="flex flex-wrap items-center gap-3 text-sm text-gray-400 mb-6 pb-6 border-b border-gray-100">
                 <span><i class="fas fa-calendar-alt mr-1"></i>{{ $announcement->created_at->format('F d, Y') }}</span>
                 <span><i class="fas fa-church mr-1"></i>Chrisco Upper Room</span>
                 @if($announcement->expires_at)

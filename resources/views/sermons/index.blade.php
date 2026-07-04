@@ -4,10 +4,10 @@
 
 @section('content')
 
-<section style="background: #0a1f44; min-height: 220px; display:flex; align-items:center;">
+<section style="background: #0a1f44; min-height: 180px; display:flex; align-items:center;">
     <div class="max-w-7xl mx-auto px-4 text-center w-full py-8">
-        <i class="fas fa-bible text-5xl mb-3" style="color: #f0a500;"></i>
-        <h1 class="text-4xl font-bold text-white mb-2">Sermons &amp; Messages</h1>
+        <i class="fas fa-bible text-4xl sm:text-5xl mb-3" style="color: #f0a500;"></i>
+        <h1 class="text-2xl sm:text-4xl font-bold text-white mb-2">Sermons &amp; Messages</h1>
         <p class="text-gray-300">Be empowered by the Word of God</p>
         @include('partials.resources-subnav')
     </div>
@@ -48,11 +48,11 @@
                 {{-- Mobile Category Pills --}}
                 <div class="flex flex-wrap gap-2 mb-6 md:hidden">
                     <a href="{{ route('sermons.index') }}"
-                       class="px-3 py-1 rounded-full text-xs font-semibold {{ !$category || $category === 'all' ? '' : 'border border-gray-300 text-gray-600' }}"
+                       class="px-4 py-2 rounded-full text-sm font-semibold {{ !$category || $category === 'all' ? '' : 'border border-gray-300 text-gray-600' }}"
                        style="{{ !$category || $category === 'all' ? 'background:#f0a500; color:#0a1f44;' : '' }}">All</a>
                     @foreach($categories as $slug => $label)
                     <a href="{{ route('sermons.index', ['category' => $slug]) }}"
-                       class="px-3 py-1 rounded-full text-xs font-semibold {{ $category === $slug ? '' : 'border border-gray-300 text-gray-600' }}"
+                       class="px-4 py-2 rounded-full text-sm font-semibold {{ $category === $slug ? '' : 'border border-gray-300 text-gray-600' }}"
                        style="{{ $category === $slug ? 'background:#f0a500; color:#0a1f44;' : '' }}">{{ $label }}</a>
                     @endforeach
                 </div>
@@ -62,8 +62,9 @@
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                         @foreach($sermons as $sermon)
                             <div class="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition group">
-                                @if($sermon->thumbnail)
-                                    <img src="{{ asset('storage/' . $sermon->thumbnail) }}" alt="{{ $sermon->title }}"
+                                @php $thumb = $sermon->thumbnail ? asset('storage/' . $sermon->thumbnail) : $sermon->youtube_thumbnail; @endphp
+                                @if($thumb)
+                                    <img src="{{ $thumb }}" alt="{{ $sermon->title }}"
                                         class="w-full h-44 object-cover group-hover:scale-105 transition duration-300">
                                 @else
                                     <div class="w-full h-44 flex items-center justify-center" style="background: #0a1f44;">
@@ -78,7 +79,7 @@
                                     @endif
                                     <h3 class="text-lg font-bold mt-2 mb-1 leading-snug" style="color: #0a1f44;">{{ $sermon->title }}</h3>
                                     <p class="text-gray-500 text-sm mb-1">
-                                        <i class="fas fa-user mr-1 text-gray-400"></i>{{ $sermon->speaker }}
+                                        <i class="fas fa-church mr-1 text-gray-400"></i>Chrisco Upper Room
                                     </p>
                                     <p class="text-gray-400 text-xs mb-1">
                                         <i class="fas fa-calendar mr-1"></i>

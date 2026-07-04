@@ -25,7 +25,7 @@
             <span class="text-xs font-bold px-3 py-1 rounded-full text-white {{ $statusColor }} mt-1 flex-shrink-0">
                 {{ ucfirst($dynStatus) }}
             </span>
-            <h1 class="text-2xl md:text-4xl font-bold text-white leading-tight" style="font-family: 'Playfair Display', serif;">
+            <h1 class="text-xl sm:text-2xl md:text-4xl font-bold text-white leading-tight" style="font-family: 'Playfair Display', serif;">
                 {{ $event->title }}
             </h1>
         </div>
@@ -145,7 +145,7 @@
 
 {{-- STEP 1: Email Lookup Modal --}}
 <div id="email-modal" class="fixed inset-0 z-50 flex items-center justify-center hidden" style="background:rgba(0,0,0,0.6);">
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 p-8">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-3 p-5 sm:p-8">
         <div class="flex items-center justify-between mb-5">
             <h3 class="text-xl font-bold" style="color:#0a1f44;"><i class="fas fa-envelope mr-2 text-red-600"></i>Enter Your Email</h3>
             <button onclick="closeEmailModal()" class="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
@@ -165,7 +165,7 @@
 
 {{-- STEP 2: Registration Form Modal --}}
 <div id="register-modal" class="fixed inset-0 z-50 flex items-center justify-center hidden" style="background:rgba(0,0,0,0.6);">
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg mx-4 p-8" style="max-height:90vh; overflow-y:auto;">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg mx-3 p-5 sm:p-8" style="max-height:90vh; overflow-y:auto;">
         <div class="flex items-center justify-between mb-5">
             <h3 class="text-xl font-bold" style="color:#0a1f44;"><i class="fas fa-clipboard-list mr-2 text-red-600"></i>Event Registration</h3>
             <button onclick="closeRegisterModal()" class="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>

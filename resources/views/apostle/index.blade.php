@@ -4,10 +4,10 @@
 
 @section('content')
 
-<section style="background: #0a1f44; min-height: 220px; display:flex; align-items:center;">
+<section style="background: #0a1f44; min-height: 180px; display:flex; align-items:center;">
     <div class="max-w-7xl mx-auto px-4 text-center w-full py-8">
-        <i class="fas fa-video text-5xl mb-3" style="color: #f0a500;"></i>
-        <h1 class="text-4xl font-bold text-white mb-2">Apostle Das Teachings</h1>
+        <i class="fas fa-video text-4xl sm:text-5xl mb-3" style="color: #f0a500;"></i>
+        <h1 class="text-2xl sm:text-4xl font-bold text-white mb-2">Apostle Das Teachings</h1>
         <p class="text-gray-300">Deep revelations from the Word of God</p>
         @include('partials.resources-subnav')
     </div>
@@ -51,11 +51,11 @@
                 @if($categories->count())
                 <div class="flex flex-wrap gap-2 mb-6 md:hidden">
                     <a href="{{ route('apostle.index') }}"
-                       class="px-3 py-1 rounded-full text-xs font-semibold {{ !$categoryId ? '' : 'border border-gray-300 text-gray-600' }}"
+                       class="px-4 py-2 rounded-full text-sm font-semibold {{ !$categoryId ? '' : 'border border-gray-300 text-gray-600' }}"
                        style="{{ !$categoryId ? 'background:#f0a500; color:#0a1f44;' : '' }}">All</a>
                     @foreach($categories as $cat)
                     <a href="{{ route('apostle.index', ['category' => $cat->id]) }}"
-                       class="px-3 py-1 rounded-full text-xs font-semibold {{ $categoryId == $cat->id ? '' : 'border border-gray-300 text-gray-600' }}"
+                       class="px-4 py-2 rounded-full text-sm font-semibold {{ $categoryId == $cat->id ? '' : 'border border-gray-300 text-gray-600' }}"
                        style="{{ $categoryId == $cat->id ? 'background:#f0a500; color:#0a1f44;' : '' }}">{{ $cat->name }}</a>
                     @endforeach
                 </div>

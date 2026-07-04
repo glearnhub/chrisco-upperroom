@@ -11,7 +11,7 @@
         </a>
         <h1 class="text-3xl md:text-4xl font-bold text-white leading-tight">{{ $sermon->title }}</h1>
         <div class="flex flex-wrap gap-4 mt-4 text-gray-300 text-sm">
-            <span><i class="fas fa-user mr-1 text-yellow-400"></i>{{ $sermon->speaker }}</span>
+            <span><i class="fas fa-church mr-1 text-yellow-400"></i>Chrisco Upper Room</span>
             <span><i class="fas fa-calendar mr-1 text-yellow-400"></i>{{ \Carbon\Carbon::parse($sermon->sermon_date)->format('F d, Y') }}</span>
             @if($sermon->scripture)
                 <span><i class="fas fa-book mr-1 text-yellow-400"></i>{{ $sermon->scripture }}</span>
@@ -62,7 +62,7 @@
         @endif
 
         {{-- Sermon Details --}}
-        <div class="bg-white rounded-xl shadow p-6">
+        <div class="bg-white rounded-xl shadow p-4 sm:p-6">
             @if($sermon->thumbnail && !$sermon->video_url)
                 <img src="{{ asset('storage/' . $sermon->thumbnail) }}" alt="{{ $sermon->title }}" class="w-full h-64 object-cover rounded-lg mb-6">
             @endif

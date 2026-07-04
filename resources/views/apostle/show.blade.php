@@ -31,7 +31,7 @@
                     allowfullscreen></iframe>
             </div>
 
-            <div class="p-6 md:p-8">
+            <div class="p-4 sm:p-6 md:p-8">
                 @if($apostleTeaching->category)
                     <span class="text-xs font-semibold px-2 py-1 rounded-full text-white" style="background:#c0392b;">
                         {{ $apostleTeaching->category->name }}
@@ -53,7 +53,7 @@
         @if($related->count())
         <div class="mt-12">
             <h2 class="text-xl font-bold mb-5" style="color:#0a1f44;">More Teachings</h2>
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                 @foreach($related as $item)
                     @php
                         preg_match('/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/live\/)([a-zA-Z0-9_-]{11})/', $item->youtube_url, $ym);

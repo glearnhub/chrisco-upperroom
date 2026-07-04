@@ -50,7 +50,7 @@
                     @if(file_exists($logoPath))
                         <img src="{{ asset('images/logo.png') }}"
                              alt="Chrisco Upper Room Fellowship"
-                             style="height:52px; width:auto; object-fit:contain; display:block;">
+                             style="height:44px; width:auto; max-width:160px; object-fit:contain; display:block;">
                     @else
                         <span class="text-white text-2xl mr-3"><i class="fas fa-cross" style="color:#f0a500;"></i></span>
                         <span class="text-white font-bold text-lg leading-tight" style="font-family:'Playfair Display',serif;">
@@ -110,21 +110,6 @@
                     <a href="{{ route('prayer.index') }}" class="nav-link text-white px-3 py-2 text-sm font-medium">Prayer Request</a>
                 </div>
 
-                <!-- Auth Links (shown only when logged in) -->
-                @auth
-                <div class="hidden md:flex items-center gap-2 flex-shrink-0">
-                    @if(auth()->user()->role === 'admin')
-                        <a href="{{ route('admin.dashboard') }}"
-                           class="text-white text-sm px-3 py-1.5 rounded border border-yellow-400 hover:bg-yellow-400 hover:text-gray-900 transition leading-none flex items-center">
-                            <i class="fas fa-tachometer-alt mr-1"></i>Admin
-                        </a>
-                    @endif
-                    <form method="POST" action="{{ route('logout') }}" style="display:flex; align-items:center; margin:0;">
-                        @csrf
-                        <button type="submit" class="btn-red text-sm leading-none" style="padding:6px 16px;">Logout</button>
-                    </form>
-                </div>
-                @endauth
 
                 <!-- Hamburger Button -->
                 <button class="md:hidden text-white focus:outline-none" onclick="toggleNavMenu()">
@@ -182,16 +167,6 @@
                 <a href="{{ route('prayer.index') }}" class="block text-white py-2 text-sm hover:text-yellow-400">
                     <i class="fas fa-praying-hands mr-2 text-yellow-400 text-xs"></i>Prayer Request
                 </a>
-                @auth
-                <hr class="border-gray-600 my-2">
-                @if(auth()->user()->role === 'admin')
-                    <a href="{{ route('admin.dashboard') }}" class="block text-white py-2 text-sm hover:text-yellow-400">Admin Panel</a>
-                @endif
-                <form method="POST" action="{{ route('logout') }}">
-                    @csrf
-                    <button type="submit" class="w-full text-left text-white py-2 text-sm hover:text-red-400">Logout</button>
-                </form>
-                @endauth
             </div>
         </div>
     </nav>

@@ -20,11 +20,11 @@
             <form method="POST" action="{{ route('member.lookup.post') }}">
                 @csrf
                 <label class="block text-sm font-semibold text-gray-700 mb-2">Your Email Address</label>
-                <div class="flex gap-3">
+                <div class="flex flex-col sm:flex-row gap-3">
                     <input type="email" name="email" value="{{ old('email', session('lookup_email', request()->isMethod('post') ? request('email') : '')) }}"
                            placeholder="yourname@email.com" required autofocus
-                           class="flex-1 border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 @error('email') border-red-400 @enderror">
-                    <button type="submit" class="btn-red px-6 py-2 text-sm font-semibold whitespace-nowrap">
+                           class="flex-1 border border-gray-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 @error('email') border-red-400 @enderror">
+                    <button type="submit" class="btn-red px-6 py-3 text-sm font-semibold w-full sm:w-auto">
                         <i class="fas fa-search mr-1"></i> Look Up
                     </button>
                 </div>
@@ -48,17 +48,17 @@
             @if($member)
             <div class="bg-white rounded-xl shadow overflow-hidden">
                 {{-- Header --}}
-                <div class="px-6 py-5 flex items-center space-x-4" style="background: #0a1f44;">
-                    <div class="w-14 h-14 rounded-full flex items-center justify-center text-white text-2xl font-bold flex-shrink-0" style="background: #c0392b;">
+                <div class="px-4 sm:px-6 py-4 sm:py-5 flex items-center gap-3 flex-wrap" style="background: #0a1f44;">
+                    <div class="w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center text-white text-xl sm:text-2xl font-bold flex-shrink-0" style="background: #c0392b;">
                         {{ strtoupper(substr($member->name, 0, 1)) }}
                     </div>
-                    <div>
-                        <p class="text-white font-bold text-xl">
+                    <div class="flex-1 min-w-0">
+                        <p class="text-white font-bold text-base sm:text-xl truncate">
                             {{ $member->name }} {{ $member->middle_name }} {{ $member->last_name }}
                         </p>
-                        <p class="text-yellow-400 text-sm">{{ $member->email }}</p>
+                        <p class="text-yellow-400 text-xs sm:text-sm truncate">{{ $member->email }}</p>
                     </div>
-                    <span class="ml-auto text-xs px-3 py-1 rounded-full font-semibold" style="background: #f0a500; color: #0a1f44;">
+                    <span class="text-xs px-3 py-1 rounded-full font-semibold flex-shrink-0" style="background: #f0a500; color: #0a1f44;">
                         {{ $member->role === 'admin' ? 'IT Support' : 'Member' }}
                     </span>
                 </div>
@@ -206,7 +206,7 @@
                     {{-- Next of Kin --}}
                     <div>
                         <h2 class="text-sm font-bold uppercase tracking-wider mb-3 pb-1 border-b" style="color: #c0392b;">Next of Kin (Emergency Contact)</h2>
-                        <dl class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm">
+                        <dl class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 text-sm">
                             <div>
                                 <dt class="text-gray-400 text-xs">Full Name</dt>
                                 <dd class="text-gray-800 font-medium">{{ $member->next_of_kin_name ?: '—' }}</dd>

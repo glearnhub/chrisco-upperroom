@@ -13,18 +13,18 @@
     </div>
     <div class="relative z-10 text-center px-4 max-w-4xl mx-auto">
 
-        <h1 class="text-4xl md:text-6xl font-bold mb-4 leading-tight" style="font-family: 'Playfair Display', serif;">
+        <h1 class="text-3xl sm:text-4xl md:text-6xl font-bold mb-4 leading-tight" style="font-family: 'Playfair Display', serif;">
             Welcome to Chrisco Upper Room Fellowship
         </h1>
-        <p class="text-xl md:text-2xl mb-3 italic text-yellow-400">"Where God Dwells"</p>
-        <p class="text-lg text-gray-300 mb-8">
+        <p class="text-lg sm:text-xl md:text-2xl mb-3 italic text-yellow-400">"Where God Dwells"</p>
+        <p class="text-base sm:text-lg text-gray-300 mb-8">
             <i class="fas fa-map-marker-alt mr-2 text-yellow-400"></i>Nairobi, Kenya
         </p>
         <div class="flex flex-col sm:flex-row gap-4 justify-center">
-            <a href="{{ route('events.index') }}" class="btn-red text-lg font-semibold px-8 py-3 transition hover:scale-105">
+            <a href="{{ route('events.index') }}" class="btn-red text-base sm:text-lg font-semibold px-6 sm:px-8 py-3 transition hover:scale-105">
                 <i class="fas fa-church mr-2"></i>Join Us This Sunday
             </a>
-            <a href="{{ route('livestream') }}" class="border-2 border-white text-white text-lg font-semibold px-8 py-3 rounded hover:bg-white hover:text-gray-900 transition">
+            <a href="{{ route('livestream') }}" class="border-2 border-white text-white text-base sm:text-lg font-semibold px-6 sm:px-8 py-3 rounded hover:bg-white hover:text-gray-900 transition">
                 <i class="fas fa-play-circle mr-2"></i>Watch Livestream
             </a>
         </div>
@@ -57,20 +57,20 @@
             <h2 class="text-3xl font-bold mb-2" style="color: #0a1f44;">Service Times</h2>
             <div class="w-16 h-1 mx-auto rounded" style="background: #c0392b;"></div>
         </div>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div class="text-center p-8 rounded-xl shadow-md border-t-4" style="border-color: #c0392b;">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
+            <div class="text-center p-6 sm:p-8 rounded-xl shadow-md border-t-4" style="border-color: #c0392b;">
                 <i class="fas fa-sun text-4xl mb-4" style="color: #f0a500;"></i>
                 <h3 class="text-xl font-bold mb-1" style="color: #0a1f44;">Sunday Service</h3>
                 <p class="text-gray-500 text-sm mb-2">Main Worship Service</p>
                 <p class="text-2xl font-bold" style="color: #c0392b;">9:00 AM</p>
             </div>
-            <div class="text-center p-8 rounded-xl shadow-md border-t-4" style="border-color: #0a1f44;">
+            <div class="text-center p-6 sm:p-8 rounded-xl shadow-md border-t-4" style="border-color: #0a1f44;">
                 <i class="fas fa-book-open text-4xl mb-4" style="color: #0a1f44;"></i>
                 <h3 class="text-xl font-bold mb-1" style="color: #0a1f44;">Wednesday Revival Kesha</h3>
                 <p class="text-gray-500 text-sm mb-2">Interdenominational Kesha</p>
                 <p class="text-2xl font-bold" style="color: #c0392b;">8:00 PM – 5:00 AM</p>
             </div>
-            <div class="text-center p-8 rounded-xl shadow-md border-t-4" style="border-color: #f0a500;">
+            <div class="text-center p-6 sm:p-8 rounded-xl shadow-md border-t-4" style="border-color: #f0a500;">
                 <i class="fas fa-praying-hands text-4xl mb-4" style="color: #f0a500;"></i>
                 <h3 class="text-xl font-bold mb-1" style="color: #0a1f44;">Thursday Revival Service</h3>
                 <p class="text-gray-500 text-sm mb-2">Interdenominational Service</p>
@@ -89,11 +89,12 @@
             <p class="text-gray-500 mt-3">Be transformed by the Word of God</p>
         </div>
         @if(isset($sermons) && $sermons->count())
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                 @foreach($sermons as $sermon)
                     <div class="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition">
-                        @if($sermon->thumbnail)
-                            <img src="{{ asset('storage/' . $sermon->thumbnail) }}" alt="{{ $sermon->title }}" class="w-full h-44 object-cover">
+                        @php $thumb = $sermon->thumbnail ? asset('storage/' . $sermon->thumbnail) : $sermon->youtube_thumbnail; @endphp
+                        @if($thumb)
+                            <img src="{{ $thumb }}" alt="{{ $sermon->title }}" class="w-full h-44 object-cover">
                         @else
                             <div class="w-full h-44 flex items-center justify-center" style="background: #0a1f44;">
                                 <i class="fas fa-cross text-white text-5xl opacity-30"></i>
@@ -104,7 +105,7 @@
                                 <span class="text-xs font-semibold px-2 py-1 rounded-full text-white" style="background: #c0392b;">{{ $sermon->series }}</span>
                             @endif
                             <h3 class="text-lg font-bold mt-2 mb-1" style="color: #0a1f44;">{{ $sermon->title }}</h3>
-                            <p class="text-gray-500 text-sm mb-1"><i class="fas fa-user mr-1"></i>{{ $sermon->speaker }}</p>
+                            <p class="text-gray-500 text-sm mb-1"><i class="fas fa-church mr-1"></i>Chrisco Upper Room</p>
                             <p class="text-gray-400 text-xs mb-4"><i class="fas fa-calendar mr-1"></i>{{ \Carbon\Carbon::parse($sermon->sermon_date)->format('M d, Y') }}</p>
                             <a href="{{ route('sermons.show', $sermon) }}" class="btn-red text-sm w-full text-center block">
                                 <i class="fas fa-play mr-1"></i>Listen / Watch
@@ -130,7 +131,7 @@
             <div class="w-16 h-1 mx-auto rounded" style="background: #c0392b;"></div>
         </div>
         @if(isset($events) && $events->count())
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                 @foreach($events as $event)
                     <div class="bg-white rounded-xl shadow-md overflow-hidden border border-gray-100 hover:shadow-xl transition">
                         @if($event->image)
@@ -179,7 +180,7 @@
             <div class="w-16 h-1 mx-auto rounded" style="background: #c0392b;"></div>
         </div>
         @php $catColors = \App\Models\Announcement::CATEGORY_COLORS; @endphp
-        <div class="grid md:grid-cols-2 gap-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             @foreach($announcements as $ann)
                 @php $color = $catColors[$ann->category] ?? '#0a1f44'; @endphp
                 <a href="{{ route('announcements.show', $ann) }}"

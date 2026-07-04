@@ -4,10 +4,10 @@
 
 @section('content')
 
-<section style="background: #0a1f44; min-height: 220px; display:flex; align-items:center;">
+<section style="background: #0a1f44; min-height: 180px; display:flex; align-items:center;">
     <div class="max-w-7xl mx-auto px-4 text-center w-full py-8">
-        <i class="fas fa-calendar-alt text-5xl mb-3" style="color: #f0a500;"></i>
-        <h1 class="text-4xl font-bold text-white mb-2">Upcoming Events</h1>
+        <i class="fas fa-calendar-alt text-4xl sm:text-5xl mb-3" style="color: #f0a500;"></i>
+        <h1 class="text-2xl sm:text-4xl font-bold text-white mb-2">Upcoming Events</h1>
         <p class="text-gray-300">Join us as we fellowship, worship, and grow together</p>
         @include('partials.updates-subnav')
     </div>
@@ -16,7 +16,7 @@
 <section class="py-10 bg-gray-50">
     <div class="max-w-7xl mx-auto px-4">
         @if($events->count())
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                 @foreach($events as $event)
                     @php
                         $dynStatus = $event->dynamic_status;

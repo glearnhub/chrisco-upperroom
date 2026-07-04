@@ -5,10 +5,10 @@
 @section('content')
 
 {{-- Hero --}}
-<section style="background: #0a1f44; min-height: 220px; display:flex; align-items:center;">
+<section style="background: #0a1f44; min-height: 180px; display:flex; align-items:center;">
     <div class="max-w-6xl mx-auto px-4 text-center w-full py-8">
-        <i class="fas fa-bullhorn text-5xl mb-3" style="color: #f0a500;"></i>
-        <h1 class="text-4xl font-bold text-white mb-2" style="font-family: 'Playfair Display', serif;">
+        <i class="fas fa-bullhorn text-4xl sm:text-5xl mb-3" style="color: #f0a500;"></i>
+        <h1 class="text-2xl sm:text-4xl font-bold text-white mb-2" style="font-family: 'Playfair Display', serif;">
             Announcements
         </h1>
         <p class="text-gray-300">Stay updated with the latest news from Chrisco Upper Room Fellowship</p>
@@ -20,7 +20,7 @@
 <section style="background: #f8fafc; border-bottom: 1px solid #e2e8f0;" class="sticky top-[72px] z-10">
     <div class="max-w-6xl mx-auto px-4 py-3 flex flex-wrap gap-2 items-center">
         <a href="{{ route('announcements.index') }}"
-            class="px-4 py-1.5 rounded-full text-sm font-semibold transition-all
+            class="px-4 py-2 rounded-full text-sm font-semibold transition-all
             {{ !$category ? 'text-white' : 'bg-white text-gray-600 border border-gray-300 hover:border-gray-400' }}"
             style="{{ !$category ? 'background:#0a1f44;' : '' }}">
             All
@@ -28,7 +28,7 @@
         @foreach($categories as $key => $label)
             @php $colors = \App\Models\Announcement::CATEGORY_COLORS; @endphp
             <a href="{{ route('announcements.index', ['category' => $key]) }}"
-                class="px-4 py-1.5 rounded-full text-sm font-semibold transition-all
+                class="px-4 py-2 rounded-full text-sm font-semibold transition-all
                 {{ $category === $key ? 'text-white' : 'bg-white text-gray-600 border border-gray-300 hover:border-gray-400' }}"
                 style="{{ $category === $key ? 'background:' . $colors[$key] . ';' : '' }}">
                 {{ $label }}
@@ -50,7 +50,7 @@
                         <i class="fas fa-thumbtack text-yellow-500"></i>
                         <h2 class="text-sm font-bold uppercase tracking-wider text-gray-500">Pinned</h2>
                     </div>
-                    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                         @foreach($pinned as $ann)
                             @include('announcements._card', ['ann' => $ann, 'isPinned' => true])
                         @endforeach
@@ -59,7 +59,7 @@
                 @php $rest = $announcements->filter(fn($a) => !$a->is_pinned); @endphp
                 @if($rest->count())
                     <hr class="mb-8 border-gray-200">
-                    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                         @foreach($rest as $ann)
                             @include('announcements._card', ['ann' => $ann, 'isPinned' => false])
                         @endforeach
