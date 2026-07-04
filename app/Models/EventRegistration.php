@@ -18,6 +18,13 @@ class EventRegistration extends Model
         'email',
         'category',
         'status',
+        'attended',
+        'attended_at',
+    ];
+
+    protected $casts = [
+        'attended'    => 'boolean',
+        'attended_at' => 'datetime',
     ];
 
     const CATEGORIES = ['presbyter','pastor','elder','deacon','deaconess','member','visitor'];

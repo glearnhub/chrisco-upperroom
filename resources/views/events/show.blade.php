@@ -4,103 +4,138 @@
 
 @section('content')
 
-{{-- Event Header --}}
-<section class="relative" style="min-height: 300px;">
-    @if($event->image)
-        <div class="absolute inset-0">
-            <img src="{{ asset('storage/' . $event->image) }}" alt="{{ $event->title }}" class="w-full h-full object-cover">
-            <div class="absolute inset-0" style="background: rgba(10,31,68,0.75);"></div>
-        </div>
-    @else
-        <div class="absolute inset-0" style="background: linear-gradient(135deg, #0a1f44, #1a3a6b);"></div>
-    @endif
-    <div class="relative z-10 max-w-4xl mx-auto px-4 py-16 text-white">
-        <a href="{{ route('events.index') }}" class="text-yellow-400 hover:text-yellow-300 text-sm mb-4 inline-block">
+@php
+    $dynStatus = $event->dynamic_status;
+    $statusColor = match($dynStatus) {
+        'upcoming'  => 'bg-green-500',
+        'ongoing'   => 'bg-blue-500',
+        'cancelled' => 'bg-red-600',
+        default     => 'bg-gray-500',
+    };
+    $isSundayService = str_contains(strtolower($event->title), 'sunday service');
+@endphp
+
+{{-- Title bar --}}
+<div style="background: #0a1f44;" class="py-6">
+    <div class="max-w-4xl mx-auto px-4">
+        <a href="{{ route('events.index') }}" class="text-yellow-400 hover:text-yellow-300 text-sm mb-3 inline-block">
             <i class="fas fa-arrow-left mr-1"></i>Back to Events
         </a>
-        @php $dynStatus = $event->dynamic_status; @endphp
-        @php
-            $statusColor = match($dynStatus) {
-                'upcoming'  => 'bg-green-500',
-                'ongoing'   => 'bg-blue-500',
-                'cancelled' => 'bg-red-600',
-                default     => 'bg-gray-500',
-            };
-        @endphp
-        <span class="text-xs font-bold px-3 py-1 rounded-full text-white {{ $statusColor }} mb-3 inline-block">
-            {{ ucfirst($dynStatus) }}
-        </span>
-        <h1 class="text-3xl md:text-5xl font-bold leading-tight mb-4">{{ $event->title }}</h1>
-        <div class="flex flex-wrap gap-4 text-gray-200 text-sm">
-            <span><i class="fas fa-calendar mr-1 text-yellow-400"></i>
-                {{ \Carbon\Carbon::parse($event->start_datetime)->format('F d, Y — g:i A') }}
+        <div class="flex items-start gap-3 flex-wrap">
+            <span class="text-xs font-bold px-3 py-1 rounded-full text-white {{ $statusColor }} mt-1 flex-shrink-0">
+                {{ ucfirst($dynStatus) }}
             </span>
-            @if($event->end_datetime)
-                <span><i class="fas fa-flag-checkered mr-1 text-yellow-400"></i>
-                    Ends: {{ \Carbon\Carbon::parse($event->end_datetime)->format('F d, Y — g:i A') }}
-                </span>
-            @endif
-            <span><i class="fas fa-map-marker-alt mr-1 text-yellow-400"></i>{{ $event->location }}</span>
+            <h1 class="text-2xl md:text-4xl font-bold text-white leading-tight" style="font-family: 'Playfair Display', serif;">
+                {{ $event->title }}
+            </h1>
         </div>
     </div>
-</section>
+</div>
 
+{{-- Main Content --}}
 <section class="py-10 bg-gray-50">
     <div class="max-w-4xl mx-auto px-4">
         <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
 
-            {{-- Description --}}
-            <div class="md:col-span-2 bg-white rounded-xl shadow p-6">
-                <h2 class="text-2xl font-bold mb-4" style="color: #0a1f44;">About This Event</h2>
-                <div class="text-gray-700 leading-relaxed">
-                    {!! nl2br(e($event->description)) !!}
+            {{-- Left: About + Description --}}
+            <div class="md:col-span-2 space-y-6">
+
+                {{-- Event Image --}}
+                @if($event->image)
+                    <div class="relative rounded-xl overflow-hidden shadow">
+                        <img src="{{ asset('storage/' . $event->image) }}" alt="{{ $event->title }}"
+                            class="w-full object-cover" style="max-height: 280px;">
+                        @if($event->status === 'cancelled')
+                            <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                <span style="transform:rotate(-35deg);color:#ff0000;font-size:2.4rem;font-weight:900;letter-spacing:0.12em;font-family:Arial,sans-serif;text-shadow:1px 1px 0 #000,-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000;border:5px solid #ff0000;padding:6px 18px;white-space:nowrap;background:rgba(0,0,0,0.4);-webkit-text-stroke:1px #cc0000;">CANCELLED</span>
+                            </div>
+                        @endif
+                    </div>
+                @endif
+
+                {{-- About This Event --}}
+                <div class="bg-white rounded-xl shadow p-6">
+                    <h2 class="text-xl font-bold mb-4 pb-2 border-b" style="color: #0a1f44; border-color: #c0392b;">
+                        <i class="fas fa-info-circle mr-2" style="color: #c0392b;"></i>About This Event
+                    </h2>
+                    @if($event->description)
+                        <div class="text-gray-700 leading-relaxed text-base" style="white-space: pre-wrap;">{{ $event->description }}</div>
+                    @else
+                        <p class="text-gray-400 italic">No description provided for this event.</p>
+                    @endif
                 </div>
+
+                {{-- Flash messages --}}
+                @if(session('success'))
+                    <div class="bg-green-100 border border-green-300 text-green-800 px-4 py-3 rounded-xl flex items-center gap-2">
+                        <i class="fas fa-check-circle text-green-500"></i>{{ session('success') }}
+                    </div>
+                @endif
+                @if(session('error'))
+                    <div class="bg-red-100 border border-red-300 text-red-800 px-4 py-3 rounded-xl flex items-center gap-2">
+                        <i class="fas fa-exclamation-circle text-red-500"></i>{{ session('error') }}
+                    </div>
+                @endif
+
             </div>
 
-            {{-- Sidebar --}}
+            {{-- Right: Event Details + Registration --}}
             <div class="space-y-4">
+
+                {{-- Event Details --}}
                 <div class="bg-white rounded-xl shadow p-5">
-                    <h3 class="font-bold text-gray-800 mb-3 border-b pb-2">Event Details</h3>
-                    <ul class="space-y-2 text-sm text-gray-600">
-                        <li><i class="fas fa-clock mr-2 text-red-500"></i>
-                            {{ \Carbon\Carbon::parse($event->start_datetime)->format('g:i A') }}
+                    <h3 class="font-bold text-gray-800 mb-4 pb-2 border-b" style="border-color: #c0392b;">
+                        <i class="fas fa-calendar-check mr-2" style="color: #c0392b;"></i>Event Details
+                    </h3>
+                    <ul class="space-y-3 text-sm text-gray-600">
+                        <li class="flex items-start gap-2">
+                            <i class="fas fa-calendar-alt mt-0.5 flex-shrink-0" style="color: #c0392b;"></i>
+                            <span>{{ \Carbon\Carbon::parse($event->start_datetime)->format('F d, Y') }}</span>
                         </li>
-                        <li><i class="fas fa-map-marker-alt mr-2 text-red-500"></i>{{ $event->location }}</li>
+                        <li class="flex items-start gap-2">
+                            <i class="fas fa-clock mt-0.5 flex-shrink-0" style="color: #c0392b;"></i>
+                            <span>
+                                {{ \Carbon\Carbon::parse($event->start_datetime)->format('g:i A') }}
+                                @if($event->end_datetime)
+                                    – {{ \Carbon\Carbon::parse($event->end_datetime)->format('g:i A') }}
+                                @endif
+                            </span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <i class="fas fa-map-marker-alt mt-0.5 flex-shrink-0" style="color: #c0392b;"></i>
+                            <span>{{ $event->location }}</span>
+                        </li>
                         @if($event->capacity)
-                            <li><i class="fas fa-users mr-2 text-red-500"></i>
-                                Capacity: {{ $event->capacity }} ({{ $registrationCount }} registered)
+                            <li class="flex items-start gap-2">
+                                <i class="fas fa-users mt-0.5 flex-shrink-0" style="color: #c0392b;"></i>
+                                <span>Capacity: {{ $event->capacity }}
+                                    <span class="text-gray-400">({{ $registrationCount }} registered)</span>
+                                </span>
                             </li>
                         @endif
                     </ul>
                 </div>
 
-                {{-- Registration Card --}}
-                @if($event->registration_required && $dynStatus !== 'cancelled')
-                    <div class="bg-white rounded-xl shadow p-5">
-                        <h3 class="font-bold text-gray-800 mb-3">Registration</h3>
-                        @if(session('success'))
-                            <div class="bg-green-100 text-green-700 px-3 py-2 rounded text-sm mb-3">
-                                <i class="fas fa-check-circle mr-1"></i>{{ session('success') }}
-                            </div>
-                        @endif
-                        @if(session('error'))
-                            <div class="bg-red-100 text-red-700 px-3 py-2 rounded text-sm mb-3">
-                                <i class="fas fa-exclamation-circle mr-1"></i>{{ session('error') }}
-                            </div>
-                        @endif
-                        <button onclick="openEmailModal()" class="btn-red w-full text-center">
-                            <i class="fas fa-user-plus mr-2"></i>Register Now
-                        </button>
-                    </div>
-                @elseif($dynStatus === 'cancelled')
+                {{-- Registration --}}
+                @if($dynStatus === 'cancelled')
                     <div class="bg-red-50 border border-red-200 rounded-xl p-5 text-center text-red-600 text-sm font-semibold">
                         <i class="fas fa-ban mr-2"></i>This event has been cancelled.
                     </div>
+                @elseif($event->registration_required && !$isSundayService)
+                    <div class="bg-white rounded-xl shadow p-5">
+                        <h3 class="font-bold text-gray-800 mb-3 pb-2 border-b" style="border-color: #c0392b;">
+                            <i class="fas fa-user-plus mr-2" style="color: #c0392b;"></i>Registration
+                        </h3>
+                        <button onclick="openEmailModal()" class="btn-red w-full text-center py-2.5">
+                            <i class="fas fa-user-plus mr-2"></i>Register Now
+                        </button>
+                    </div>
                 @endif
+
             </div>
         </div>
 
-        <div class="mt-6">
+        <div class="mt-8">
             <a href="{{ route('events.index') }}" class="btn-navy">
                 <i class="fas fa-arrow-left mr-2"></i>Back to All Events
             </a>
@@ -243,19 +278,19 @@ async function lookupEmail() {
         document.getElementById('field-email').value = email;
 
         if (data.found) {
-            document.getElementById('field-full-name').value  = data.full_name;
-            document.getElementById('field-phone').value      = data.phone;
-            document.getElementById('field-member-id').value  = data.member_id;
+            document.getElementById('field-full-name').value         = data.full_name;
+            document.getElementById('field-phone').value             = data.phone;
+            document.getElementById('field-member-id').value         = data.member_id;
             document.getElementById('field-category').value          = data.category;
             document.getElementById('field-category-hidden').value   = data.category;
-            document.getElementById('field-category').disabled        = false;
+            document.getElementById('field-category').disabled       = false;
             document.getElementById('member-found-banner').classList.remove('hidden');
         } else {
-            document.getElementById('field-full-name').value   = '';
-            document.getElementById('field-phone').value       = '';
-            document.getElementById('field-member-id').value   = '';
-            document.getElementById('field-category').value    = 'visitor';
-            document.getElementById('field-category').disabled = true;
+            document.getElementById('field-full-name').value         = '';
+            document.getElementById('field-phone').value             = '';
+            document.getElementById('field-member-id').value         = '';
+            document.getElementById('field-category').value          = 'visitor';
+            document.getElementById('field-category').disabled       = true;
             document.getElementById('member-found-banner').classList.add('hidden');
         }
         openRegisterModal();
@@ -270,7 +305,6 @@ document.addEventListener('DOMContentLoaded', function () {
         if (e.key === 'Enter') { e.preventDefault(); lookupEmail(); }
     });
 
-    // Keep hidden input in sync with the visible select
     document.getElementById('field-category').addEventListener('change', function () {
         document.getElementById('field-category-hidden').value = this.value;
     });

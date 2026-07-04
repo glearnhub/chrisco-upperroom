@@ -4,22 +4,12 @@
 
 @section('content')
 
-<section class="py-10" style="background: #0a1f44;">
-    <div class="max-w-7xl mx-auto px-4 text-center">
+<section style="background: #0a1f44; min-height: 220px; display:flex; align-items:center;">
+    <div class="max-w-7xl mx-auto px-4 text-center w-full py-8">
         <i class="fas fa-book text-5xl mb-3" style="color: #f0a500;"></i>
         <h1 class="text-4xl font-bold text-white mb-2">Books & Articles</h1>
         <p class="text-gray-300">Download PDF resources to enrich your faith</p>
-        <div class="mt-4 flex justify-center gap-4">
-            <a href="{{ route('sermons.index') }}" class="text-gray-400 hover:text-yellow-400 text-sm transition-colors">
-                <i class="fas fa-microphone mr-1"></i>Sermons
-            </a>
-            <a href="{{ route('teachings.index') }}" class="text-gray-400 hover:text-yellow-400 text-sm transition-colors">
-                <i class="fas fa-book-open mr-1"></i>Teachings
-            </a>
-            <span class="text-yellow-400 text-sm font-semibold border-b-2 border-yellow-400 pb-0.5">
-                <i class="fas fa-file-pdf mr-1"></i>Books & Articles
-            </span>
-        </div>
+        @include('partials.resources-subnav')
     </div>
 </section>
 

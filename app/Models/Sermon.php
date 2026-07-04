@@ -9,12 +9,21 @@ class Sermon extends Model
 {
     use HasFactory;
 
+    const CATEGORIES = [
+        'sunday-service' => 'Sunday Service',
+        'bible-hour'     => 'Bible Hour',
+        'kesha'          => 'Radical Kesha',
+        'proverbs-31'    => 'Proverbs 31',
+        'handmaidens'    => 'Handmaidens',
+        'others'         => 'Others',
+    ];
+
     protected $fillable = [
         'title',
         'speaker',
         'description',
         'sermon_date',
-        'series',
+        'category',
         'scripture',
         'audio_url',
         'video_url',

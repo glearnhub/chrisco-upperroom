@@ -42,10 +42,14 @@
             </div>
 
             <div>
-                <label class="block text-sm font-semibold text-gray-700 mb-1">Series</label>
-                <input type="text" name="series" value="{{ old('series') }}"
-                    class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Sermon series name">
+                <label class="block text-sm font-semibold text-gray-700 mb-1">Category <span class="text-red-500">*</span></label>
+                <select name="category" required class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="">— Select Category —</option>
+                    @foreach(\App\Models\Sermon::CATEGORIES as $slug => $label)
+                        <option value="{{ $slug }}" {{ old('category') == $slug ? 'selected' : '' }}>{{ $label }}</option>
+                    @endforeach
+                </select>
+                @error('category')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
             </div>
 
             <div>
@@ -69,11 +73,23 @@
                     placeholder="https://www.youtube.com/watch?v=...">
             </div>
 
-            <div>
-                <label class="block text-sm font-semibold text-gray-700 mb-1">Thumbnail Image</label>
-                <input type="file" name="thumbnail" accept="image/*"
-                    class="w-full border border-gray-300 rounded-lg px-4 py-2 @error('thumbnail') border-red-400 @enderror">
-                @error('thumbnail')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
+            <div class="md:col-span-2">
+                <label class="block text-sm font-semibold text-gray-700 mb-1">
+                    Thumbnail Image
+                    <span class="text-gray-400 font-normal text-xs ml-1">(JPG, PNG or WebP · max 2MB · optional)</span>
+                </label>
+                <div class="flex items-start gap-4">
+                    <div id="thumb-preview-wrap" class="hidden flex-shrink-0">
+                        <img id="thumb-preview" src="#" alt="Preview" class="h-32 w-48 object-cover rounded-lg border border-gray-200">
+                    </div>
+                    <div class="flex-1">
+                        <input type="file" name="thumbnail" accept="image/*" id="thumb-input"
+                            class="w-full border border-gray-300 rounded-lg px-4 py-2 @error('thumbnail') border-red-400 @enderror"
+                            onchange="previewThumb(this)">
+                        <p class="text-xs text-gray-400 mt-1">Optional. Will show a placeholder cross icon if no thumbnail is uploaded.</p>
+                        @error('thumbnail')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
+                    </div>
+                </div>
             </div>
 
             <div>
@@ -101,6 +117,20 @@
         </div>
     </form>
 </div>
+
+@push('scripts')
+<script>
+function previewThumb(input) {
+    const wrap = document.getElementById('thumb-preview-wrap');
+    const img = document.getElementById('thumb-preview');
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = e => { img.src = e.target.result; wrap.classList.remove('hidden'); };
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+</script>
+@endpush
 
 @endsection
 

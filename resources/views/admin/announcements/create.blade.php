@@ -1,4 +1,4 @@
-﻿@extends('layouts.admin')
+@extends('layouts.admin')
 
 @section('title', 'Add Announcement')
 @section('page-title', 'Add Announcement')
@@ -25,6 +25,18 @@
         </div>
 
         <div class="mb-4">
+            <label class="block text-sm font-semibold text-gray-700 mb-1">Category <span class="text-red-500">*</span></label>
+            <select name="category" required
+                class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 @error('category') border-red-400 @enderror">
+                <option value="">-- Select Category --</option>
+                @foreach($categories as $key => $label)
+                    <option value="{{ $key }}" {{ old('category') === $key ? 'selected' : '' }}>{{ $label }}</option>
+                @endforeach
+            </select>
+            @error('category')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
+        </div>
+
+        <div class="mb-4">
             <label class="block text-sm font-semibold text-gray-700 mb-1">Body <span class="text-red-500">*</span></label>
             <textarea name="body" rows="6" required
                 class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 @error('body') border-red-400 @enderror"
@@ -33,24 +45,36 @@
         </div>
 
         <div class="mb-4">
-            <label class="block text-sm font-semibold text-gray-700 mb-1">Image (Optional)</label>
-            <input type="file" name="image" accept="image/*"
-                class="w-full border border-gray-300 rounded-lg px-4 py-2 @error('image') border-red-400 @enderror">
+            <label class="block text-sm font-semibold text-gray-700 mb-1">Image <span class="text-gray-400 font-normal">(Optional)</span></label>
+            <input type="file" name="image" accept="image/*" id="image-input"
+                class="w-full border border-gray-300 rounded-lg px-4 py-2 @error('image') border-red-400 @enderror"
+                onchange="previewImage(this)">
+            <img id="image-preview" src="#" alt="Preview" class="hidden mt-2 h-32 rounded-lg object-cover">
             @error('image')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
         </div>
 
         <div class="mb-4">
-            <label class="block text-sm font-semibold text-gray-700 mb-1">Expires At</label>
+            <label class="block text-sm font-semibold text-gray-700 mb-1">Expires At <span class="text-gray-400 font-normal">(Optional)</span></label>
             <input type="datetime-local" name="expires_at" value="{{ old('expires_at') }}"
                 class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
-            <p class="text-xs text-gray-400 mt-1">Leave empty for no expiry.</p>
+            <p class="text-xs text-gray-400 mt-1">Leave empty for no expiry. Expired announcements are hidden from the public automatically.</p>
         </div>
 
-        <div class="mb-6">
+        <div class="mb-4 flex items-center flex-wrap gap-6">
             <label class="flex items-center space-x-2 cursor-pointer">
                 <input type="checkbox" name="is_published" value="1" {{ old('is_published') ? 'checked' : '' }}
                     class="w-4 h-4 text-blue-600">
                 <span class="text-sm font-semibold text-gray-700">Publish Immediately</span>
+            </label>
+            <label class="flex items-center space-x-2 cursor-pointer">
+                <input type="checkbox" name="is_pinned" value="1" {{ old('is_pinned') ? 'checked' : '' }}
+                    class="w-4 h-4 text-yellow-500">
+                <span class="text-sm font-semibold text-gray-700"><i class="fas fa-thumbtack mr-1 text-yellow-500"></i>Pin to Top</span>
+            </label>
+            <label class="flex items-center space-x-2 cursor-pointer">
+                <input type="checkbox" name="is_recurring" value="1" {{ old('is_recurring') ? 'checked' : '' }}
+                    class="w-4 h-4 text-purple-600">
+                <span class="text-sm font-semibold text-gray-700"><i class="fas fa-sync-alt mr-1 text-purple-500"></i>Recurring</span>
             </label>
         </div>
 
@@ -63,6 +87,17 @@
     </form>
 </div>
 
+@push('scripts')
+<script>
+function previewImage(input) {
+    const preview = document.getElementById('image-preview');
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = e => { preview.src = e.target.result; preview.classList.remove('hidden'); };
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+</script>
+@endpush
+
 @endsection
-
-

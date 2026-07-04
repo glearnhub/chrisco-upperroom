@@ -53,7 +53,7 @@
         {{-- Audio Player --}}
         @if($sermon->audio_url)
             <div class="mb-8 bg-white rounded-xl shadow p-6">
-                <h3 class="font-semibold text-gray-700 mb-3"><i class="fas fa-headphones mr-2 text-red-600"></i>Listen to Sermon</h3>
+                <h3 class="font-semibold text-gray-700 mb-3"><i class="fas fa-play-circle mr-2 text-red-600"></i>Watch Sermon</h3>
                 <audio controls class="w-full">
                     <source src="{{ $sermon->audio_url }}" type="audio/mpeg">
                     Your browser does not support the audio element.

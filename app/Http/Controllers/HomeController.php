@@ -17,6 +17,7 @@ class HomeController extends Controller
             ->get();
 
         $events = Event::upcoming()
+            ->orderByRaw("CASE WHEN LOWER(title) LIKE '%sunday service%' THEN 0 ELSE 1 END")
             ->limit(3)
             ->get();
 

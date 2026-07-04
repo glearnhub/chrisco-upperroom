@@ -15,6 +15,43 @@ class EventReportController extends Controller
         return view('admin.reports.events', compact('events'));
     }
 
+    public function searchAttendee(Request $request, Event $event)
+    {
+        $q = trim($request->get('q', ''));
+        if (strlen($q) < 2) {
+            return response()->json([]);
+        }
+
+        $results = EventRegistration::where('event_id', $event->id)
+            ->where('status', '!=', 'cancelled')
+            ->where(function ($query) use ($q) {
+                $query->where('full_name', 'like', "%{$q}%")
+                      ->orWhere('phone', 'like', "%{$q}%")
+                      ->orWhere('email', 'like', "%{$q}%");
+            })
+            ->get(['id', 'full_name', 'phone', 'email', 'category', 'attended', 'attended_at']);
+
+        return response()->json($results);
+    }
+
+    public function markAttendance(Request $request, Event $event, EventRegistration $registration)
+    {
+        if ($registration->event_id !== $event->id) {
+            return response()->json(['error' => 'Not found'], 404);
+        }
+
+        $attended = !$registration->attended;
+        $registration->update([
+            'attended'    => $attended,
+            'attended_at' => $attended ? now() : null,
+        ]);
+
+        return response()->json([
+            'attended'    => $registration->attended,
+            'attended_at' => $registration->attended_at?->format('d M Y, g:i A'),
+        ]);
+    }
+
     public function show(Request $request, Event $event)
     {
         $categoryOrder = EventRegistration::CATEGORY_ORDER;

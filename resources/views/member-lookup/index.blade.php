@@ -1,4 +1,4 @@
-﻿@extends('layouts.app')
+@extends('layouts.app')
 
 @section('title', 'Verify My Details — Chrisco Upper Room Fellowship')
 
@@ -21,7 +21,7 @@
                 @csrf
                 <label class="block text-sm font-semibold text-gray-700 mb-2">Your Email Address</label>
                 <div class="flex gap-3">
-                    <input type="email" name="email" value="{{ old('email', request()->isMethod('post') ? request('email') : '') }}"
+                    <input type="email" name="email" value="{{ old('email', session('lookup_email', request()->isMethod('post') ? request('email') : '')) }}"
                            placeholder="yourname@email.com" required autofocus
                            class="flex-1 border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 @error('email') border-red-400 @enderror">
                     <button type="submit" class="btn-red px-6 py-2 text-sm font-semibold whitespace-nowrap">
@@ -31,6 +31,17 @@
                 @error('email')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
             </form>
         </div>
+
+        {{-- Correction sent confirmation --}}
+        @if(session('correction_sent'))
+            <div class="mb-6 bg-green-50 border border-green-300 rounded-xl px-5 py-4 flex items-center gap-3 text-green-800">
+                <i class="fas fa-check-circle text-green-500 text-xl flex-shrink-0"></i>
+                <div>
+                    <p class="font-semibold">Correction request submitted!</p>
+                    <p class="text-sm mt-0.5">The church office will review your request and update your records accordingly.</p>
+                </div>
+            </div>
+        @endif
 
         {{-- Result --}}
         @if(isset($searched))
@@ -211,14 +222,71 @@
                         </dl>
                     </div>
 
-                    {{-- Notice --}}
-                    <div class="rounded-lg p-4 text-sm" style="background: #f0f9ff; border: 1px solid #bae6fd;">
-                        <i class="fas fa-info-circle mr-2" style="color: #0a1f44;"></i>
-                        If any information above is incorrect, please contact the church office or speak to your Deacon / Deaconess to have your records updated.
-                        <br>
-                        <span class="font-semibold">Phone:</span> 0726900700
+                    {{-- Children --}}
+                    @if(isset($children) && $children->count())
+                    <div>
+                        <h2 class="text-sm font-bold uppercase tracking-wider mb-3 pb-1 border-b" style="color: #c0392b;">My Children</h2>
+                        <div class="space-y-2">
+                            @foreach($children as $child)
+                            <div class="flex items-center gap-4 bg-gray-50 rounded-lg px-4 py-3 text-sm">
+                                <div class="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0" style="background: #0a1f44;">
+                                    {{ strtoupper(substr($child->first_name, 0, 1)) }}
+                                </div>
+                                <div class="flex-1">
+                                    <p class="font-semibold text-gray-800">{{ $child->full_name }}</p>
+                                    <p class="text-xs text-gray-400">
+                                        {{ $child->date_of_birth ? $child->date_of_birth->format('d M Y') : '' }}
+                                        {{ $child->gender ? ' · ' . ucfirst($child->gender) : '' }}
+                                        {{ $child->sunday_school_class ? ' · ' . $child->sunday_school_class : '' }}
+                                    </p>
+                                </div>
+                            </div>
+                            @endforeach
+                        </div>
+                    </div>
+                    @endif
+
+                    {{-- Request Correction Button --}}
+                    <div class="pt-2 border-t border-gray-100">
+                        <button onclick="document.getElementById('correction-modal').classList.remove('hidden')"
+                            class="w-full py-2.5 rounded-lg font-semibold text-sm transition-opacity hover:opacity-80"
+                            style="background: #f0a500; color: #0a1f44;">
+                            <i class="fas fa-edit mr-2"></i>Request Correction
+                        </button>
                     </div>
 
+                </div>
+            </div>
+
+            {{-- Correction Request Modal --}}
+            <div id="correction-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center px-4" style="background: rgba(0,0,0,0.55);">
+                <div class="bg-white rounded-xl shadow-2xl w-full max-w-md">
+                    <div class="px-6 py-4 border-b flex items-center justify-between" style="background: #0a1f44; border-radius: 0.75rem 0.75rem 0 0;">
+                        <h3 class="text-white font-bold text-lg"><i class="fas fa-edit mr-2" style="color:#f0a500;"></i>Request Correction</h3>
+                        <button onclick="document.getElementById('correction-modal').classList.add('hidden')" class="text-gray-300 hover:text-white text-xl leading-none">&times;</button>
+                    </div>
+                    <form method="POST" action="{{ route('member.lookup.correction') }}">
+                        @csrf
+                        <input type="hidden" name="email" value="{{ $member->email }}">
+                        <div class="p-6">
+                            <p class="text-sm text-gray-500 mb-4">Please describe which details are incorrect and what the correct information should be. The church office will update your records.</p>
+                            <textarea name="message" rows="5" required minlength="10" maxlength="1000"
+                                class="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400 @error('message') border-red-400 @enderror"
+                                placeholder="e.g. My phone number is wrong, it should be 0712 345 678. Also my department should be Worship not Ushering.">{{ old('message') }}</textarea>
+                            @error('message')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
+                        </div>
+                        <div class="px-6 pb-6 flex gap-3">
+                            <button type="submit"
+                                class="flex-1 py-2.5 rounded-lg font-semibold text-sm transition-opacity hover:opacity-80"
+                                style="background: #f0a500; color: #0a1f44;">
+                                <i class="fas fa-paper-plane mr-2"></i>Submit Request
+                            </button>
+                            <button type="button" onclick="document.getElementById('correction-modal').classList.add('hidden')"
+                                class="px-5 py-2.5 rounded-lg font-semibold text-sm bg-gray-100 text-gray-600 hover:bg-gray-200">
+                                Cancel
+                            </button>
+                        </div>
+                    </form>
                 </div>
             </div>
 
@@ -240,7 +308,13 @@
     </div>
 </section>
 
+@push('scripts')
+<script>
+// Close modal on backdrop click
+document.getElementById('correction-modal')?.addEventListener('click', function(e) {
+    if (e.target === this) this.classList.add('hidden');
+});
+</script>
+@endpush
+
 @endsection
-
-
-

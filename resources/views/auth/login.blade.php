@@ -18,7 +18,6 @@
 
         {{-- Logo / Church Header --}}
         <div class="text-center mb-8">
-            <i class="fas fa-cross text-5xl mb-3" style="color: #f0a500;"></i>
             <h1 class="text-3xl font-bold text-white mb-1">Chrisco Upper Room Fellowship</h1>
             <p class="text-gray-300 italic">"Where God Dwells"</p>
         </div>
@@ -83,10 +82,6 @@
                     <i class="fas fa-sign-in-alt mr-2"></i>Login
                 </button>
 
-                <p class="text-center text-gray-500 text-sm mt-5">
-                    Don't have an account?
-                    <a href="{{ route('register') }}" class="font-semibold hover:underline" style="color: #0a1f44;">Register here</a>
-                </p>
             </form>
         </div>
 

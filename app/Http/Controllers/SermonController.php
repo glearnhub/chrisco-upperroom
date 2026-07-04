@@ -8,11 +8,16 @@ class SermonController extends Controller
 {
     public function index()
     {
-        $sermons = Sermon::published()
-            ->orderBy('sermon_date', 'desc')
-            ->paginate(12);
+        $category = request('category');
+        $categories = \App\Models\Sermon::CATEGORIES;
 
-        return view('sermons.index', compact('sermons'));
+        $sermons = Sermon::published()
+            ->when($category && $category !== 'all', fn($q) => $q->where('category', $category))
+            ->orderBy('sermon_date', 'desc')
+            ->paginate(12)
+            ->withQueryString();
+
+        return view('sermons.index', compact('sermons', 'categories', 'category'));
     }
 
     public function show(Sermon $sermon)
@@ -21,7 +26,7 @@ class SermonController extends Controller
 
         $related = Sermon::published()
             ->where('id', '!=', $sermon->id)
-            ->where('series', $sermon->series)
+            ->where('category', $sermon->category)
             ->limit(3)
             ->get();
 

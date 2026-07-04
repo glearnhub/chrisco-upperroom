@@ -4,11 +4,12 @@
 
 @section('content')
 
-<section class="py-8" style="background: #0a1f44;">
-    <div class="max-w-7xl mx-auto px-4 text-center">
-        <i class="fas fa-broadcast-tower text-4xl mb-3 text-yellow-400"></i>
+<section style="background: #0a1f44; min-height: 220px; display:flex; align-items:center;">
+    <div class="max-w-7xl mx-auto px-4 text-center w-full py-8">
+        <i class="fas fa-broadcast-tower text-5xl mb-3" style="color: #f0a500;"></i>
         <h1 class="text-4xl font-bold text-white mb-2">Live Service</h1>
         <p class="text-gray-300">Watch our services from anywhere in the world</p>
+        @include('partials.resources-subnav')
     </div>
 </section>
 
@@ -43,9 +44,20 @@
             @endif
 
             {{-- Video Embed --}}
+            @php
+                $rawUrl = $livestream->embed_url;
+                // Convert any YouTube watch/short URL to embed URL
+                if (preg_match('/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/live\/)([a-zA-Z0-9_-]{11})/', $rawUrl, $m)) {
+                    $embedSrc = 'https://www.youtube.com/embed/' . $m[1] . '?autoplay=0&rel=0';
+                } elseif (str_contains($rawUrl, 'facebook.com')) {
+                    $embedSrc = 'https://www.facebook.com/plugins/video.php?href=' . urlencode($rawUrl) . '&show_text=0';
+                } else {
+                    $embedSrc = $rawUrl; // already an embed URL
+                }
+            @endphp
             <div class="relative w-full rounded-xl overflow-hidden shadow-2xl" style="padding-top: 56.25%;">
                 <iframe class="absolute inset-0 w-full h-full"
-                    src="{{ $livestream->embed_url }}"
+                    src="{{ $embedSrc }}"
                     frameborder="0"
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                     allowfullscreen>

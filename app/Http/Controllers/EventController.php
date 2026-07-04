@@ -11,7 +11,9 @@ class EventController extends Controller
 {
     public function index()
     {
-        $events = Event::upcoming()->paginate(9);
+        $events = Event::upcoming()
+            ->orderByRaw("CASE WHEN LOWER(title) LIKE '%sunday service%' THEN 0 ELSE 1 END")
+            ->paginate(9);
         return view('events.index', compact('events'));
     }
 

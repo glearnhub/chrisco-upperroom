@@ -96,7 +96,7 @@
     </div>
     <div style="text-align:center; margin-top:6px;">
         <p style="font-size:15px; font-weight:800; color:#0a1f44; text-transform:uppercase; letter-spacing:.5px;">Church Leadership Report</p>
-        <p style="font-size:11px; color:#666; margin-top:3px;">Generated: {{ now()->format('d M Y') }}</p>
+        <p style="font-size:11px; color:#666; margin-top:3px;">{{ now()->format('d M Y') }}</p>
     </div>
 </div>
 

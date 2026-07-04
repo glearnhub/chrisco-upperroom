@@ -22,7 +22,7 @@
         </p>
         <div class="flex flex-col sm:flex-row gap-4 justify-center">
             <a href="{{ route('events.index') }}" class="btn-red text-lg font-semibold px-8 py-3 transition hover:scale-105">
-                <i class="fas fa-church mr-2"></i>Join Us Sunday
+                <i class="fas fa-church mr-2"></i>Join Us This Sunday
             </a>
             <a href="{{ route('livestream') }}" class="border-2 border-white text-white text-lg font-semibold px-8 py-3 rounded hover:bg-white hover:text-gray-900 transition">
                 <i class="fas fa-play-circle mr-2"></i>Watch Livestream
@@ -66,15 +66,15 @@
             </div>
             <div class="text-center p-8 rounded-xl shadow-md border-t-4" style="border-color: #0a1f44;">
                 <i class="fas fa-book-open text-4xl mb-4" style="color: #0a1f44;"></i>
-                <h3 class="text-xl font-bold mb-1" style="color: #0a1f44;">Wednesday Bible Study</h3>
-                <p class="text-gray-500 text-sm mb-2">Midweek Teaching</p>
-                <p class="text-2xl font-bold" style="color: #c0392b;">6:00 PM</p>
+                <h3 class="text-xl font-bold mb-1" style="color: #0a1f44;">Wednesday Revival Kesha</h3>
+                <p class="text-gray-500 text-sm mb-2">Interdenominational Kesha</p>
+                <p class="text-2xl font-bold" style="color: #c0392b;">8:00 PM – 5:00 AM</p>
             </div>
             <div class="text-center p-8 rounded-xl shadow-md border-t-4" style="border-color: #f0a500;">
                 <i class="fas fa-praying-hands text-4xl mb-4" style="color: #f0a500;"></i>
-                <h3 class="text-xl font-bold mb-1" style="color: #0a1f44;">Friday Night Prayer</h3>
-                <p class="text-gray-500 text-sm mb-2">Corporate Prayer</p>
-                <p class="text-2xl font-bold" style="color: #c0392b;">7:00 PM</p>
+                <h3 class="text-xl font-bold mb-1" style="color: #0a1f44;">Thursday Revival Service</h3>
+                <p class="text-gray-500 text-sm mb-2">Interdenominational Service</p>
+                <p class="text-2xl font-bold" style="color: #c0392b;">5:00 PM – 8:00 PM</p>
             </div>
         </div>
     </div>
@@ -133,6 +133,13 @@
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 @foreach($events as $event)
                     <div class="bg-white rounded-xl shadow-md overflow-hidden border border-gray-100 hover:shadow-xl transition">
+                        @if($event->image)
+                            <img src="{{ asset('storage/' . $event->image) }}" alt="{{ $event->title }}" class="w-full h-44 object-cover">
+                        @else
+                            <div class="w-full h-44 flex items-center justify-center" style="background: linear-gradient(135deg, #0a1f44, #1a3a6b);">
+                                <i class="fas fa-calendar-alt text-white text-5xl opacity-30"></i>
+                            </div>
+                        @endif
                         <div class="p-5">
                             <div class="flex items-center justify-between mb-3">
                                 <span class="bg-blue-100 text-blue-700 text-xs font-semibold px-2 py-1 rounded-full">
@@ -148,7 +155,7 @@
                                 <i class="fas fa-map-marker-alt mr-1 text-red-500"></i>{{ $event->location }}
                             </p>
                             <a href="{{ route('events.show', $event) }}" class="btn-red text-sm w-full text-center block">
-                                Register / Learn More
+                                More Details
                             </a>
                         </div>
                     </div>
@@ -166,23 +173,41 @@
 {{-- LATEST ANNOUNCEMENTS --}}
 @if(isset($announcements) && $announcements->count())
 <section class="py-12" style="background: #f8fafc;">
-    <div class="max-w-4xl mx-auto px-4">
+    <div class="max-w-5xl mx-auto px-4">
         <div class="text-center mb-8">
             <h2 class="text-3xl font-bold mb-2" style="color: #0a1f44;">Announcements</h2>
             <div class="w-16 h-1 mx-auto rounded" style="background: #c0392b;"></div>
         </div>
-        <div class="space-y-4">
-            @foreach($announcements as $announcement)
-                <div class="bg-white rounded-lg shadow p-5 flex items-start space-x-4 border-l-4" style="border-color: #0a1f44;">
-                    <div class="mt-1">
-                        <i class="fas fa-bullhorn text-xl" style="color: #c0392b;"></i>
+        @php $catColors = \App\Models\Announcement::CATEGORY_COLORS; @endphp
+        <div class="grid md:grid-cols-2 gap-4">
+            @foreach($announcements as $ann)
+                @php $color = $catColors[$ann->category] ?? '#0a1f44'; @endphp
+                <a href="{{ route('announcements.show', $ann) }}"
+                    class="bg-white rounded-lg shadow hover:shadow-md transition-shadow p-5 flex items-start space-x-4 border-l-4 group"
+                    style="border-color: {{ $color }};">
+                    <div class="mt-1 flex-shrink-0">
+                        @if($ann->is_pinned)
+                            <i class="fas fa-thumbtack text-yellow-400 text-lg"></i>
+                        @else
+                            <i class="fas fa-bullhorn text-lg" style="color: {{ $color }};"></i>
+                        @endif
                     </div>
-                    <div>
-                        <h4 class="font-bold text-gray-800 mb-1">{{ $announcement->title }}</h4>
-                        <p class="text-gray-600 text-sm">{{ Str::limit($announcement->body, 150) }}</p>
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-center gap-2 mb-1">
+                            <span class="text-xs font-bold px-2 py-0.5 rounded-full text-white" style="background: {{ $color }};">
+                                {{ \App\Models\Announcement::CATEGORIES[$ann->category] ?? ucfirst($ann->category) }}
+                            </span>
+                        </div>
+                        <h4 class="font-bold text-gray-800 mb-1 group-hover:text-blue-700 transition-colors">{{ $ann->title }}</h4>
+                        <p class="text-gray-500 text-sm">{{ Str::limit(strip_tags($ann->body), 120) }}</p>
                     </div>
-                </div>
+                </a>
             @endforeach
+        </div>
+        <div class="text-center mt-8">
+            <a href="{{ route('announcements.index') }}" class="btn-navy px-8 py-3 font-semibold">
+                <i class="fas fa-bullhorn mr-2"></i>View All Announcements
+            </a>
         </div>
     </div>
 </section>

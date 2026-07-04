@@ -4,10 +4,12 @@
 
 @section('content')
 
-<section class="py-8" style="background: #0a1f44;">
-    <div class="max-w-7xl mx-auto px-4 text-center">
+<section style="background: #0a1f44; min-height: 220px; display:flex; align-items:center;">
+    <div class="max-w-7xl mx-auto px-4 text-center w-full py-8">
+        <i class="fas fa-calendar-alt text-5xl mb-3" style="color: #f0a500;"></i>
         <h1 class="text-4xl font-bold text-white mb-2">Upcoming Events</h1>
         <p class="text-gray-300">Join us as we fellowship, worship, and grow together</p>
+        @include('partials.updates-subnav')
     </div>
 </section>
 
@@ -78,7 +80,7 @@
                                 </p>
                             @endif
                             <a href="{{ route('events.show', $event) }}" class="btn-red text-sm w-full text-center block">
-                                Learn More
+                                More Details
                             </a>
                         </div>
                     </div>

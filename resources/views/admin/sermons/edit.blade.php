@@ -41,9 +41,14 @@
             </div>
 
             <div>
-                <label class="block text-sm font-semibold text-gray-700 mb-1">Series</label>
-                <input type="text" name="series" value="{{ old('series', $sermon->series) }}"
-                    class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <label class="block text-sm font-semibold text-gray-700 mb-1">Category <span class="text-red-500">*</span></label>
+                <select name="category" required class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="">— Select Category —</option>
+                    @foreach(\App\Models\Sermon::CATEGORIES as $slug => $label)
+                        <option value="{{ $slug }}" {{ old('category', $sermon->category) == $slug ? 'selected' : '' }}>{{ $label }}</option>
+                    @endforeach
+                </select>
+                @error('category')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
             </div>
 
             <div>
@@ -65,14 +70,26 @@
                     placeholder="https://www.youtube.com/watch?v=...">
             </div>
 
-            <div>
-                <label class="block text-sm font-semibold text-gray-700 mb-1">Thumbnail Image</label>
-                @if($sermon->thumbnail)
-                    <img src="{{ asset('storage/' . $sermon->thumbnail) }}" class="h-20 mb-2 rounded">
-                @endif
-                <input type="file" name="thumbnail" accept="image/*"
-                    class="w-full border border-gray-300 rounded-lg px-4 py-2">
-                <p class="text-xs text-gray-400 mt-1">Leave empty to keep current image.</p>
+            <div class="md:col-span-2">
+                <label class="block text-sm font-semibold text-gray-700 mb-1">
+                    Thumbnail Image <span class="text-red-500">*</span>
+                    <span class="text-gray-400 font-normal text-xs ml-1">(JPG, PNG or WebP · max 2MB)</span>
+                </label>
+                <div class="flex items-start gap-4">
+                    <div class="flex-shrink-0">
+                        <img id="thumb-preview"
+                            src="{{ $sermon->thumbnail ? asset('storage/' . $sermon->thumbnail) : '' }}"
+                            alt="Thumbnail"
+                            class="h-32 w-48 object-cover rounded-lg border border-gray-200 {{ $sermon->thumbnail ? '' : 'hidden' }}">
+                    </div>
+                    <div class="flex-1">
+                        <input type="file" name="thumbnail" accept="image/*" id="thumb-input"
+                            class="w-full border border-gray-300 rounded-lg px-4 py-2 @error('thumbnail') border-red-400 @enderror"
+                            onchange="previewThumb(this)">
+                        <p class="text-xs text-gray-400 mt-1">Leave empty to keep the current thumbnail.</p>
+                        @error('thumbnail')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
+                    </div>
+                </div>
             </div>
 
             <div>
@@ -99,6 +116,19 @@
         </div>
     </form>
 </div>
+
+@push('scripts')
+<script>
+function previewThumb(input) {
+    const img = document.getElementById('thumb-preview');
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = e => { img.src = e.target.result; img.classList.remove('hidden'); };
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+</script>
+@endpush
 
 @endsection
 

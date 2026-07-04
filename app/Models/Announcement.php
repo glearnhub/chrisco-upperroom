@@ -9,11 +9,34 @@ class Announcement extends Model
 {
     use HasFactory;
 
+    const CATEGORIES = [
+        'general' => 'General',
+        'events'  => 'Events',
+        'youth'   => 'Youth',
+        'women'   => 'Women',
+        'men'     => 'Men',
+        'prayer'  => 'Prayer',
+        'finance' => 'Finance',
+    ];
+
+    const CATEGORY_COLORS = [
+        'general' => '#0a1f44',
+        'events'  => '#c0392b',
+        'youth'   => '#7c3aed',
+        'women'   => '#db2777',
+        'men'     => '#1d4ed8',
+        'prayer'  => '#065f46',
+        'finance' => '#92400e',
+    ];
+
     protected $fillable = [
         'title',
+        'category',
         'body',
         'image',
         'is_published',
+        'is_pinned',
+        'is_recurring',
         'expires_at',
         'user_id',
     ];
@@ -21,8 +44,10 @@ class Announcement extends Model
     protected function casts(): array
     {
         return [
-            'is_published' => 'boolean',
-            'expires_at' => 'datetime',
+            'is_published'  => 'boolean',
+            'is_pinned'     => 'boolean',
+            'is_recurring'  => 'boolean',
+            'expires_at'    => 'datetime',
         ];
     }
 
@@ -37,6 +62,8 @@ class Announcement extends Model
             ->where(function ($q) {
                 $q->whereNull('expires_at')
                   ->orWhere('expires_at', '>', now());
-            });
+            })
+            ->orderByDesc('is_pinned')
+            ->orderByDesc('created_at');
     }
 }

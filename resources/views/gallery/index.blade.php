@@ -29,11 +29,12 @@
 
 @section('content')
 
-<section class="py-10" style="background: #0a1f44;">
-    <div class="max-w-7xl mx-auto px-4 text-center">
+<section style="background: #0a1f44; min-height: 220px; display:flex; align-items:center;">
+    <div class="max-w-7xl mx-auto px-4 text-center w-full py-8">
         <i class="fas fa-images text-5xl mb-3" style="color: #f0a500;"></i>
         <h1 class="text-4xl font-bold text-white mb-2">Gallery</h1>
         <p class="text-gray-300">Moments captured at Chrisco Upper Room Fellowship</p>
+        @include('partials.resources-subnav')
     </div>
 </section>
 

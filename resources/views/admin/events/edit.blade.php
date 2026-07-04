@@ -64,14 +64,28 @@
                 </select>
             </div>
 
-            <div>
-                <label class="block text-sm font-semibold text-gray-700 mb-1">Event Image</label>
-                @if($event->image)
-                    <img src="{{ asset('storage/' . $event->image) }}" class="h-20 mb-2 rounded">
-                @endif
-                <input type="file" name="image" accept="image/*"
-                    class="w-full border border-gray-300 rounded-lg px-4 py-2">
-                <p class="text-xs text-gray-400 mt-1">Leave empty to keep current image.</p>
+            <div class="md:col-span-2">
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Event Image</label>
+                <div class="flex items-start gap-4">
+                    <div class="flex-shrink-0">
+                        <img id="event-img-preview"
+                            src="{{ $event->image ? asset('storage/' . $event->image) : '' }}"
+                            alt="Event image"
+                            class="h-36 w-56 object-cover rounded-lg border border-gray-200 {{ $event->image ? '' : 'hidden' }}">
+                        @if(!$event->image)
+                            <div id="event-img-placeholder" class="h-36 w-56 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center text-gray-400 text-sm">
+                                <span><i class="fas fa-image mr-1"></i>No image</span>
+                            </div>
+                        @endif
+                    </div>
+                    <div class="flex-1">
+                        <input type="file" name="image" accept="image/*"
+                            class="w-full border border-gray-300 rounded-lg px-4 py-2 @error('image') border-red-400 @enderror"
+                            onchange="previewEventImg(this)">
+                        <p class="text-xs text-gray-400 mt-1">Leave empty to keep current image. JPG, PNG or WebP · max 2MB.</p>
+                        @error('image')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
+                    </div>
+                </div>
             </div>
 
             <div class="flex items-center">
@@ -99,6 +113,24 @@
         </div>
     </form>
 </div>
+
+@push('scripts')
+<script>
+function previewEventImg(input) {
+    const img = document.getElementById('event-img-preview');
+    const placeholder = document.getElementById('event-img-placeholder');
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = e => {
+            img.src = e.target.result;
+            img.classList.remove('hidden');
+            if (placeholder) placeholder.classList.add('hidden');
+        };
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+</script>
+@endpush
 
 @endsection
 
