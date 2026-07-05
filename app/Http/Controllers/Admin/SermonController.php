@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Sermon;
+use App\Models\SystemLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -91,6 +92,7 @@ class SermonController extends Controller
             Storage::disk('public')->delete($sermon->thumbnail);
         }
 
+        SystemLog::record('delete', 'Sermons', "Sermon \"{$sermon->title}\" deleted.");
         $sermon->delete();
 
         return redirect()->route('admin.sermons.index')

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Child;
+use App\Models\SystemLog;
 use App\Models\User;
 use Illuminate\Http\Request;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
@@ -143,6 +144,7 @@ class ChildController extends Controller
     public function destroy(Child $child)
     {
         $name = $child->full_name;
+        SystemLog::record('delete', 'Children', "Child \"{$name}\" removed.");
         $child->delete();
         return redirect()->route('admin.children.index')
             ->with('success', "{$name} removed.");

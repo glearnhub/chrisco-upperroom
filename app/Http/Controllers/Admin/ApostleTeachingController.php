@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\ApostleTeaching;
 use App\Models\ApostleTeachingCategory;
+use App\Models\SystemLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -76,6 +77,7 @@ class ApostleTeachingController extends Controller
         if ($apostleTeaching->thumbnail) {
             Storage::disk('public')->delete($apostleTeaching->thumbnail);
         }
+        SystemLog::record('delete', 'Apostle Teachings', "Teaching \"{$apostleTeaching->title}\" deleted.");
         $apostleTeaching->delete();
         return redirect()->route('admin.apostle.index')->with('success', 'Teaching deleted.');
     }

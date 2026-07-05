@@ -142,7 +142,7 @@
             <table id="report-table" class="w-full text-sm">
                 <thead class="bg-gray-50">
                     <tr>
-                        <th class="px-4 py-3 text-left text-xs text-gray-500 font-semibold">#</th>
+                        <th class="px-4 py-3 text-left text-xs text-gray-500 font-semibold">S/No</th>
                         <th class="px-4 py-3 text-left text-xs text-gray-500 font-semibold">Child Name</th>
                         <th class="px-4 py-3 text-left text-xs text-gray-500 font-semibold">Gender</th>
                         <th class="px-4 py-3 text-left text-xs text-gray-500 font-semibold">Date of Birth</th>

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\GalleryItem;
+use App\Models\SystemLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -80,6 +81,7 @@ class GalleryController extends Controller
     public function destroy(GalleryItem $gallery)
     {
         Storage::disk('public')->delete($gallery->image);
+        SystemLog::record('delete', 'Gallery', "Photo \"{$gallery->title}\" deleted.");
         $gallery->delete();
         return redirect()->route('admin.gallery.index')->with('success', 'Photo deleted.');
     }

@@ -74,7 +74,7 @@
         <button onclick="window.print()" class="flex items-center gap-2 px-4 py-2 text-sm rounded-lg text-white font-semibold" style="background:#0a1f44;">
             <i class="fas fa-print"></i> Print
         </button>
-        <button onclick="openAttendanceModal()" class="flex items-center gap-2 px-4 py-2 text-sm rounded-lg text-white font-semibold" style="background:#7c3aed;">
+        <button onclick="openAttendanceModal()" class="flex items-center gap-2 px-4 py-2 text-sm rounded-lg text-white font-semibold" style="background:#0a1f44;">
             <i class="fas fa-clipboard-check"></i> Mark Attendance
         </button>
         <a href="{{ route('admin.reports.events.show', ['event' => $event->id, 'export' => 'excel', 'filter' => $filter, 'search' => $search]) }}"
@@ -149,7 +149,7 @@
         <table class="w-full text-sm">
             <thead>
                 <tr style="background:#f1f5f9;">
-                    <th class="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase">#</th>
+                    <th class="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase">S/No</th>
                     <th class="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase">Full Name</th>
                     <th class="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase">Phone</th>
                     <th class="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase">Email</th>

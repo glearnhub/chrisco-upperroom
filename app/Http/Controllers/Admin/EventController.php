@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Event;
+use App\Models\SystemLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -92,6 +93,7 @@ class EventController extends Controller
             Storage::disk('public')->delete($event->image);
         }
 
+        SystemLog::record('delete', 'Events', "Event \"{$event->title}\" deleted.");
         $event->delete();
 
         return redirect()->route('admin.events.index')

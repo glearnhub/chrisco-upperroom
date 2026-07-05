@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\ApostleTeachingCategory;
+use App\Models\SystemLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
@@ -49,6 +50,7 @@ class ApostleTeachingCategoryController extends Controller
 
     public function destroy(ApostleTeachingCategory $apostleTeachingCategory)
     {
+        SystemLog::record('delete', 'Apostle Teachings', "Category \"{$apostleTeachingCategory->name}\" deleted.");
         $apostleTeachingCategory->delete();
         return back()->with('success', 'Category deleted.');
     }

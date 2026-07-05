@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Livestream;
+use App\Models\SystemLog;
 use Illuminate\Http\Request;
 
 class LivestreamController extends Controller
@@ -69,6 +70,7 @@ class LivestreamController extends Controller
 
     public function destroy(Livestream $livestream)
     {
+        SystemLog::record('delete', 'Livestream', "Livestream \"{$livestream->title}\" deleted.");
         $livestream->delete();
 
         return redirect()->route('admin.livestreams.index')

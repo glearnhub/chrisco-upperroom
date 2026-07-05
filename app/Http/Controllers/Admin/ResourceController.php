@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Resource;
+use App\Models\SystemLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -83,6 +84,7 @@ class ResourceController extends Controller
     {
         Storage::disk('public')->delete($resource->file_path);
         if ($resource->cover_image) Storage::disk('public')->delete($resource->cover_image);
+        SystemLog::record('delete', 'Resources', "Resource \"{$resource->title}\" deleted.");
         $resource->delete();
         return redirect()->route('admin.resources.index')->with('success', 'Resource deleted.');
     }

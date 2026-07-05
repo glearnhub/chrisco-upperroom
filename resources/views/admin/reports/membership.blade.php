@@ -117,7 +117,7 @@
         <table class="w-full text-sm">
             <thead class="bg-gray-50">
                 <tr>
-                    <th class="px-4 py-2 text-left text-xs text-gray-500 font-semibold">#</th>
+                    <th class="px-4 py-2 text-left text-xs text-gray-500 font-semibold">S/No</th>
                     <th class="px-4 py-2 text-left text-xs text-gray-500 font-semibold">Full Name</th>
                     <th class="px-4 py-2 text-left text-xs text-gray-500 font-semibold">Gender</th>
                     <th class="px-4 py-2 text-left text-xs text-gray-500 font-semibold">Marital Status</th>

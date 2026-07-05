@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Announcement;
+use App\Models\SystemLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -103,6 +104,7 @@ class AnnouncementController extends Controller
             Storage::disk('public')->delete($announcement->image);
         }
 
+        SystemLog::record('delete', 'Announcements', "Announcement \"{$announcement->title}\" deleted.");
         $announcement->delete();
 
         return redirect()->route('admin.announcements.index')
