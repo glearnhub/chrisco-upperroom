@@ -32,16 +32,6 @@
             </form>
         </div>
 
-        {{-- Correction sent confirmation --}}
-        @if(session('correction_sent'))
-            <div class="mb-6 bg-green-50 border border-green-300 rounded-xl px-5 py-4 flex items-center gap-3 text-green-800">
-                <i class="fas fa-check-circle text-green-500 text-xl flex-shrink-0"></i>
-                <div>
-                    <p class="font-semibold">Correction request submitted!</p>
-                    <p class="text-sm mt-0.5">The church office will review your request and update your records accordingly.</p>
-                </div>
-            </div>
-        @endif
 
         {{-- Result --}}
         @if(isset($searched))
@@ -248,6 +238,15 @@
 
                     {{-- Request Correction Button --}}
                     <div class="pt-2 border-t border-gray-100">
+                        @if(session('correction_sent'))
+                            <div class="mb-3 bg-green-50 border border-green-300 rounded-lg px-4 py-3 flex items-center gap-3 text-green-800 text-sm">
+                                <i class="fas fa-check-circle text-green-500 text-lg flex-shrink-0"></i>
+                                <div>
+                                    <p class="font-semibold">Correction request submitted!</p>
+                                    <p class="mt-0.5">The church office will review and update your records.</p>
+                                </div>
+                            </div>
+                        @endif
                         <button onclick="document.getElementById('correction-modal').classList.remove('hidden')"
                             class="w-full py-2.5 rounded-lg font-semibold text-sm transition-opacity hover:opacity-80"
                             style="background: #f0a500; color: #0a1f44;">
@@ -296,7 +295,7 @@
                 <i class="fas fa-user-slash text-5xl text-gray-300 mb-4"></i>
                 <p class="text-gray-700 font-semibold text-lg mb-1">No record found</p>
                 <p class="text-gray-400 text-sm mb-4">
-                    We could not find a member with the email <strong>{{ request('email') }}</strong>.
+                    We could not find a member with the email <strong>{{ old('email') }}</strong>.
                 </p>
                 <p class="text-sm text-gray-500">
                     If you believe this is an error, please contact the church office at <strong>0726900700</strong>.

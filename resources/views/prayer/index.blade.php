@@ -70,6 +70,13 @@
                             </label>
                         </div>
 
+                        @if(session('success'))
+                            <div class="mb-4 bg-green-50 border border-green-300 rounded-lg px-4 py-3 flex items-center gap-3 text-green-800 text-sm">
+                                <i class="fas fa-check-circle text-green-500 text-lg flex-shrink-0"></i>
+                                <span>{{ session('success') }}</span>
+                            </div>
+                        @endif
+
                         <button type="submit" class="btn-red w-full text-center text-lg font-semibold py-3">
                             <i class="fas fa-paper-plane mr-2"></i>Submit Prayer Request
                         </button>

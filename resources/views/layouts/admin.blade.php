@@ -3,13 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'IT Support') — Chrisco Upper Room</title>
 
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
 
-    <!-- Font Awesome 6 CDN -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <!-- Font Awesome 6 (local – avoids Edge Tracking Prevention blocking CDN) -->
+    <link rel="stylesheet" href="{{ asset('fa/css/all.min.css') }}">
 
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
@@ -197,8 +198,14 @@
             <a href="{{ route('admin.members.index') }}" class="sidebar-link {{ request()->routeIs('admin.members.index') || request()->routeIs('admin.members.show') || request()->routeIs('admin.members.create') || request()->routeIs('admin.members.edit') ? 'active' : '' }}">
                 <i class="fas fa-users main-icon"></i> Members (Adults)
             </a>
-            <a href="{{ route('admin.children.index') }}" class="sidebar-link {{ request()->routeIs('admin.children.*') ? 'active' : '' }}">
+            <a href="{{ route('admin.children.index') }}" class="sidebar-link {{ request()->routeIs('admin.children.*') && !request()->routeIs('admin.children.attendance*') ? 'active' : '' }}">
                 <i class="fas fa-child main-icon"></i> Members (Children)
+            </a>
+            <a href="{{ route('admin.children.attendance') }}" class="sidebar-link {{ request()->routeIs('admin.children.attendance') ? 'active' : '' }}" style="padding-left:2.5rem;">
+                <i class="fas fa-camera-retro main-icon"></i> Child Attendance
+            </a>
+            <a href="{{ route('admin.children.attendance.report') }}" class="sidebar-link {{ request()->routeIs('admin.children.attendance.report') ? 'active' : '' }}" style="padding-left:2.5rem;">
+                <i class="fas fa-chart-bar main-icon"></i> Attendance Report
             </a>
             @php $pendingCorrections = \App\Models\CorrectionRequest::where('status','pending')->count(); @endphp
             <a href="{{ route('admin.corrections.index') }}" class="sidebar-link {{ request()->routeIs('admin.corrections.*') ? 'active' : '' }}" style="position:relative;">
@@ -222,6 +229,18 @@
             </span>
             <span class="sidebar-link-disabled">
                 <i class="fas fa-edit main-icon"></i> Correction Requests
+                <i class="fas fa-lock lock-icon"></i>
+                <span class="no-perm-tip">You have no permissions</span>
+            </span>
+            @endif
+
+            @if($u->hasPermission('visitors.view'))
+            <a href="{{ route('admin.visitors.index') }}" class="sidebar-link {{ request()->routeIs('admin.visitors.*') ? 'active' : '' }}">
+                <i class="fas fa-user-clock main-icon"></i> Visitors
+            </a>
+            @else
+            <span class="sidebar-link-disabled">
+                <i class="fas fa-user-clock main-icon"></i> Visitors
                 <i class="fas fa-lock lock-icon"></i>
                 <span class="no-perm-tip">You have no permissions</span>
             </span>
@@ -276,6 +295,9 @@
             <p class="px-4 pt-4 pb-1 text-xs font-bold uppercase tracking-widest" style="color: #4a6fa5;">Settings</p>
             <a href="{{ route('admin.settings.social.index') }}" class="sidebar-link {{ request()->routeIs('admin.settings.social.*') ? 'active' : '' }}">
                 <i class="fas fa-share-alt main-icon"></i> Social Media
+            </a>
+            <a href="{{ route('admin.settings.verify-access.index') }}" class="sidebar-link {{ request()->routeIs('admin.settings.verify-access.*') ? 'active' : '' }}">
+                <i class="fas fa-calendar-check main-icon"></i> Verify Access
             </a>
             <a href="{{ route('admin.settings.users.index') }}" class="sidebar-link {{ request()->routeIs('admin.settings.users.*') ? 'active' : '' }}">
                 <i class="fas fa-user-cog main-icon"></i> System Users

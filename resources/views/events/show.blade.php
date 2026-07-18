@@ -143,22 +143,63 @@
     </div>
 </section>
 
-{{-- STEP 1: Email Lookup Modal --}}
+{{-- STEP 1: Email Entry Modal --}}
 <div id="email-modal" class="fixed inset-0 z-50 flex items-center justify-center hidden" style="background:rgba(0,0,0,0.6);">
     <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-3 p-5 sm:p-8">
         <div class="flex items-center justify-between mb-5">
             <h3 class="text-xl font-bold" style="color:#0a1f44;"><i class="fas fa-envelope mr-2 text-red-600"></i>Enter Your Email</h3>
             <button onclick="closeEmailModal()" class="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
         </div>
-        <p class="text-gray-500 text-sm mb-5">We will check if you are already in our church database and pre-fill your details.</p>
-        <input type="email" id="lookup-email" placeholder="your@email.com"
-            class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm mb-2">
+        <p class="text-gray-500 text-sm mb-5">We'll send a 6-digit verification code to confirm your email is real.</p>
+        <div class="relative mb-2">
+            <input type="email" id="lookup-email" placeholder="your@email.com" autocomplete="email"
+                class="w-full border border-gray-300 rounded-lg px-4 py-3 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                oninput="validateEmailInput(this)">
+            <span id="email-status-icon" class="absolute right-3 top-1/2 -translate-y-1/2 text-sm hidden"></span>
+        </div>
+        <div id="email-hint" class="text-xs mb-1 hidden"></div>
         <div id="email-error" class="text-red-500 text-xs mb-3 hidden"></div>
-        <button onclick="lookupEmail()" class="btn-red w-full py-3 font-semibold mt-2">
-            <i class="fas fa-search mr-2"></i>Continue
+        <button id="lookup-btn" onclick="sendOtp()" class="btn-red w-full py-3 font-semibold mt-2" disabled style="opacity:0.5;cursor:not-allowed;">
+            <i class="fas fa-paper-plane mr-2"></i>Send Verification Code
         </button>
         <p class="text-center text-xs text-gray-400 mt-4">
             No email? <a href="#" onclick="skipEmail(); return false;" class="text-blue-600 underline">Skip and fill manually</a>
+        </p>
+    </div>
+</div>
+
+{{-- STEP 1.5: OTP Verification Modal --}}
+<div id="otp-modal" class="fixed inset-0 z-50 flex items-center justify-center hidden" style="background:rgba(0,0,0,0.6);">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-3 p-5 sm:p-8 text-center">
+        <div class="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4" style="background:#fef3c7;">
+            <i class="fas fa-shield-alt text-3xl" style="color:#f0a500;"></i>
+        </div>
+        <h3 class="text-xl font-bold mb-1" style="color:#0a1f44;">Check Your Email</h3>
+        <p class="text-gray-500 text-sm mb-1">We sent a 6-digit code to</p>
+        <p id="otp-email-display" class="font-semibold text-gray-800 text-sm mb-5"></p>
+
+        <div class="flex justify-center gap-2 mb-3" id="otp-inputs">
+            <input type="text" maxlength="1" class="otp-digit w-11 h-12 border-2 border-gray-300 rounded-lg text-center text-xl font-bold focus:outline-none focus:border-blue-500" inputmode="numeric">
+            <input type="text" maxlength="1" class="otp-digit w-11 h-12 border-2 border-gray-300 rounded-lg text-center text-xl font-bold focus:outline-none focus:border-blue-500" inputmode="numeric">
+            <input type="text" maxlength="1" class="otp-digit w-11 h-12 border-2 border-gray-300 rounded-lg text-center text-xl font-bold focus:outline-none focus:border-blue-500" inputmode="numeric">
+            <input type="text" maxlength="1" class="otp-digit w-11 h-12 border-2 border-gray-300 rounded-lg text-center text-xl font-bold focus:outline-none focus:border-blue-500" inputmode="numeric">
+            <input type="text" maxlength="1" class="otp-digit w-11 h-12 border-2 border-gray-300 rounded-lg text-center text-xl font-bold focus:outline-none focus:border-blue-500" inputmode="numeric">
+            <input type="text" maxlength="1" class="otp-digit w-11 h-12 border-2 border-gray-300 rounded-lg text-center text-xl font-bold focus:outline-none focus:border-blue-500" inputmode="numeric">
+        </div>
+
+        <div id="otp-error" class="text-red-500 text-xs mb-3 hidden"></div>
+
+        <button onclick="verifyOtp()" id="verify-btn" class="btn-red w-full py-3 font-semibold mb-3">
+            <i class="fas fa-check mr-2"></i>Verify Code
+        </button>
+
+        <p class="text-xs text-gray-400">
+            Didn't receive it?
+            <button onclick="resendOtp()" id="resend-btn" class="text-blue-600 underline">Resend code</button>
+            <span id="resend-timer" class="hidden text-gray-400"></span>
+        </p>
+        <p class="text-xs text-gray-400 mt-2">
+            <a href="#" onclick="backToEmail(); return false;" class="text-gray-500 underline">← Change email</a>
         </p>
     </div>
 </div>
@@ -179,6 +220,7 @@
             @csrf
             <input type="hidden" name="member_id" id="field-member-id">
             <input type="hidden" name="category" id="field-category-hidden" value="visitor">
+            <input type="hidden" name="otp_token" id="field-otp-token">
 
             <div class="mb-4">
                 <label class="block text-sm font-semibold text-gray-700 mb-1">Full Name <span class="text-red-500">*</span></label>
@@ -198,9 +240,14 @@
 
             <div class="mb-4">
                 <label class="block text-sm font-semibold text-gray-700 mb-1">Email Address</label>
-                <input type="email" name="email" id="field-email"
-                    class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 @error('email') border-red-400 @enderror"
-                    placeholder="gkiplangat01@gmail.com" value="{{ old('email') }}">
+                <div class="relative">
+                    <input type="email" name="email" id="field-email"
+                        class="w-full border border-gray-300 rounded-lg px-4 py-2 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-500 @error('email') border-red-400 @enderror"
+                        placeholder="gkiplangat01@gmail.com" value="{{ old('email') }}"
+                        oninput="validateFormEmail(this)">
+                    <span id="form-email-icon" class="absolute right-3 top-1/2 -translate-y-1/2 text-sm hidden"></span>
+                </div>
+                <p id="form-email-hint" class="text-xs mt-1 hidden"></p>
                 @error('email')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
             </div>
 
@@ -256,17 +303,195 @@ function skipEmail() {
     openRegisterModal();
 }
 
-async function lookupEmail() {
+function isValidEmail(email) {
+    return /^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/.test(email)
+        && !email.includes('..')
+        && email.indexOf('@') > 0;
+}
+
+function validateFormEmail(input) {
+    const email = input.value.trim();
+    const icon  = document.getElementById('form-email-icon');
+    const hint  = document.getElementById('form-email-hint');
+    if (!email) { icon.classList.add('hidden'); hint.classList.add('hidden'); return; }
+    if (isValidEmail(email)) {
+        icon.className = 'absolute right-3 top-1/2 -translate-y-1/2 text-sm fas fa-check-circle'; icon.style.color = '#059669'; icon.classList.remove('hidden');
+        hint.textContent = 'Valid email.'; hint.style.color = '#059669'; hint.classList.remove('hidden');
+        input.classList.add('border-green-500'); input.classList.remove('border-red-400');
+    } else {
+        icon.className = 'absolute right-3 top-1/2 -translate-y-1/2 text-sm fas fa-times-circle'; icon.style.color = '#dc2626'; icon.classList.remove('hidden');
+        hint.textContent = 'Invalid email format.'; hint.style.color = '#dc2626'; hint.classList.remove('hidden');
+        input.classList.add('border-red-400'); input.classList.remove('border-green-500');
+    }
+}
+
+// ── OTP ──────────────────────────────────────────────────
+let resendCountdown = null;
+
+async function sendOtp() {
     const email = document.getElementById('lookup-email').value.trim();
     const errEl = document.getElementById('email-error');
     errEl.classList.add('hidden');
 
-    if (!email || !email.includes('@')) {
+    if (!isValidEmail(email)) {
         errEl.textContent = 'Please enter a valid email address.';
         errEl.classList.remove('hidden');
         return;
     }
 
+    const btn = document.getElementById('lookup-btn');
+    btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Sending…';
+
+    try {
+        const res = await fetch('{{ route('events.send-otp') }}', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+            body: JSON.stringify({ email, event_id: {{ $event->id }} }),
+        });
+        const data = await res.json();
+
+        if (!data.success) {
+            errEl.textContent = data.message || 'Failed to send code. Try again.';
+            errEl.classList.remove('hidden');
+            btn.disabled = false; btn.innerHTML = '<i class="fas fa-paper-plane mr-2"></i>Send Verification Code';
+            return;
+        }
+
+        // Show OTP modal
+        document.getElementById('email-modal').classList.add('hidden');
+        document.getElementById('otp-email-display').textContent = email;
+        document.getElementById('otp-error').classList.add('hidden');
+        document.querySelectorAll('.otp-digit').forEach(i => i.value = '');
+        document.getElementById('otp-modal').classList.remove('hidden');
+        setTimeout(() => document.querySelectorAll('.otp-digit')[0].focus(), 100);
+        startResendTimer(60);
+
+        btn.disabled = false; btn.innerHTML = '<i class="fas fa-paper-plane mr-2"></i>Send Verification Code';
+    } catch (e) {
+        errEl.textContent = 'Something went wrong. Please try again.';
+        errEl.classList.remove('hidden');
+        btn.disabled = false; btn.innerHTML = '<i class="fas fa-paper-plane mr-2"></i>Send Verification Code';
+    }
+}
+
+async function verifyOtp() {
+    const digits = [...document.querySelectorAll('.otp-digit')].map(i => i.value).join('');
+    const email  = document.getElementById('otp-email-display').textContent;
+    const errEl  = document.getElementById('otp-error');
+    errEl.classList.add('hidden');
+
+    if (digits.length !== 6 || !/^\d{6}$/.test(digits)) {
+        errEl.textContent = 'Please enter the complete 6-digit code.';
+        errEl.classList.remove('hidden');
+        return;
+    }
+
+    const btn = document.getElementById('verify-btn');
+    btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Verifying…';
+
+    try {
+        const res = await fetch('{{ route('events.verify-otp') }}', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+            body: JSON.stringify({ email, otp: digits }),
+        });
+        const data = await res.json();
+
+        if (!data.success) {
+            errEl.textContent = data.message || 'Incorrect code.';
+            errEl.classList.remove('hidden');
+            document.querySelectorAll('.otp-digit').forEach(i => { i.value = ''; i.classList.add('border-red-400'); });
+            btn.disabled = false; btn.innerHTML = '<i class="fas fa-check mr-2"></i>Verify Code';
+            return;
+        }
+
+        // ✔ Verified — store token, do member lookup, open registration
+        document.getElementById('field-otp-token').value = data.token;
+        document.getElementById('field-email').value = email;
+        document.getElementById('otp-modal').classList.add('hidden');
+
+        // Now do the member lookup with this verified email
+        await doMemberLookup(email);
+
+    } catch (e) {
+        errEl.textContent = 'Something went wrong. Please try again.';
+        errEl.classList.remove('hidden');
+        btn.disabled = false; btn.innerHTML = '<i class="fas fa-check mr-2"></i>Verify Code';
+    }
+}
+
+async function resendOtp() {
+    document.getElementById('lookup-email').value = document.getElementById('otp-email-display').textContent;
+    document.getElementById('otp-modal').classList.add('hidden');
+    document.getElementById('email-modal').classList.remove('hidden');
+    await sendOtp();
+}
+
+function backToEmail() {
+    document.getElementById('otp-modal').classList.add('hidden');
+    document.getElementById('email-modal').classList.remove('hidden');
+}
+
+function startResendTimer(seconds) {
+    const btn   = document.getElementById('resend-btn');
+    const timer = document.getElementById('resend-timer');
+    btn.classList.add('hidden');
+    timer.classList.remove('hidden');
+    clearInterval(resendCountdown);
+    let s = seconds;
+    timer.textContent = ` (resend in ${s}s)`;
+    resendCountdown = setInterval(() => {
+        s--;
+        timer.textContent = ` (resend in ${s}s)`;
+        if (s <= 0) {
+            clearInterval(resendCountdown);
+            btn.classList.remove('hidden');
+            timer.classList.add('hidden');
+        }
+    }, 1000);
+}
+
+function validateEmailInput(input) {
+    const email   = input.value.trim();
+    const icon    = document.getElementById('email-status-icon');
+    const hint    = document.getElementById('email-hint');
+    const btn     = document.getElementById('lookup-btn');
+    const errEl   = document.getElementById('email-error');
+
+    errEl.classList.add('hidden');
+
+    if (!email) {
+        icon.className = 'absolute right-3 top-1/2 -translate-y-1/2 text-sm hidden';
+        hint.classList.add('hidden');
+        input.classList.remove('border-green-500', 'border-red-400');
+        btn.disabled = true; btn.style.opacity = '0.5'; btn.style.cursor = 'not-allowed';
+        return;
+    }
+
+    if (isValidEmail(email)) {
+        icon.className = 'absolute right-3 top-1/2 -translate-y-1/2 text-sm fas fa-check-circle';
+        icon.style.color = '#059669';
+        icon.classList.remove('hidden');
+        hint.textContent = 'Email looks valid.';
+        hint.style.color = '#059669';
+        hint.classList.remove('hidden');
+        input.classList.add('border-green-500');
+        input.classList.remove('border-red-400');
+        btn.disabled = false; btn.style.opacity = '1'; btn.style.cursor = 'pointer';
+    } else {
+        icon.className = 'absolute right-3 top-1/2 -translate-y-1/2 text-sm fas fa-times-circle';
+        icon.style.color = '#dc2626';
+        icon.classList.remove('hidden');
+        hint.textContent = 'Please enter a valid email address (e.g. name@gmail.com).';
+        hint.style.color = '#dc2626';
+        hint.classList.remove('hidden');
+        input.classList.add('border-red-400');
+        input.classList.remove('border-green-500');
+        btn.disabled = true; btn.style.opacity = '0.5'; btn.style.cursor = 'not-allowed';
+    }
+}
+
+async function doMemberLookup(email) {
     try {
         const res  = await fetch('{{ route('events.lookup-email') }}', {
             method: 'POST',
@@ -274,8 +499,6 @@ async function lookupEmail() {
             body: JSON.stringify({ email }),
         });
         const data = await res.json();
-
-        document.getElementById('field-email').value = email;
 
         if (data.found) {
             document.getElementById('field-full-name').value         = data.full_name;
@@ -295,14 +518,33 @@ async function lookupEmail() {
         }
         openRegisterModal();
     } catch (e) {
-        errEl.textContent = 'Something went wrong. Please try again.';
-        errEl.classList.remove('hidden');
+        openRegisterModal(); // still open form even if lookup fails
     }
 }
 
 document.addEventListener('DOMContentLoaded', function () {
     document.getElementById('lookup-email').addEventListener('keydown', function (e) {
-        if (e.key === 'Enter') { e.preventDefault(); lookupEmail(); }
+        if (e.key === 'Enter') { e.preventDefault(); sendOtp(); }
+    });
+
+    // OTP digit auto-advance
+    const digits = document.querySelectorAll('.otp-digit');
+    digits.forEach((input, idx) => {
+        input.addEventListener('input', function () {
+            this.value = this.value.replace(/\D/g, '').slice(-1);
+            this.classList.remove('border-red-400');
+            if (this.value && idx < digits.length - 1) digits[idx + 1].focus();
+            if ([...digits].every(i => i.value)) verifyOtp();
+        });
+        input.addEventListener('keydown', function (e) {
+            if (e.key === 'Backspace' && !this.value && idx > 0) digits[idx - 1].focus();
+        });
+        input.addEventListener('paste', function (e) {
+            e.preventDefault();
+            const pasted = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g, '').slice(0, 6);
+            [...pasted].forEach((ch, i) => { if (digits[i]) digits[i].value = ch; });
+            if (pasted.length === 6) verifyOtp();
+        });
     });
 
     document.getElementById('field-category').addEventListener('change', function () {

@@ -40,7 +40,7 @@
 <body class="text-gray-800" style="background-color: #0a1f44;">
 
     <!-- NAVBAR -->
-    <nav class="fixed top-0 left-0 right-0 z-50 shadow-lg" style="background: linear-gradient(to right, #ffffff 0%, #c8d8f0 10%, #4a6fa5 25%, #0a1f44 50%); height: 72px;">
+    <nav class="fixed top-0 left-0 right-0 z-50 shadow-lg relative" style="background: linear-gradient(to right, #ffffff 0%, #c8d8f0 10%, #4a6fa5 25%, #0a1f44 50%); height: 72px;">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex items-center justify-between" style="height:72px;">
 
@@ -60,8 +60,8 @@
                     @endif
                 </a>
 
-                <!-- Desktop Nav Links -->
-                <div class="hidden md:flex items-center space-x-1">
+                <!-- Desktop Nav Links — centered absolutely -->
+                <div class="hidden md:flex items-center space-x-1 absolute left-1/2 -translate-x-1/2">
                     <a href="{{ route('home') }}" class="nav-link text-white px-3 py-2 text-sm font-medium">Home</a>
                     <a href="{{ route('about') }}" class="nav-link text-white px-3 py-2 text-sm font-medium">About Us</a>
                     <!-- Resources Dropdown -->
@@ -109,7 +109,6 @@
                     <a href="{{ route('give') }}" class="nav-link text-white px-3 py-2 text-sm font-medium">Giving</a>
                     <a href="{{ route('prayer.index') }}" class="nav-link text-white px-3 py-2 text-sm font-medium">Prayer Request</a>
                 </div>
-
 
                 <!-- Hamburger Button -->
                 <button class="md:hidden text-white focus:outline-none" onclick="toggleNavMenu()">

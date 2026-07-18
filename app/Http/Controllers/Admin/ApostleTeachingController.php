@@ -28,7 +28,7 @@ class ApostleTeachingController extends Controller
         $validated = $request->validate([
             'title'       => 'required|string|max:255',
             'description' => 'nullable|string',
-            'youtube_url' => 'required|string|max:500',
+            'youtube_url' => ['required','url','max:500','regex:/^https:\/\/(www\.)?(youtube\.com|youtu\.be)\//'],
             'thumbnail'   => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
             'category_id' => 'nullable|exists:apostle_teaching_categories,id',
             'status'      => 'required|in:published,draft',
@@ -54,7 +54,7 @@ class ApostleTeachingController extends Controller
         $validated = $request->validate([
             'title'       => 'required|string|max:255',
             'description' => 'nullable|string',
-            'youtube_url' => 'required|string|max:500',
+            'youtube_url' => ['required','url','max:500','regex:/^https:\/\/(www\.)?(youtube\.com|youtu\.be)\//'],
             'thumbnail'   => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
             'category_id' => 'nullable|exists:apostle_teaching_categories,id',
             'status'      => 'required|in:published,draft',

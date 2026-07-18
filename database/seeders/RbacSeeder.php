@@ -92,6 +92,12 @@ class RbacSeeder extends Seeder
             ['module' => 'Settings',       'slug' => 'settings.roles',             'name' => 'Manage Roles & Permissions'],
             ['module' => 'Settings',       'slug' => 'settings.logs',              'name' => 'View System Logs'],
 
+            // Visitors
+            ['module' => 'Visitors',       'slug' => 'visitors.view',              'name' => 'View Visitors'],
+            ['module' => 'Visitors',       'slug' => 'visitors.create',            'name' => 'Add Visitors'],
+            ['module' => 'Visitors',       'slug' => 'visitors.edit',              'name' => 'Edit Visitors'],
+            ['module' => 'Visitors',       'slug' => 'visitors.delete',            'name' => 'Delete Visitors'],
+
             // Correction Requests
             ['module' => 'Corrections',    'slug' => 'corrections.view',           'name' => 'View Correction Requests'],
             ['module' => 'Corrections',    'slug' => 'corrections.manage',         'name' => 'Manage Correction Requests'],
@@ -142,7 +148,21 @@ class RbacSeeder extends Seeder
             'name' => 'Membership Administrator', 'description' => 'Manages members and membership data',
         ]);
         $membership->permissions()->syncWithoutDetaching(
-            Permission::whereIn('slug', ['members.view','members.create','members.edit','members.delete','members.import','corrections.view','corrections.manage','reports.membership'])->pluck('id')
+            Permission::whereIn('slug', ['members.view','members.create','members.edit','members.delete','members.import','visitors.view','visitors.create','visitors.edit','visitors.delete','corrections.view','corrections.manage','reports.membership'])->pluck('id')
+        );
+
+        $visitors = Role::firstOrCreate(['slug' => 'cur_visitors'], [
+            'name' => 'Visitors Administrator', 'description' => 'Manages visitor records and follow-ups',
+        ]);
+        $visitors->permissions()->syncWithoutDetaching(
+            Permission::whereIn('slug', ['visitors.view','visitors.create','visitors.edit','visitors.delete'])->pluck('id')
+        );
+
+        $prayers = Role::firstOrCreate(['slug' => 'cur_prayers'], [
+            'name' => 'Prayer Request Administrator', 'description' => 'Views and manages prayer requests assigned to them',
+        ]);
+        $prayers->permissions()->syncWithoutDetaching(
+            Permission::whereIn('slug', ['prayers.view','prayers.manage'])->pluck('id')
         );
 
         // ── Default Super Admin User ────────────────────────────────────────

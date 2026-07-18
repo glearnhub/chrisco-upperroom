@@ -40,6 +40,15 @@ class Sermon extends Model
         ];
     }
 
+    public function getYoutubeThumbnailAttribute(): ?string
+    {
+        if (!$this->video_url) return null;
+        if (preg_match('/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/live\/)([a-zA-Z0-9_-]{11})/', $this->video_url, $m)) {
+            return "https://img.youtube.com/vi/{$m[1]}/hqdefault.jpg";
+        }
+        return null;
+    }
+
     public function scopePublished($query)
     {
         return $query->where('status', 'published');

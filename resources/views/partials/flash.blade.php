@@ -1,4 +1,4 @@
-@if(session('success'))
+@if(session('success') && !request()->routeIs('events.show'))
     <div class="max-w-7xl mx-auto px-4 pt-4">
         <div class="bg-green-100 border border-green-400 text-green-800 px-4 py-3 rounded flex items-center justify-between">
             <span><i class="fas fa-check-circle mr-2"></i>{{ session('success') }}</span>

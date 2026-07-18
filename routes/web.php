@@ -23,6 +23,8 @@ use App\Http\Controllers\Admin\MemberController as AdminMember;
 use App\Http\Controllers\Admin\MemberImportController;
 use App\Http\Controllers\Admin\ReportController as AdminReport;
 use App\Http\Controllers\Admin\ChildController as AdminChild;
+use App\Http\Controllers\Admin\ChildAttendanceController as AdminChildAttendance;
+use App\Http\Controllers\Admin\VisitorController as AdminVisitor;
 use App\Http\Controllers\Admin\TeachingController as AdminTeaching;
 use App\Http\Controllers\Admin\ResourceController as AdminResource;
 use App\Http\Controllers\GalleryController;
@@ -32,6 +34,7 @@ use App\Http\Controllers\Admin\EventReportController as AdminEventReport;
 use App\Http\Controllers\Admin\CorrectionRequestController as AdminCorrection;
 use App\Http\Controllers\AnnouncementController;
 use App\Http\Controllers\Admin\Settings\SocialMediaController as AdminSocial;
+use App\Http\Controllers\Admin\Settings\VerifyAccessController as AdminVerifyAccess;
 use App\Http\Controllers\Admin\Settings\SystemUserController as AdminSysUser;
 use App\Http\Controllers\Admin\Settings\RolePermissionController as AdminRolePerms;
 use App\Http\Controllers\Admin\Settings\SystemLogController as AdminSysLog;
@@ -63,9 +66,11 @@ Route::get('/gallery', [GalleryController::class, 'index'])->name('gallery.index
 Route::get('/apostle-teachings', [ApostleTeachingController::class, 'index'])->name('apostle.index');
 Route::get('/apostle-teachings/{apostleTeaching}', [ApostleTeachingController::class, 'show'])->name('apostle.show');
 
-Route::get('/verify', [MemberLookupController::class, 'index'])->name('member.lookup');
-Route::post('/verify', [MemberLookupController::class, 'lookup'])->name('member.lookup.post');
-Route::post('/verify/correction', [MemberLookupController::class, 'requestCorrection'])->name('member.lookup.correction');
+Route::middleware(['verify.access', 'throttle:20,1'])->group(function () {
+    Route::get('/verify', [MemberLookupController::class, 'index'])->name('member.lookup');
+    Route::post('/verify', [MemberLookupController::class, 'lookup'])->name('member.lookup.post');
+    Route::post('/verify/correction', [MemberLookupController::class, 'requestCorrection'])->name('member.lookup.correction');
+});
 
 Route::get('/events', [EventController::class, 'index'])->name('events.index');
 Route::get('/events/{event}', [EventController::class, 'show'])->name('events.show');
@@ -83,15 +88,12 @@ Route::get('/announcements/{announcement}', [AnnouncementController::class, 'sho
 // -------------------------------------------------------
 // Event registration — open to public (no login required)
 // -------------------------------------------------------
-Route::post('/events/lookup-email', [EventController::class, 'lookupEmail'])->name('events.lookup-email');
+Route::post('/events/lookup-email', [EventController::class, 'lookupEmail'])->name('events.lookup-email')->middleware('throttle:20,1');
+Route::post('/events/send-otp',    [EventController::class, 'sendOtp'])->name('events.send-otp')->middleware('throttle:5,10');
+Route::post('/events/verify-otp',  [EventController::class, 'verifyOtp'])->name('events.verify-otp')->middleware('throttle:10,1');
 Route::post('/events/{event}/register', [EventController::class, 'register'])->name('events.register');
 
-// -------------------------------------------------------
-// Authenticated-only public actions
-// -------------------------------------------------------
-Route::middleware(['auth'])->group(function () {
-    Route::post('/prayer', [PrayerController::class, 'store'])->name('prayer.store');
-});
+Route::post('/prayer', [PrayerController::class, 'store'])->name('prayer.store');
 
 // -------------------------------------------------------
 // Member Dashboard
@@ -104,6 +106,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
+// /admin returns 404 — keeps the real login URL hidden
+Route::get('/admin', fn() => abort(404))->withoutMiddleware(['auth', 'admin']);
+
 // -------------------------------------------------------
 // Admin Routes
 // -------------------------------------------------------
@@ -112,7 +117,6 @@ Route::middleware(['auth', 'admin'])
     ->name('admin.')
     ->group(function () {
 
-        Route::get('/', fn() => redirect()->route('admin.dashboard'));
         Route::get('/dashboard', [AdminDashboard::class, 'index'])->name('dashboard');
 
         // Reports
@@ -125,6 +129,27 @@ Route::middleware(['auth', 'admin'])
         Route::get('/reports/events/{event}',                                      [AdminEventReport::class, 'show'])->middleware('permission:reports.events')->name('reports.events.show');
         Route::get('/reports/events/{event}/attendance/search',                    [AdminEventReport::class, 'searchAttendee'])->middleware('permission:reports.events')->name('reports.events.attendance.search');
         Route::post('/reports/events/{event}/attendance/{registration}',           [AdminEventReport::class, 'markAttendance'])->middleware('permission:reports.events')->name('reports.events.attendance.mark');
+
+        // Visitors
+        Route::get('/visitors/import/template', [AdminVisitor::class, 'downloadTemplate'])->middleware('permission:visitors.view')->name('visitors.import.template');
+        Route::get('/visitors/import',  [AdminVisitor::class, 'importForm'])->middleware('permission:visitors.create')->name('visitors.import');
+        Route::post('/visitors/import', [AdminVisitor::class, 'importStore'])->middleware('permission:visitors.create')->name('visitors.import.store');
+        Route::get('/visitors',         [AdminVisitor::class, 'index'])->middleware('permission:visitors.view')->name('visitors.index');
+        Route::get('/visitors/create',  [AdminVisitor::class, 'create'])->middleware('permission:visitors.create')->name('visitors.create');
+        Route::post('/visitors',        [AdminVisitor::class, 'store'])->middleware('permission:visitors.create')->name('visitors.store');
+        Route::get('/visitors/{visitor}',      [AdminVisitor::class, 'show'])->middleware('permission:visitors.view')->name('visitors.show');
+        Route::get('/visitors/{visitor}/edit', [AdminVisitor::class, 'edit'])->middleware('permission:visitors.edit')->name('visitors.edit');
+        Route::match(['PUT','PATCH'], '/visitors/{visitor}', [AdminVisitor::class, 'update'])->middleware('permission:visitors.edit')->name('visitors.update');
+        Route::delete('/visitors/{visitor}',   [AdminVisitor::class, 'destroy'])->middleware('permission:visitors.delete')->name('visitors.destroy');
+
+        // Child Attendance
+        Route::get('/children/attendance',              [AdminChildAttendance::class, 'scanner'])->middleware('permission:children.view')->name('children.attendance');
+        Route::get('/children/attendance/history',      [AdminChildAttendance::class, 'history'])->middleware('permission:children.view')->name('children.attendance.history');
+        Route::get('/children/attendance/report',       [AdminChildAttendance::class, 'report'])->middleware('permission:children.view')->name('children.attendance.report');
+        Route::get('/children/attendance/descriptors',  [AdminChildAttendance::class, 'descriptors'])->middleware('permission:children.view')->name('children.attendance.descriptors');
+        Route::post('/children/attendance/save',        [AdminChildAttendance::class, 'saveAttendance'])->middleware('permission:children.create')->name('children.attendance.save');
+        Route::delete('/children/attendance/{attendance}', [AdminChildAttendance::class, 'remove'])->middleware('permission:children.edit')->name('children.attendance.remove');
+        Route::post('/children/{child}/save-descriptor', [AdminChildAttendance::class, 'saveDescriptor'])->middleware('permission:children.edit')->name('children.save-descriptor');
 
         // Children
         Route::get('/children/print',   [AdminChild::class, 'printList'])->middleware('permission:children.view')->name('children.print');
@@ -219,7 +244,9 @@ Route::middleware(['auth', 'admin'])
 
         // Prayer Requests
         Route::get('/prayers',                       [AdminPrayer::class, 'index'])->middleware('permission:prayers.view')->name('prayers.index');
+        Route::post('/prayers/bulk-assign',          [AdminPrayer::class, 'bulkAssign'])->middleware('permission:prayers.manage')->name('prayers.bulk-assign');
         Route::patch('/prayers/{prayer}/status',     [AdminPrayer::class, 'updateStatus'])->middleware('permission:prayers.manage')->name('prayers.updateStatus');
+        Route::patch('/prayers/{prayer}/assign',     [AdminPrayer::class, 'assign'])->middleware('permission:prayers.manage')->name('prayers.assign');
 
         // Announcements
         Route::get('/announcements',                                    [AdminAnnouncement::class, 'index'])->middleware('permission:announcements.view')->name('announcements.index');
@@ -272,6 +299,10 @@ Route::middleware(['auth', 'admin'])
             });
             Route::middleware('permission:settings.logs')->group(function () {
                 Route::get('/logs', [AdminSysLog::class, 'index'])->name('logs.index');
+            });
+            Route::middleware('permission:settings.social')->group(function () {
+                Route::get('/verify-access',  [AdminVerifyAccess::class, 'index'])->name('verify-access.index');
+                Route::post('/verify-access', [AdminVerifyAccess::class, 'update'])->name('verify-access.update');
             });
         });
 

@@ -297,7 +297,7 @@ class ChildController extends Controller
                     'first_name'         => $firstName,
                     'middle_name'        => trim($row[2] ?? '') ?: null,
                     'last_name'          => $lastName,
-                    'gender'             => strtolower(trim($row[4] ?? '')) ?: null,
+                    'gender'             => in_array(strtolower(trim($row[4] ?? '')), ['male', 'female']) ? strtolower(trim($row[4])) : null,
                     'date_of_birth'      => !empty($row[5]) ? $this->parseDate($row[5]) : null,
                     'sunday_school_class'=> trim($row[6] ?? '') ?: null,
                     'parent1_name'       => trim($row[7] ?? '') ?: null,

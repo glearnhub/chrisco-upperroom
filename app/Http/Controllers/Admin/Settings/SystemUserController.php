@@ -22,25 +22,29 @@ class SystemUserController extends Controller
 
     public function create()
     {
-        $roles = Role::orderBy('name')->get();
-        return view('admin.settings.users.create', compact('roles'));
+        $roles   = Role::orderBy('name')->get();
+        $members = User::where('role', 'member')->orderBy('name')->get(['id', 'name', 'last_name', 'email']);
+        return view('admin.settings.users.create', compact('roles', 'members'));
     }
 
     public function store(Request $request)
     {
         $request->validate([
-            'name'     => 'required|string|max:100',
-            'email'    => 'required|email|unique:users,email',
-            'password' => 'required|min:8|confirmed',
-            'roles'    => 'nullable|array',
-            'roles.*'  => 'exists:roles,id',
+            'member_id' => 'required|exists:users,id',
+            'password'  => 'required|min:8|confirmed',
+            'roles'     => 'nullable|array',
+            'roles.*'   => 'exists:roles,id',
         ]);
 
-        $user = User::create([
-            'name'      => $request->name,
-            'email'     => $request->email,
-            'password'  => Hash::make($request->password),
+        $user = User::findOrFail($request->member_id);
+
+        if ($user->role === 'admin') {
+            return back()->withErrors(['member_id' => 'This person is already an admin user.']);
+        }
+
+        $user->update([
             'role'      => 'admin',
+            'password'  => Hash::make($request->password),
             'is_active' => true,
         ]);
 

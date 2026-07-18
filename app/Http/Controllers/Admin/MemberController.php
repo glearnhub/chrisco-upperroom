@@ -169,12 +169,12 @@ class MemberController extends Controller
             'middle_name'             => 'nullable|string|max:255',
             'last_name'               => 'nullable|string|max:255',
             'gender'                  => 'nullable|in:male,female',
-            'marital_status'          => 'nullable|string|max:50',
+            'marital_status'          => 'nullable|in:single,married,widowed,divorced,separated',
             'email'                   => 'required|email|unique:users,email',
             'phone'                   => 'nullable|string|max:20',
             'date_of_birth'           => 'nullable|date',
             'membership_date'         => 'nullable|date',
-            'role'                    => 'required|in:admin,member',
+            'role'                    => 'nullable|in:member',
             'password'                => 'required|string|min:8|confirmed',
             'county'                  => 'nullable|string|max:100',
             'sub_county'              => 'nullable|string|max:100',
@@ -193,14 +193,15 @@ class MemberController extends Controller
             'home_cell'               => 'nullable|string|max:255',
             'assigned_to_deacon'      => 'boolean',
             'deacon_name'             => 'nullable|string|max:255',
-            'office'                  => 'nullable|string|max:50',
+            'office'                  => 'nullable|in:presbyter,pastor,elder,deacon,deaconess',
         ]);
 
         $validated['belongs_to_home_cell'] = $request->boolean('belongs_to_home_cell');
         $validated['assigned_to_deacon']   = $request->boolean('assigned_to_deacon');
         $validated['is_committed_member']  = $request->boolean('is_committed_member');
         $validated['password']             = Hash::make($validated['password']);
-        $validated['membership_date'] = $validated['membership_date'] ?? now()->toDateString();
+        $validated['membership_date']      = $validated['membership_date'] ?? now()->toDateString();
+        $validated['role']                 = 'member'; // always member — admins created via Settings > System Users
 
         User::create($validated);
 
@@ -228,7 +229,7 @@ class MemberController extends Controller
             'middle_name'             => 'nullable|string|max:255',
             'last_name'               => 'nullable|string|max:255',
             'gender'                  => 'nullable|in:male,female',
-            'marital_status'          => 'nullable|string|max:50',
+            'marital_status'          => 'nullable|in:single,married,widowed,divorced,separated',
             'email'                   => 'required|email|unique:users,email,' . $user->id,
             'phone'                   => 'nullable|string|max:20',
             'date_of_birth'           => 'nullable|date',
@@ -248,7 +249,7 @@ class MemberController extends Controller
             'next_of_kin_phone'       => 'nullable|string|max:20',
             'home_cell'               => 'nullable|string|max:255',
             'deacon_name'             => 'nullable|string|max:255',
-            'office'                  => 'nullable|string|max:50',
+            'office'                  => 'nullable|in:presbyter,pastor,elder,deacon,deaconess',
         ]);
 
         $validated['is_committed_member'] = $request->boolean('is_committed_member');

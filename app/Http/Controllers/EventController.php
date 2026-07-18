@@ -2,10 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\EventOtpMail;
 use App\Models\Event;
 use App\Models\EventRegistration;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\RateLimiter;
 
 class EventController extends Controller
 {
@@ -22,6 +26,75 @@ class EventController extends Controller
         $event->load('registrations');
         $registrationCount = $event->registrations()->where('status', '!=', 'cancelled')->count();
         return view('events.show', compact('event', 'registrationCount'));
+    }
+
+    /**
+     * AJAX: send OTP to email for event registration verification.
+     */
+    public function sendOtp(Request $request)
+    {
+        $request->validate(['email' => 'required|email', 'event_id' => 'required|exists:events,id']);
+
+        $email = strtolower(trim($request->email));
+        $rateLimiterKey = 'otp_send_' . sha1($email);
+
+        if (RateLimiter::tooManyAttempts($rateLimiterKey, 3)) {
+            $seconds = RateLimiter::availableIn($rateLimiterKey);
+            return response()->json(['success' => false, 'message' => "Too many attempts. Try again in {$seconds} seconds."], 429);
+        }
+
+        RateLimiter::hit($rateLimiterKey, 600);
+
+        $otp = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+        $event = Event::findOrFail($request->event_id);
+
+        Cache::put('event_otp_' . sha1($email), [
+            'code'     => $otp,
+            'attempts' => 0,
+        ], now()->addMinutes(10));
+
+        try {
+            Mail::to($email)->send(new EventOtpMail($otp, $event->title));
+        } catch (\Throwable $e) {
+            return response()->json(['success' => false, 'message' => 'Failed to send email. Please check your email address and try again.'], 500);
+        }
+
+        return response()->json(['success' => true]);
+    }
+
+    /**
+     * AJAX: verify OTP entered by user.
+     */
+    public function verifyOtp(Request $request)
+    {
+        $request->validate(['email' => 'required|email', 'otp' => 'required|string|size:6']);
+
+        $email = strtolower(trim($request->email));
+        $cacheKey = 'event_otp_' . sha1($email);
+        $data = Cache::get($cacheKey);
+
+        if (!$data) {
+            return response()->json(['success' => false, 'message' => 'Code expired. Please request a new one.']);
+        }
+
+        if ($data['attempts'] >= 5) {
+            Cache::forget($cacheKey);
+            return response()->json(['success' => false, 'message' => 'Too many incorrect attempts. Please request a new code.']);
+        }
+
+        if ($data['code'] !== $request->otp) {
+            $data['attempts']++;
+            Cache::put($cacheKey, $data, now()->addMinutes(10));
+            $remaining = 5 - $data['attempts'];
+            return response()->json(['success' => false, 'message' => "Incorrect code. {$remaining} attempt(s) remaining."]);
+        }
+
+        // OTP correct — store verified token (30 min window to complete registration)
+        Cache::forget($cacheKey);
+        $token = bin2hex(random_bytes(16));
+        Cache::put('event_otp_verified_' . sha1($email), $token, now()->addMinutes(30));
+
+        return response()->json(['success' => true, 'token' => $token]);
     }
 
     /**
@@ -46,19 +119,29 @@ class EventController extends Controller
             'phone'     => $user->phone ?? '',
             'email'     => $user->email,
             'category'  => $category,
-            'member_id' => $user->id,
+            'member_id' => $user->id, // used only for form pre-fill, not exposed publicly
         ]);
     }
 
     public function register(Request $request, Event $event)
     {
         $validated = $request->validate([
-            'full_name' => 'required|string|max:255',
-            'phone'     => 'required|string|max:20',
-            'email'     => 'nullable|email|max:255',
-            'category'  => 'required|in:presbyter,pastor,elder,deacon,deaconess,member,visitor',
-            'member_id' => 'nullable|exists:users,id',
+            'full_name'      => 'required|string|max:255',
+            'phone'          => 'required|string|max:20',
+            'email'          => 'nullable|email|max:255',
+            'category'       => 'required|in:presbyter,pastor,elder,deacon,deaconess,member,visitor',
+            'member_id'      => 'nullable|exists:users,id',
+            'otp_token'      => 'nullable|string',
         ]);
+
+        // Verify OTP token if email was provided
+        if (!empty($validated['email'])) {
+            $email = strtolower(trim($validated['email']));
+            $storedToken = Cache::get('event_otp_verified_' . sha1($email));
+            if (!$storedToken || $storedToken !== $request->otp_token) {
+                return back()->with('error', 'Email verification required. Please verify your email before registering.');
+            }
+        }
 
         // Prevent duplicate registration by email for the same event
         if (!empty($validated['email'])) {

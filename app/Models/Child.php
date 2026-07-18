@@ -12,11 +12,25 @@ class Child extends Model
         'parent1_id', 'parent1_name', 'parent1_contact',
         'parent2_id', 'parent2_name', 'parent2_contact',
         'sunday_school_class', 'notes',
+        'photo', 'face_descriptor',
     ];
 
     protected function casts(): array
     {
-        return ['date_of_birth' => 'date'];
+        return [
+            'date_of_birth'   => 'date',
+            'face_descriptor' => 'array',
+        ];
+    }
+
+    public function attendances()
+    {
+        return $this->hasMany(ChildAttendance::class);
+    }
+
+    public function getPhotoUrlAttribute(): ?string
+    {
+        return $this->photo ? asset('storage/' . $this->photo) : null;
     }
 
     public function getFullNameAttribute(): string

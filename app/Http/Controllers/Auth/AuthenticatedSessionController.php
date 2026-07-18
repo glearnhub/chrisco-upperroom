@@ -31,7 +31,7 @@ class AuthenticatedSessionController extends Controller
 
         SystemLog::record('login', 'Auth', 'User logged in.');
 
-        return redirect()->intended(route('dashboard', absolute: false));
+        return redirect()->route('admin.dashboard');
     }
 
     /**

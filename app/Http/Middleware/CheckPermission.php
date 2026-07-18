@@ -12,7 +12,7 @@ class CheckPermission
     {
         $user = $request->user();
 
-        if (!$user || !$user->isAdmin()) {
+        if (!$user || !$user->isAdmin() || $user->is_active === false) {
             abort(403, 'Access denied.');
         }
 

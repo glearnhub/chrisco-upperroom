@@ -18,6 +18,7 @@ class PrayerRequest extends Model
         'is_anonymous',
         'is_public',
         'status',
+        'assigned_to',
     ];
 
     protected function casts(): array
@@ -31,6 +32,11 @@ class PrayerRequest extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function assignedLeader()
+    {
+        return $this->belongsTo(User::class, 'assigned_to');
     }
 
     public function scopePublic($query)

@@ -46,23 +46,61 @@
             {{-- Video Embed --}}
             @php
                 $rawUrl = $livestream->embed_url;
-                // Convert any YouTube watch/short URL to embed URL
+                $isYoutube = false;
+                $youtubeId = null;
                 if (preg_match('/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/live\/)([a-zA-Z0-9_-]{11})/', $rawUrl, $m)) {
-                    $embedSrc = 'https://www.youtube.com/embed/' . $m[1] . '?autoplay=0&rel=0';
+                    $youtubeId = $m[1];
+                    $isYoutube = true;
+                    $embedSrc = 'https://www.youtube.com/embed/' . $youtubeId . '?autoplay=0&rel=0&enablejsapi=1';
                 } elseif (str_contains($rawUrl, 'facebook.com')) {
                     $embedSrc = 'https://www.facebook.com/plugins/video.php?href=' . urlencode($rawUrl) . '&show_text=0';
                 } else {
-                    $embedSrc = $rawUrl; // already an embed URL
+                    $embedSrc = $rawUrl;
                 }
             @endphp
-            <div class="relative w-full rounded-xl overflow-hidden shadow-2xl" style="padding-top: 56.25%;">
-                <iframe class="absolute inset-0 w-full h-full"
+
+            {{-- Live Ended overlay (hidden by default, shown by JS) --}}
+            @if($livestream->is_live && $isYoutube)
+            <div id="live-ended-banner" class="hidden mb-4 rounded-xl text-center py-6 px-4" style="background:#1a1a2e;">
+                <i class="fas fa-circle text-gray-500 text-3xl mb-2 block"></i>
+                <p class="text-white text-xl font-bold">Live Ended</p>
+                <p class="text-gray-400 text-sm mt-1">This stream has ended. Watch our past sermons below.</p>
+                <a href="{{ route('sermons.index') }}" class="inline-block mt-4 px-5 py-2 rounded-full text-white text-sm font-semibold" style="background:#c0392b;">
+                    <i class="fas fa-play mr-1"></i> Watch Past Sermons
+                </a>
+            </div>
+            @endif
+
+            <div id="player-wrapper" class="relative w-full rounded-xl overflow-hidden shadow-2xl" style="padding-top: 56.25%;">
+                <iframe id="yt-player" class="absolute inset-0 w-full h-full"
                     src="{{ $embedSrc }}"
                     frameborder="0"
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                     allowfullscreen>
                 </iframe>
             </div>
+
+            @if($livestream->is_live && $isYoutube)
+            <script>
+                var tag = document.createElement('script');
+                tag.src = "https://www.youtube.com/iframe_api";
+                document.head.appendChild(tag);
+
+                var player;
+                function onYouTubeIframeAPIReady() {
+                    player = new YT.Player('yt-player', {
+                        events: { 'onStateChange': onPlayerStateChange }
+                    });
+                }
+                function onPlayerStateChange(event) {
+                    // YT.PlayerState.ENDED = 0
+                    if (event.data === 0) {
+                        document.getElementById('player-wrapper').classList.add('hidden');
+                        document.getElementById('live-ended-banner').classList.remove('hidden');
+                    }
+                }
+            </script>
+            @endif
 
             @if($livestream->scheduled_at && !$livestream->is_live)
                 <div class="mt-4 text-center text-gray-400 text-sm">

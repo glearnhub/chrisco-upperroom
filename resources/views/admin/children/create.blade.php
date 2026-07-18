@@ -147,6 +147,15 @@
     </div>
 </div>
 
+{{-- Face enrollment note --}}
+<div class="bg-blue-50 border border-blue-200 rounded-xl p-4 flex items-start gap-3">
+    <i class="fas fa-info-circle text-blue-500 mt-0.5"></i>
+    <p class="text-sm text-blue-700">
+        <strong>Face Recognition Attendance:</strong>
+        After saving the child, open the <strong>Edit</strong> page to upload a photo and enroll their face for automatic attendance marking.
+    </p>
+</div>
+
 <div class="flex gap-3">
     <button type="submit" class="btn-red px-8 py-2 font-semibold">
         <i class="fas fa-child mr-2"></i>Add Child

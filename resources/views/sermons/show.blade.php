@@ -43,7 +43,7 @@
                         allowfullscreen>
                     </iframe>
                 </div>
-            @else
+            @elseif(str_starts_with($sermon->video_url, 'https://'))
                 <div class="mb-8 rounded-xl overflow-hidden shadow-xl" style="padding-top: 56.25%; position: relative;">
                     <iframe class="absolute inset-0 w-full h-full" src="{{ $sermon->video_url }}" frameborder="0" allowfullscreen></iframe>
                 </div>
@@ -51,9 +51,9 @@
         @endif
 
         {{-- Audio Player --}}
-        @if($sermon->audio_url)
+        @if($sermon->audio_url && str_starts_with($sermon->audio_url, 'https://'))
             <div class="mb-8 bg-white rounded-xl shadow p-6">
-                <h3 class="font-semibold text-gray-700 mb-3"><i class="fas fa-play-circle mr-2 text-red-600"></i>Watch Sermon</h3>
+                <h3 class="font-semibold text-gray-700 mb-3"><i class="fas fa-play-circle mr-2 text-red-600"></i>Listen to Sermon</h3>
                 <audio controls class="w-full">
                     <source src="{{ $sermon->audio_url }}" type="audio/mpeg">
                     Your browser does not support the audio element.
