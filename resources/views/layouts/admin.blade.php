@@ -155,6 +155,10 @@
             </span>
             @endif
 
+            <a href="{{ route('admin.calendar.index') }}" class="sidebar-link {{ request()->routeIs('admin.calendar.*') ? 'active' : '' }}">
+                <i class="fas fa-calendar-week main-icon"></i> Church Calendar
+            </a>
+
             @if($u->hasPermission('announcements.view'))
             <a href="{{ route('admin.announcements.index') }}" class="sidebar-link {{ request()->routeIs('admin.announcements.*') ? 'active' : '' }}">
                 <i class="fas fa-bullhorn main-icon"></i> Announcements
@@ -311,6 +315,9 @@
             @endif
 
             <div class="mt-6 px-4 py-3 border-t border-gray-700">
+                <a href="{{ route('admin.my-profile.edit') }}" class="sidebar-link {{ request()->routeIs('admin.my-profile.*') ? 'active' : '' }}">
+                    <i class="fas fa-user-circle main-icon"></i> My Profile
+                </a>
                 <a href="{{ route('home') }}" class="sidebar-link text-xs">
                     <i class="fas fa-globe"></i> View Website
                 </a>

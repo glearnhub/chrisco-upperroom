@@ -20,6 +20,25 @@ class AnnouncementController extends Controller
         return view('admin.announcements.index', compact('announcements'));
     }
 
+    public function printView(Request $request)
+    {
+        $announcements = Announcement::where('is_published', true)
+            ->where(function ($q) {
+                $q->whereNull('expires_at')->orWhere('expires_at', '>', now());
+            })
+            ->orderByDesc('is_pinned')
+            ->orderBy('created_at')
+            ->get();
+
+        $monday = now()->startOfWeek(\Carbon\Carbon::MONDAY);
+        $sunday = now()->endOfWeek(\Carbon\Carbon::SUNDAY);
+        $dateLabel = $request->input('date_label',
+            $monday->format('j') . ' ' . $monday->format('M') . ' – ' . $sunday->format('j') . ' ' . $sunday->format('M') . ' ' . $sunday->format('Y')
+        );
+
+        return view('admin.announcements.print', compact('announcements', 'dateLabel'));
+    }
+
     public function create()
     {
         $categories = Announcement::CATEGORIES;

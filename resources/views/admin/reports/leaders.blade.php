@@ -160,6 +160,9 @@ document.addEventListener('DOMContentLoaded', function () {
     window.addEventListener('beforeprint', () => header.classList.remove('hidden'));
     window.addEventListener('afterprint',  () => header.classList.add('hidden'));
 });
+
+
+
 </script>
 @endpush
 

@@ -42,7 +42,7 @@ class PrayerController extends Controller
                 ->where('is_active', true)
                 ->whereIn('office', $leaderOffices)
                 ->orderBy('name')
-                ->get(['id', 'name', 'last_name', 'office'])
+                ->get(['id', 'name', 'last_name', 'office', 'phone'])
             : collect();
 
         return view('admin.prayers.index', compact('prayers', 'leaders'));
@@ -72,9 +72,20 @@ class PrayerController extends Controller
         SystemLog::record('assign', 'prayers',
             "Bulk assigned {$prayers->count()} prayer(s) to {$leader->name}");
 
-        return back()->with('success',
-            $prayers->count() . ' prayer request(s) assigned to ' .
-            trim($leader->name . ' ' . $leader->last_name) . ' and notified by email.');
+        $waPhone = preg_replace('/\D/', '', $leader->phone ?? '');
+        if ($waPhone && str_starts_with($waPhone, '0')) {
+            $waPhone = '254' . substr($waPhone, 1);
+        }
+        $waUrl = $waPhone
+            ? 'https://wa.me/' . $waPhone . '?text=' . rawurlencode(
+                "Hello " . trim($leader->name . ' ' . $leader->last_name) . ",\n\n"
+                . "You have been assigned {$prayers->count()} prayer request(s) on the Chrisco Upper Room Fellowship system. Please check your email for full details and remember to pray and follow up on each one.\n\nGod bless you!")
+            : null;
+
+        return back()
+            ->with('success', $prayers->count() . ' prayer request(s) assigned to ' . trim($leader->name . ' ' . $leader->last_name) . ' and notified by email.')
+            ->with('whatsapp_url', $waUrl)
+            ->with('whatsapp_name', trim($leader->name . ' ' . $leader->last_name));
     }
 
     public function assign(Request $request, PrayerRequest $prayer)
@@ -116,8 +127,8 @@ class PrayerController extends Controller
         }
 
         $allowedStatuses = $user->isSuperAdmin()
-            ? ['pending', 'prayed', 'answered']
-            : ['pending', 'prayed'];
+            ? ['ongoing', 'pending', 'prayed', 'answered']
+            : ['ongoing', 'pending', 'prayed'];
 
         $validated = $request->validate([
             'status' => ['required', 'in:' . implode(',', $allowedStatuses)],

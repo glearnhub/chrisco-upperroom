@@ -14,11 +14,6 @@ class ChurchLeader extends Model
 
     public function getRoleLabelAttribute(): string
     {
-        return match($this->role) {
-            'founder' => 'Founder',
-            'bishop'  => 'Residing Bishop / Senior Pastor',
-            'pastor'  => 'Pastor',
-            default   => 'Church Leader',
-        };
+        return $this->role ?: 'Church Leader';
     }
 }

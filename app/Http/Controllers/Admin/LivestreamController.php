@@ -77,6 +77,14 @@ class LivestreamController extends Controller
             ->with('success', 'Livestream deleted successfully.');
     }
 
+    public function endAll()
+    {
+        $count = Livestream::where('is_live', true)->count();
+        Livestream::where('is_live', true)->update(['is_live' => false]);
+        SystemLog::record('update', 'Livestream', "Ended all {$count} active livestream(s).");
+        return back()->with('success', "All livestreams have been taken offline ({$count} ended).");
+    }
+
     public function toggleLive(Livestream $livestream)
     {
         // If turning this one live, take all others offline first

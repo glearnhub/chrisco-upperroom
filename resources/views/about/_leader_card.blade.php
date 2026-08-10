@@ -8,8 +8,10 @@
         </div>
     @endif
     <div class="p-5">
-        <h4 class="text-lg font-bold" style="color: #0a1f44; font-family: 'Playfair Display', serif;">{{ $leader->name }}</h4>
-        <p class="text-sm font-semibold mt-1" style="color: #c0392b;">{{ $leader->title }}</p>
+        <h4 class="text-lg font-bold" style="color: #1e3a6e; font-family: 'Playfair Display', serif;">{{ str_replace(' and ', ' & ', $leader->title) }}</h4>
+        @if($leader->role)
+        <p class="text-sm font-semibold mt-1 uppercase tracking-wide" style="color: #c0392b;">{{ $leader->role }}</p>
+        @endif
         @if($leader->bio)
             <p class="text-gray-500 text-sm mt-3 leading-relaxed">{{ Str::limit($leader->bio, 120) }}</p>
         @endif

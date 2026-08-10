@@ -14,7 +14,8 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'admin'         => \App\Http\Middleware\AdminMiddleware::class,
             'permission'    => \App\Http\Middleware\CheckPermission::class,
-            'verify.access' => \App\Http\Middleware\CheckVerifyAccess::class,
+            'verify.access'         => \App\Http\Middleware\CheckVerifyAccess::class,
+            'force.password.change' => \App\Http\Middleware\RequirePasswordChange::class,
         ]);
         $middleware->append(\App\Http\Middleware\TrackVisit::class);
     })

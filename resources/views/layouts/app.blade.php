@@ -104,6 +104,9 @@
                             <a href="{{ route('announcements.index') }}">
                                 <i class="fas fa-bullhorn"></i>Announcements
                             </a>
+                            <a href="{{ route('church.calendar') }}">
+                                <i class="fas fa-calendar-week"></i>Church Calendar
+                            </a>
                         </div>
                     </div>
                     <a href="{{ route('give') }}" class="nav-link text-white px-3 py-2 text-sm font-medium">Giving</a>
@@ -158,6 +161,9 @@
                     </a>
                     <a href="{{ route('announcements.index') }}" class="block text-gray-300 py-1.5 text-sm hover:text-yellow-400">
                         <i class="fas fa-bullhorn mr-2 text-yellow-400 text-xs"></i>Announcements
+                    </a>
+                    <a href="{{ route('church.calendar') }}" class="block text-gray-300 py-1.5 text-sm hover:text-yellow-400">
+                        <i class="fas fa-calendar-week mr-2 text-yellow-400 text-xs"></i>Church Calendar
                     </a>
                 </div>
                 <a href="{{ route('give') }}" class="block text-white py-2 text-sm hover:text-yellow-400">

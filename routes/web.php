@@ -42,7 +42,12 @@ use App\Http\Controllers\ApostleTeachingController;
 use App\Http\Controllers\Admin\ApostleTeachingController as AdminApostleTeaching;
 use App\Http\Controllers\Admin\ApostleTeachingCategoryController as AdminApostleCategory;
 use App\Http\Controllers\Admin\ApostleTeachingImportController as AdminApostleImport;
+use App\Http\Controllers\ChurchCalendarController;
+use App\Http\Controllers\Admin\ChurchCalendarController as AdminCalendar;
+use App\Http\Controllers\Admin\ChurchCalendarImportController as AdminCalendarImport;
 use App\Http\Controllers\Admin\SermonImportController as AdminSermonImport;
+use App\Http\Controllers\Admin\MyProfileController as AdminMyProfile;
+use App\Http\Controllers\Admin\ForcePasswordChangeController as AdminForcePassword;
 use Illuminate\Support\Facades\Route;
 
 // -------------------------------------------------------
@@ -83,6 +88,8 @@ Route::get('/livestream', [LivestreamController::class, 'index'])->name('livestr
 Route::get('/prayer', [PrayerController::class, 'index'])->name('prayer.index');
 
 Route::get('/announcements', [AnnouncementController::class, 'index'])->name('announcements.index');
+
+Route::get('/calendar', [ChurchCalendarController::class, 'index'])->name('church.calendar');
 Route::get('/announcements/{announcement}', [AnnouncementController::class, 'show'])->name('announcements.show');
 
 // -------------------------------------------------------
@@ -116,6 +123,13 @@ Route::middleware(['auth', 'admin'])
     ->prefix('admin')
     ->name('admin.')
     ->group(function () {
+
+        // Force password change (no force.password.change middleware here — these ARE the escape routes)
+        Route::get('/force-password-change',   [AdminForcePassword::class, 'show'])->name('password.force.show');
+        Route::patch('/force-password-change', [AdminForcePassword::class, 'update'])->name('password.force.update');
+
+        // All other admin routes require password to not need changing
+        Route::middleware('force.password.change')->group(function () {
 
         Route::get('/dashboard', [AdminDashboard::class, 'index'])->name('dashboard');
 
@@ -241,6 +255,22 @@ Route::middleware(['auth', 'admin'])
         Route::match(['PUT','PATCH'], '/livestreams/{livestream}', [AdminLivestream::class, 'update'])->middleware('permission:livestream.manage')->name('livestreams.update');
         Route::delete('/livestreams/{livestream}',        [AdminLivestream::class, 'destroy'])->middleware('permission:livestream.manage')->name('livestreams.destroy');
         Route::post('/livestreams/{livestream}/toggle-live', [AdminLivestream::class, 'toggleLive'])->middleware('permission:livestream.manage')->name('livestreams.toggleLive');
+        Route::post('/livestreams/end-all',               [AdminLivestream::class, 'endAll'])->middleware('permission:livestream.manage')->name('livestreams.endAll');
+
+        // Church Calendar
+        Route::get('/calendar',                    [AdminCalendar::class, 'index'])->name('calendar.index');
+        Route::get('/calendar/create',             [AdminCalendar::class, 'create'])->name('calendar.create');
+        Route::post('/calendar',                   [AdminCalendar::class, 'store'])->name('calendar.store');
+        Route::get('/calendar/print',              [AdminCalendar::class, 'print'])->name('calendar.print');
+        Route::get('/calendar/import',             [AdminCalendarImport::class, 'showForm'])->name('calendar.import.form');
+        Route::post('/calendar/import',            [AdminCalendarImport::class, 'import'])->name('calendar.import.store');
+        Route::get('/calendar/import/template',    [AdminCalendarImport::class, 'downloadTemplate'])->name('calendar.import.template');
+        Route::get('/calendar/{calendar}/edit',         [AdminCalendar::class, 'edit'])->name('calendar.edit');
+        Route::put('/calendar/{calendar}',              [AdminCalendar::class, 'update'])->name('calendar.update');
+        Route::delete('/calendar/{calendar}',           [AdminCalendar::class, 'destroy'])->name('calendar.destroy');
+        Route::patch('/calendar/{calendar}/visibility', [AdminCalendar::class, 'toggleVisibility'])->name('calendar.toggle-visibility');
+        Route::get('/calendar/{calendar}/publish-event',  [AdminCalendar::class, 'publishEventForm'])->name('calendar.publish-event.form');
+        Route::post('/calendar/{calendar}/publish-event', [AdminCalendar::class, 'publishEventStore'])->name('calendar.publish-event.store');
 
         // Prayer Requests
         Route::get('/prayers',                       [AdminPrayer::class, 'index'])->middleware('permission:prayers.view')->name('prayers.index');
@@ -251,6 +281,7 @@ Route::middleware(['auth', 'admin'])
         // Announcements
         Route::get('/announcements',                                    [AdminAnnouncement::class, 'index'])->middleware('permission:announcements.view')->name('announcements.index');
         Route::get('/announcements/create',                             [AdminAnnouncement::class, 'create'])->middleware('permission:announcements.create')->name('announcements.create');
+        Route::get('/announcements/print',                              [AdminAnnouncement::class, 'printView'])->name('announcements.print');
         Route::post('/announcements',                                   [AdminAnnouncement::class, 'store'])->middleware('permission:announcements.create')->name('announcements.store');
         Route::get('/announcements/{announcement}',                     [AdminAnnouncement::class, 'show'])->middleware('permission:announcements.view')->name('announcements.show');
         Route::get('/announcements/{announcement}/edit',                [AdminAnnouncement::class, 'edit'])->middleware('permission:announcements.edit')->name('announcements.edit');
@@ -272,6 +303,11 @@ Route::middleware(['auth', 'admin'])
         // Correction Requests
         Route::get('/corrections',                   [AdminCorrection::class, 'index'])->middleware('permission:corrections.view')->name('corrections.index');
         Route::patch('/corrections/{correction}',    [AdminCorrection::class, 'update'])->middleware('permission:corrections.manage')->name('corrections.update');
+
+        // My Profile (all admin users)
+        Route::get('/my-profile',          [AdminMyProfile::class, 'edit'])->name('my-profile.edit');
+        Route::patch('/my-profile',        [AdminMyProfile::class, 'update'])->name('my-profile.update');
+        Route::patch('/my-profile/password',[AdminMyProfile::class, 'updatePassword'])->name('my-profile.password');
 
         // Settings (Super Admin only — isSuperAdmin() bypasses permission check in CheckPermission middleware)
         Route::prefix('settings')->name('settings.')->group(function () {
@@ -318,6 +354,8 @@ Route::middleware(['auth', 'admin'])
         Route::get('/members/{user}/edit',    [AdminMember::class, 'edit'])->middleware('permission:members.edit')->name('members.edit');
         Route::match(['PUT','PATCH'], '/members/{user}', [AdminMember::class, 'update'])->middleware('permission:members.edit')->name('members.update');
         Route::patch('/members/{user}/role',  [AdminMember::class, 'updateRole'])->middleware('permission:members.edit')->name('members.updateRole');
+
+        }); // end force.password.change middleware group
     });
 
 require __DIR__.'/auth.php';

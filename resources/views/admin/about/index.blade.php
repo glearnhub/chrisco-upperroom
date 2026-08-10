@@ -63,52 +63,110 @@
 <div id="pane-leaders" class="tab-pane hidden">
 
     {{-- Add Leader Form --}}
+    @php
+        $memberJson = $members->map(fn($m) => [
+            'id'     => $m->id,
+            'label'  => trim($m->name . ' ' . $m->middle_name . ' ' . $m->last_name),
+            'office' => $m->office,
+            'photo'  => $m->profile_photo ? asset('storage/'.$m->profile_photo) : null,
+        ])->values();
+
+        $officeTitle = ['presbyter'=>'Presb.','pastor'=>'Ps.','elder'=>'Elder','deacon'=>'Deacon','deaconess'=>'Deaconess'];
+    @endphp
     <div class="bg-white rounded-xl shadow p-6 mb-6">
-        <h2 class="text-lg font-bold mb-4" style="color: #0a1f44;"><i class="fas fa-user-plus mr-2"></i>Add Leader</h2>
+        <h2 class="text-lg font-bold mb-1" style="color: #0a1f44;"><i class="fas fa-user-plus mr-2"></i>Add Leader</h2>
+        <p class="text-xs text-gray-400 mb-5">Select one member, or two for a couple. Their names auto-fill — just set the ministry role and upload a shared photo.</p>
+
         <form method="POST" action="{{ route('admin.about.leaders.store') }}" enctype="multipart/form-data">
             @csrf
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-1">Full Name <span class="text-red-500">*</span></label>
-                    <input type="text" name="name" value="{{ old('name') }}"
-                        class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="Ps. John Doe">
-                    @error('name')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
+
+            {{-- Person 1 --}}
+            <div class="mb-4">
+                <label class="block text-sm font-semibold text-gray-700 mb-1">Person 1 <span class="text-red-500">*</span></label>
+                <div class="relative">
+                    <input type="text" id="search-1" autocomplete="off" placeholder="Type to search members…"
+                           class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <div id="dropdown-1" class="absolute z-30 w-full bg-white border border-gray-200 rounded-lg shadow-lg mt-1 max-h-52 overflow-y-auto hidden"></div>
                 </div>
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-1">Title / Position <span class="text-red-500">*</span></label>
-                    <input type="text" name="title" value="{{ old('title') }}"
-                        class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="Senior Pastor">
+            </div>
+
+            {{-- Add Couple toggle --}}
+            <div class="mb-4">
+                <button type="button" id="add-couple-btn"
+                        onclick="toggleCouple()"
+                        class="text-xs text-blue-600 hover:text-blue-800 font-semibold flex items-center gap-1">
+                    <i class="fas fa-user-plus"></i> Add Spouse / Partner (couple)
+                </button>
+            </div>
+
+            {{-- Person 2 (hidden by default) --}}
+            <div id="person2-section" class="hidden mb-4">
+                <label class="block text-sm font-semibold text-gray-700 mb-1">
+                    Person 2 <span class="text-gray-400 font-normal">(Spouse / Partner)</span>
+                    <button type="button" onclick="toggleCouple()" class="ml-2 text-xs text-red-400 hover:text-red-600">
+                        <i class="fas fa-times"></i> Remove
+                    </button>
+                </label>
+                <div class="relative">
+                    <input type="text" id="search-2" autocomplete="off" placeholder="Type to search members…"
+                           class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <div id="dropdown-2" class="absolute z-30 w-full bg-white border border-gray-200 rounded-lg shadow-lg mt-1 max-h-52 overflow-y-auto hidden"></div>
+                </div>
+            </div>
+
+            {{-- Auto-generated name preview --}}
+            <div id="name-preview" class="hidden mb-5 flex items-center gap-3 bg-blue-50 border border-blue-200 rounded-xl px-4 py-3">
+                <i class="fas fa-user-friends text-blue-400 text-lg"></i>
+                <p id="name-preview-text" class="text-sm font-semibold text-gray-800"></p>
+                <button type="button" onclick="clearAll()" class="ml-auto text-gray-400 hover:text-red-500 text-xs"><i class="fas fa-times"></i> Clear</button>
+            </div>
+
+            {{-- Hidden name field --}}
+            <input type="hidden" name="name" id="field-name" value="{{ old('name') }}" required>
+
+            @error('name')<p class="text-red-500 text-xs mb-3">{{ $message }}</p>@enderror
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-semibold text-gray-700 mb-1">
+                        Display Name / Title <span class="text-red-500">*</span>
+                        <span class="ml-1 text-gray-400 font-normal text-xs">— auto-filled, edit freely</span>
+                    </label>
+                    <input type="text" name="title" id="field-title" value="{{ old('title') }}"
+                           class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                           placeholder="e.g. Elder Daniel Njenga and Deaconess Christine Njenga">
                     @error('title')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
                 </div>
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-1">Role Category <span class="text-red-500">*</span></label>
-                    <select name="role" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        <option value="founder" {{ old('role') === 'founder' ? 'selected' : '' }}>Founder</option>
-                        <option value="bishop"  {{ old('role') === 'bishop'  ? 'selected' : '' }}>Residing Pastor / Bishop</option>
-                        <option value="pastor"  {{ old('role','pastor') === 'pastor'  ? 'selected' : '' }}>Pastor</option>
-                        <option value="other"   {{ old('role') === 'other'   ? 'selected' : '' }}>Other Church Leader</option>
-                    </select>
+
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-semibold text-gray-700 mb-1">Ministry Role <span class="text-red-500">*</span></label>
+                    <input type="text" name="role" id="field-role" value="{{ old('role') }}"
+                           class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                           placeholder="e.g. Worship Team Leaders, Evangelism Coordinators, Senior Pastor…">
+                    @error('role')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
                 </div>
+
                 <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-1">Photo</label>
+                    <label class="block text-sm font-semibold text-gray-700 mb-1">Photo <span class="text-gray-400 font-normal text-xs">(shared for couple)</span></label>
                     <input type="file" name="photo" accept="image/*"
-                        class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none">
+                           class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none">
                     <p class="text-xs text-gray-400 mt-1">Max 2MB. JPG or PNG recommended.</p>
                 </div>
+
                 <div>
                     <label class="block text-sm font-semibold text-gray-700 mb-1">Display Order</label>
                     <input type="number" name="sort_order" value="{{ old('sort_order', 0) }}" min="0"
-                        class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                           class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
                 </div>
+
                 <div class="md:col-span-2">
                     <label class="block text-sm font-semibold text-gray-700 mb-1">Bio / Short Description</label>
                     <textarea name="bio" rows="3"
-                        class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="A short biography...">{{ old('bio') }}</textarea>
+                              class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              placeholder="A short biography…">{{ old('bio') }}</textarea>
                 </div>
             </div>
+
             <div class="mt-4">
                 <button type="submit" class="btn-red px-5 py-2 text-sm">
                     <i class="fas fa-plus mr-1"></i>Add Leader
@@ -182,13 +240,10 @@
                                             class="w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:outline-none">
                                     </div>
                                     <div>
-                                        <label class="block text-xs font-semibold text-gray-600 mb-1">Role</label>
-                                        <select name="role" class="w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:outline-none">
-                                            <option value="founder" {{ $leader->role === 'founder' ? 'selected' : '' }}>Founder</option>
-                                            <option value="bishop"  {{ $leader->role === 'bishop'  ? 'selected' : '' }}>Residing Pastor / Bishop</option>
-                                            <option value="pastor"  {{ $leader->role === 'pastor'  ? 'selected' : '' }}>Pastor</option>
-                                            <option value="other"   {{ $leader->role === 'other'   ? 'selected' : '' }}>Other Church Leader</option>
-                                        </select>
+                                        <label class="block text-xs font-semibold text-gray-600 mb-1">Ministry Role</label>
+                                        <input type="text" name="role" value="{{ $leader->role }}"
+                                               class="w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:outline-none"
+                                               placeholder="e.g. Worship Team Leaders">
                                     </div>
                                     <div>
                                         <label class="block text-xs font-semibold text-gray-600 mb-1">New Photo</label>
@@ -389,6 +444,118 @@ document.addEventListener('DOMContentLoaded', function () {
     const hash = window.location.hash.replace('#','') || 'info';
     const valid = ['info','leaders','pillars'];
     showTab(valid.includes(hash) ? hash : 'info');
+
+    // ── Member search / auto-populate (couple-aware) ───────────────
+    const members = @json($memberJson);
+
+    const officePrefix = {
+        presbyter: 'Presb.', pastor: 'Ps.', elder: 'Elder',
+        deacon: 'Deacon', deaconess: 'Deaconess'
+    };
+
+    let selected = { 1: null, 2: null };
+    let coupleVisible = false;
+
+    window.toggleCouple = function() {
+        coupleVisible = !coupleVisible;
+        document.getElementById('person2-section').classList.toggle('hidden', !coupleVisible);
+        document.getElementById('add-couple-btn').classList.toggle('hidden', coupleVisible);
+        if (!coupleVisible) {
+            selected[2] = null;
+            document.getElementById('search-2').value = '';
+            rebuildNameFields();
+        }
+    };
+
+    function makeDropdown(slot) {
+        const searchEl   = document.getElementById('search-' + slot);
+        const dropdownEl = document.getElementById('dropdown-' + slot);
+
+        function render(filtered) {
+            dropdownEl.innerHTML = '';
+            if (!filtered.length) {
+                dropdownEl.innerHTML = '<div class="px-4 py-3 text-sm text-gray-400">No members found</div>';
+            }
+            filtered.forEach(m => {
+                const div = document.createElement('div');
+                div.className = 'flex items-center gap-3 px-4 py-2.5 hover:bg-blue-50 cursor-pointer text-sm';
+                const initials = m.label.split(' ').map(w => w[0] || '').slice(0, 2).join('').toUpperCase();
+                div.innerHTML = m.photo
+                    ? `<img src="${m.photo}" class="w-8 h-8 rounded-full object-cover flex-shrink-0">`
+                    : `<div class="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0" style="background:#0a1f44;">${initials}</div>`;
+                div.innerHTML += `<div><span class="font-medium text-gray-800">${m.label}</span> <span class="text-xs text-gray-400 capitalize ml-1">${m.office}</span></div>`;
+                div.addEventListener('click', () => {
+                    selected[slot] = m;
+                    searchEl.value = m.label;
+                    dropdownEl.classList.add('hidden');
+                    rebuildNameFields();
+                });
+                dropdownEl.appendChild(div);
+            });
+            dropdownEl.classList.remove('hidden');
+        }
+
+        searchEl.addEventListener('input', function () {
+            const q = this.value.toLowerCase().trim();
+            if (!q) { dropdownEl.classList.add('hidden'); return; }
+            render(members.filter(m => m.label.toLowerCase().includes(q) || m.office.toLowerCase().includes(q)));
+        });
+        searchEl.addEventListener('focus', function () {
+            const q = this.value.toLowerCase().trim();
+            if (q) render(members.filter(m => m.label.toLowerCase().includes(q)));
+        });
+        document.addEventListener('click', e => {
+            if (!searchEl.contains(e.target) && !dropdownEl.contains(e.target))
+                dropdownEl.classList.add('hidden');
+        });
+    }
+
+    function personTitle(m) {
+        const prefix = officePrefix[m.office] || '';
+        return prefix ? prefix + ' ' + m.label : m.label;
+    }
+
+    function rebuildNameFields() {
+        const p1 = selected[1], p2 = selected[2];
+        const nameField  = document.getElementById('field-name');
+        const titleField = document.getElementById('field-title');
+        const preview    = document.getElementById('name-preview');
+        const previewTxt = document.getElementById('name-preview-text');
+
+        if (!p1 && !p2) {
+            nameField.value = '';
+            preview.classList.add('hidden');
+            return;
+        }
+
+        let combinedName, combinedTitle;
+        if (p1 && p2) {
+            combinedName  = p1.label + ' & ' + p2.label;
+            combinedTitle = personTitle(p1) + ' & ' + personTitle(p2);
+        } else {
+            const p = p1 || p2;
+            combinedName  = p.label;
+            combinedTitle = personTitle(p);
+        }
+
+        nameField.value  = combinedName;
+        titleField.value = combinedTitle;
+
+        previewTxt.textContent = combinedTitle;
+        preview.classList.remove('hidden');
+    }
+
+    window.clearAll = function () {
+        selected = { 1: null, 2: null };
+        document.getElementById('search-1').value = '';
+        document.getElementById('search-2').value = '';
+        document.getElementById('field-name').value  = '';
+        document.getElementById('field-title').value = '';
+        document.getElementById('name-preview').classList.add('hidden');
+    };
+
+    makeDropdown(1);
+    makeDropdown(2);
 });
 </script>
 @endpush

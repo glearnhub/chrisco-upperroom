@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\ChurchLeader;
 use App\Models\ChurchPillar;
 use App\Models\ChurchSetting;
+use App\Models\User;
 use Illuminate\Http\Request;
 
 class AboutController extends Controller
@@ -14,7 +15,13 @@ class AboutController extends Controller
     {
         $leaders = ChurchLeader::orderBy('sort_order')->orderBy('created_at')->get();
         $pillars = ChurchPillar::orderBy('sort_order')->orderBy('created_at')->get();
-        return view('admin.about.index', compact('leaders', 'pillars'));
+
+        $members = User::whereIn('office', ['presbyter','pastor','elder','deacon','deaconess'])
+            ->orderByRaw("CASE office WHEN 'presbyter' THEN 1 WHEN 'pastor' THEN 2 WHEN 'elder' THEN 3 WHEN 'deacon' THEN 4 WHEN 'deaconess' THEN 5 ELSE 6 END")
+            ->orderBy('name')
+            ->get(['id','name','middle_name','last_name','office','profile_photo']);
+
+        return view('admin.about.index', compact('leaders', 'pillars', 'members'));
     }
 
     // ── Church Info (Who We Are / Vision / Mission) ──────────────────────────
@@ -41,7 +48,7 @@ class AboutController extends Controller
         $validated = $request->validate([
             'name'       => 'required|string|max:255',
             'title'      => 'required|string|max:255',
-            'role'       => 'required|in:founder,bishop,pastor,other',
+            'role'       => 'required|string|max:150',
             'bio'        => 'nullable|string',
             'photo'      => 'nullable|image|max:2048',
             'sort_order' => 'nullable|integer|min:0',
@@ -70,7 +77,7 @@ class AboutController extends Controller
         $validated = $request->validate([
             'name'       => 'required|string|max:255',
             'title'      => 'required|string|max:255',
-            'role'       => 'required|in:founder,bishop,pastor,other',
+            'role'       => 'required|string|max:150',
             'bio'        => 'nullable|string',
             'photo'      => 'nullable|image|max:2048',
             'sort_order' => 'nullable|integer|min:0',

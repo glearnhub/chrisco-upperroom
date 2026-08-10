@@ -21,6 +21,7 @@ class User extends Authenticatable
         'belongs_to_home_cell', 'home_cell',
         'assigned_to_deacon', 'deacon_name',
         'office',
+        'must_change_password',
     ];
 
     protected $hidden = ['password', 'remember_token'];
@@ -36,6 +37,7 @@ class User extends Authenticatable
             'assigned_to_deacon'   => 'boolean',
             'is_committed_member'  => 'boolean',
             'is_active'            => 'boolean',
+            'must_change_password' => 'boolean',
         ];
     }
 

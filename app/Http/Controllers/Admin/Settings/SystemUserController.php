@@ -43,9 +43,10 @@ class SystemUserController extends Controller
         }
 
         $user->update([
-            'role'      => 'admin',
-            'password'  => Hash::make($request->password),
-            'is_active' => true,
+            'role'                 => 'admin',
+            'password'             => Hash::make($request->password),
+            'is_active'            => true,
+            'must_change_password' => true,
         ]);
 
         if ($request->roles) {
@@ -112,9 +113,12 @@ class SystemUserController extends Controller
     public function resetPassword(Request $request, User $user)
     {
         $request->validate(['password' => 'required|min:8|confirmed']);
-        $user->update(['password' => Hash::make($request->password)]);
+        $user->update([
+            'password'             => Hash::make($request->password),
+            'must_change_password' => true,
+        ]);
         SystemLog::record('update', 'Settings', "Password reset for {$user->email}.", $user);
-        return back()->with('success', 'Password reset successfully.');
+        return back()->with('success', 'Password reset successfully. The user will be prompted to change it on next login.');
     }
 
     public function destroy(User $user)

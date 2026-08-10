@@ -7,9 +7,15 @@
 
 <div class="flex items-center justify-between mb-6">
     <h1 class="text-2xl font-bold" style="color: #0a1f44;">Announcements</h1>
-    <a href="{{ route('admin.announcements.create') }}" class="btn-red px-4 py-2 text-sm">
-        <i class="fas fa-plus mr-2"></i>Add Announcement
-    </a>
+    <div class="flex items-center gap-2">
+        <a href="{{ route('admin.announcements.print') }}" target="_blank"
+           class="px-4 py-2 text-sm rounded-lg border border-blue-300 text-blue-700 bg-blue-50 hover:bg-blue-100 font-medium transition">
+            <i class="fas fa-print mr-2"></i>Print
+        </a>
+        <a href="{{ route('admin.announcements.create') }}" class="btn-red px-4 py-2 text-sm">
+            <i class="fas fa-plus mr-2"></i>Add Announcement
+        </a>
+    </div>
 </div>
 
 {{-- Bulk Actions Bar --}}
