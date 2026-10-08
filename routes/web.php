@@ -48,6 +48,10 @@ use App\Http\Controllers\Admin\ChurchCalendarImportController as AdminCalendarIm
 use App\Http\Controllers\Admin\SermonImportController as AdminSermonImport;
 use App\Http\Controllers\Admin\MyProfileController as AdminMyProfile;
 use App\Http\Controllers\Admin\ForcePasswordChangeController as AdminForcePassword;
+use App\Http\Controllers\AttendanceController;
+use App\Http\Controllers\EventAttendanceController;
+use App\Http\Controllers\QrCodeController;
+use App\Http\Controllers\Admin\AttendanceController as AdminAttendance;
 use Illuminate\Support\Facades\Route;
 
 // -------------------------------------------------------
@@ -103,6 +107,24 @@ Route::post('/events/{event}/register', [EventController::class, 'register'])->n
 Route::post('/prayer', [PrayerController::class, 'store'])->name('prayer.store');
 
 // -------------------------------------------------------
+// QR code image generator (public)
+Route::get('/qr', [QrCodeController::class, 'generate'])->name('qr.generate')->middleware('throttle:120,1');
+
+// Sunday Check-In (public — no login required)
+// -------------------------------------------------------
+Route::get('/attend', [AttendanceController::class, 'show'])->name('attend.show');
+Route::post('/attend/search', [AttendanceController::class, 'search'])->name('attend.search')->middleware('throttle:60,1');
+Route::post('/attend/checkin', [AttendanceController::class, 'checkin'])->name('attend.checkin')->middleware('throttle:30,1');
+
+// -------------------------------------------------------
+// Event Check-In (public — no login required)
+// -------------------------------------------------------
+Route::get('/attend/event/{event}',         [EventAttendanceController::class, 'show'])->name('attend.event.show');
+Route::post('/attend/event/{event}/search', [EventAttendanceController::class, 'search'])->name('attend.event.search')->middleware('throttle:60,1');
+Route::post('/attend/event/{event}/checkin',[EventAttendanceController::class, 'checkin'])->name('attend.event.checkin')->middleware('throttle:30,1');
+Route::post('/attend/event/{event}/walkin', [EventAttendanceController::class, 'walkin'])->name('attend.event.walkin')->middleware('throttle:20,1');
+
+// -------------------------------------------------------
 // Member Dashboard
 // -------------------------------------------------------
 Route::middleware(['auth', 'verified'])->group(function () {
@@ -139,6 +161,17 @@ Route::middleware(['auth', 'admin'])
         Route::get('/reports/mentorship',      [AdminReport::class, 'mentorship'])->middleware('permission:reports.membership')->name('reports.mentorship');
         Route::get('/reports/children-parent', [AdminReport::class, 'childrenByParent'])->middleware('permission:reports.children')->name('reports.children-parent');
         Route::get('/reports/by-department',   [AdminReport::class, 'byDepartment'])->middleware('permission:reports.membership')->name('reports.by-department');
+        Route::get('/reports/committed',       [AdminReport::class, 'committed'])->middleware('permission:reports.membership')->name('reports.committed');
+        Route::get('/reports/in-commitment',   [AdminReport::class, 'inCommitment'])->middleware('permission:reports.membership')->name('reports.in-commitment');
+        Route::get('/reports/young-converts',  [AdminReport::class, 'youngConverts'])->middleware('permission:reports.membership')->name('reports.young-converts');
+        Route::get('/reports/not-baptised',    [AdminReport::class, 'notBaptised'])->middleware('permission:reports.membership')->name('reports.not-baptised');
+        Route::get('/reports/married',         [AdminReport::class, 'married'])->middleware('permission:reports.membership')->name('reports.married');
+        Route::get('/reports/pearls',          [AdminReport::class, 'pearls'])->middleware('permission:reports.membership')->name('reports.pearls');
+        Route::get('/reports/singles-youths',   [AdminReport::class, 'singlesYouths'])->middleware('permission:reports.membership')->name('reports.singles-youths');
+        Route::get('/reports/transferred-in',   [AdminReport::class, 'transferredIn'])->middleware('permission:reports.membership')->name('reports.transferred-in');
+        Route::get('/reports/transferred-out',  [AdminReport::class, 'transferredOut'])->middleware('permission:reports.membership')->name('reports.transferred-out');
+        Route::get('/reports/active-members',   [AdminReport::class, 'activeMembers'])->middleware('permission:reports.membership')->name('reports.active-members');
+        Route::get('/reports/inactive-members', [AdminReport::class, 'inactiveMembers'])->middleware('permission:reports.membership')->name('reports.inactive-members');
         Route::get('/reports/events',                                              [AdminEventReport::class, 'index'])->middleware('permission:reports.events')->name('reports.events');
         Route::get('/reports/events/{event}',                                      [AdminEventReport::class, 'show'])->middleware('permission:reports.events')->name('reports.events.show');
         Route::get('/reports/events/{event}/attendance/search',                    [AdminEventReport::class, 'searchAttendee'])->middleware('permission:reports.events')->name('reports.events.attendance.search');
@@ -240,6 +273,11 @@ Route::middleware(['auth', 'admin'])
         Route::get('/events/{event}/edit', [AdminEvent::class, 'edit'])->middleware('permission:events.edit')->name('events.edit');
         Route::match(['PUT','PATCH'], '/events/{event}', [AdminEvent::class, 'update'])->middleware('permission:events.edit')->name('events.update');
         Route::delete('/events/{event}',   [AdminEvent::class, 'destroy'])->middleware('permission:events.delete')->name('events.destroy');
+        // Event check-in usher panel
+        Route::get('/events/{event}/checkin',                [AdminEvent::class, 'checkin'])->middleware('permission:attendance.view')->name('events.checkin');
+        Route::get('/events/{event}/checkin/search',         [AdminEvent::class, 'checkinSearch'])->middleware('permission:attendance.view')->name('events.checkin.search');
+        Route::post('/events/{event}/checkin/mark/{registration}', [AdminEvent::class, 'checkinMark'])->middleware('permission:attendance.manage')->name('events.checkin.mark');
+        Route::post('/events/{event}/checkin/walkin',        [AdminEvent::class, 'checkinWalkin'])->middleware('permission:attendance.manage')->name('events.checkin.walkin');
 
         // Donations
         Route::get('/donations',                          [AdminDonation::class, 'index'])->middleware('permission:givings.view')->name('donations.index');
@@ -292,10 +330,12 @@ Route::middleware(['auth', 'admin'])
 
         // About Us
         Route::get('/about',                          [AdminAbout::class, 'index'])->middleware('permission:about.manage')->name('about.index');
+        Route::post('/about/hero-image',              [AdminAbout::class, 'updateHeroImage'])->middleware('permission:about.manage')->name('about.hero-image.update');
         Route::post('/about/info',                    [AdminAbout::class, 'updateInfo'])->middleware('permission:about.manage')->name('about.updateInfo');
         Route::post('/about/leaders',                 [AdminAbout::class, 'storeLeader'])->middleware('permission:about.manage')->name('about.leaders.store');
         Route::post('/about/leaders/{leader}',        [AdminAbout::class, 'updateLeader'])->middleware('permission:about.manage')->name('about.leaders.update');
         Route::delete('/about/leaders/{leader}',      [AdminAbout::class, 'destroyLeader'])->middleware('permission:about.manage')->name('about.leaders.destroy');
+        Route::post('/about/service-times',           [AdminAbout::class, 'updateServiceTimes'])->middleware('permission:about.manage')->name('about.service-times.update');
         Route::post('/about/pillars',                 [AdminAbout::class, 'storePillar'])->middleware('permission:about.manage')->name('about.pillars.store');
         Route::post('/about/pillars/{pillar}',        [AdminAbout::class, 'updatePillar'])->middleware('permission:about.manage')->name('about.pillars.update');
         Route::delete('/about/pillars/{pillar}',      [AdminAbout::class, 'destroyPillar'])->middleware('permission:about.manage')->name('about.pillars.destroy');
@@ -303,6 +343,18 @@ Route::middleware(['auth', 'admin'])
         // Correction Requests
         Route::get('/corrections',                   [AdminCorrection::class, 'index'])->middleware('permission:corrections.view')->name('corrections.index');
         Route::patch('/corrections/{correction}',    [AdminCorrection::class, 'update'])->middleware('permission:corrections.manage')->name('corrections.update');
+
+        // Attendance
+        Route::get('/attendance',                                           [AdminAttendance::class, 'index'])->middleware('permission:attendance.view')->name('attendance.index');
+        Route::post('/attendance/open',                                     [AdminAttendance::class, 'open'])->middleware('permission:attendance.manage')->name('attendance.open');
+        Route::post('/attendance/close/{session}',                         [AdminAttendance::class, 'close'])->middleware('permission:attendance.manage')->name('attendance.close');
+        Route::get('/attendance/qr-codes',                                  [AdminAttendance::class, 'qrCodes'])->middleware('permission:attendance.view')->name('attendance.qr-codes');
+        Route::get('/attendance/report',                                    [AdminAttendance::class, 'report'])->middleware('permission:attendance.view')->name('attendance.report');
+        Route::get('/attendance/session/{session}',                        [AdminAttendance::class, 'session'])->middleware('permission:attendance.view')->name('attendance.session');
+        Route::get('/attendance/session/{session}/search',                 [AdminAttendance::class, 'searchMember'])->middleware('permission:attendance.view')->name('attendance.session.search');
+        Route::get('/attendance/session/{session}/count',                  fn(\App\Models\ServiceSession $session) => response()->json(['count' => $session->attendanceCount()]))->middleware('permission:attendance.view')->name('attendance.session.count');
+        Route::post('/attendance/session/{session}/checkin',               [AdminAttendance::class, 'ushercheckin'])->middleware('permission:attendance.manage')->name('attendance.session.checkin');
+        Route::delete('/attendance/checkin/{attendance}',                  [AdminAttendance::class, 'undoCheckin'])->middleware('permission:attendance.manage')->name('attendance.checkin.undo');
 
         // My Profile (all admin users)
         Route::get('/my-profile',          [AdminMyProfile::class, 'edit'])->name('my-profile.edit');
