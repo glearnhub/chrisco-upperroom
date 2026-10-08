@@ -355,6 +355,8 @@ Route::middleware(['auth', 'admin'])
         Route::get('/attendance/session/{session}/count',                  fn(\App\Models\ServiceSession $session) => response()->json(['count' => $session->attendanceCount()]))->middleware('permission:attendance.view')->name('attendance.session.count');
         Route::post('/attendance/session/{session}/checkin',               [AdminAttendance::class, 'ushercheckin'])->middleware('permission:attendance.manage')->name('attendance.session.checkin');
         Route::delete('/attendance/checkin/{attendance}',                  [AdminAttendance::class, 'undoCheckin'])->middleware('permission:attendance.manage')->name('attendance.checkin.undo');
+        Route::post('/attendance/followup',                                [AdminAttendance::class, 'saveFollowup'])->middleware('permission:attendance.view')->name('attendance.followup.save');
+        Route::delete('/attendance/followup',                              [AdminAttendance::class, 'deleteFollowup'])->middleware('permission:attendance.view')->name('attendance.followup.delete');
 
         // My Profile (all admin users)
         Route::get('/my-profile',          [AdminMyProfile::class, 'edit'])->name('my-profile.edit');

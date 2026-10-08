@@ -269,11 +269,13 @@
                     <th class="px-4 py-3 text-center text-xs font-semibold text-red-700 uppercase tracking-wide">Attended</th>
                     <th class="px-4 py-3 text-center text-xs font-semibold text-red-700 uppercase tracking-wide">Missed</th>
                     <th class="px-4 py-3 text-left text-xs font-semibold text-red-700 uppercase tracking-wide hidden md:table-cell">Sundays Present</th>
+                    <th class="px-4 py-3 text-left text-xs font-semibold text-red-700 uppercase tracking-wide no-print">Follow-Up</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-gray-50">
                 @foreach($inactiveMembers as $i => $m)
-                <tr class="hover:bg-red-50">
+                @php $fu = $followups[$m->id] ?? null; @endphp
+                <tr class="hover:bg-red-50" id="row-{{ $m->id }}">
                     <td class="px-4 py-3 text-gray-400 text-xs">{{ $i + 1 }}</td>
                     <td class="px-4 py-3">
                         <div class="font-semibold text-gray-800">{{ $m->full_name }}</div>
@@ -294,7 +296,38 @@
                     <td class="px-4 py-3 text-xs text-gray-500 hidden md:table-cell">
                         {{ count($m->attended_dates) ? implode(', ', array_map(fn($d) => \Carbon\Carbon::parse($d)->format('d M'), $m->attended_dates)) : 'None' }}
                     </td>
+                    <td class="px-4 py-3 no-print" style="min-width:160px;">
+                        {{-- Follow-up status badge (shown when recorded) --}}
+                        <div id="fu-badge-{{ $m->id }}" class="{{ $fu ? '' : 'hidden' }}">
+                            <span id="fu-label-{{ $m->id }}"
+                                  class="inline-block px-2 py-0.5 rounded text-xs font-semibold bg-blue-100 text-blue-700 cursor-pointer"
+                                  onclick="openFollowupModal({{ $m->id }}, '{{ addslashes($m->full_name) }}')">
+                                {{ $fu ? $fu->reason_label : '' }}
+                            </span>
+                            @if($fu && $fu->transferred_to)
+                            <div id="fu-church-{{ $m->id }}" class="text-xs text-gray-500 mt-0.5">→ {{ $fu->transferred_to }}</div>
+                            @else
+                            <div id="fu-church-{{ $m->id }}" class="text-xs text-gray-500 mt-0.5 hidden"></div>
+                            @endif
+                        </div>
+                        {{-- Record button (shown when no follow-up yet) --}}
+                        <button id="fu-btn-{{ $m->id }}"
+                                onclick="openFollowupModal({{ $m->id }}, '{{ addslashes($m->full_name) }}')"
+                                class="text-xs px-2 py-1 rounded border font-semibold {{ $fu ? 'hidden' : '' }}"
+                                style="border-color:#dc2626;color:#dc2626;">
+                            <i class="fas fa-plus mr-1"></i>Record Reason
+                        </button>
+                    </td>
                 </tr>
+                {{-- Hidden data for JS --}}
+                <script>
+                window._fuData = window._fuData || {};
+                window._fuData[{{ $m->id }}] = {
+                    reason: '{{ $fu?->reason ?? '' }}',
+                    transferred_to: '{{ addslashes($fu?->transferred_to ?? '') }}',
+                    notes: '{{ addslashes($fu?->notes ?? '') }}',
+                };
+                </script>
                 @endforeach
             </tbody>
         </table>
@@ -304,6 +337,65 @@
             <i class="fas fa-check-double mr-2 text-green-400"></i>No inactive members this month.
         </div>
         @endif
+    </div>
+
+    {{-- ── FOLLOW-UP MODAL ── --}}
+    <div id="fu-modal" class="fixed inset-0 z-50 hidden overflow-y-auto" style="background:rgba(0,0,0,.45);">
+        <div class="flex items-center justify-center min-h-full p-4">
+            <div class="bg-white rounded-xl shadow-xl w-full max-w-md">
+                <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+                    <h3 class="font-bold text-base" style="color:#0a1f44;">
+                        <i class="fas fa-clipboard-list mr-2"></i>Follow-Up Reason
+                    </h3>
+                    <button onclick="closeFollowupModal()" class="text-gray-400 hover:text-gray-600 text-lg leading-none">&times;</button>
+                </div>
+                <div class="px-5 py-4">
+                    <p class="text-sm text-gray-500 mb-4">Recording reason for: <strong id="fu-modal-name" class="text-gray-800"></strong></p>
+                    <input type="hidden" id="fu-modal-uid">
+
+                    <div class="mb-4">
+                        <label class="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1">Reason for Missing</label>
+                        <select id="fu-modal-reason"
+                                onchange="document.getElementById('fu-church-wrap').style.display = this.value === 'transferred' ? 'block' : 'none'"
+                                class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
+                            <option value="">— Select reason —</option>
+                            @foreach($reasonLabels as $val => $label)
+                            <option value="{{ $val }}">{{ $label }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div id="fu-church-wrap" class="mb-4 hidden">
+                        <label class="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1">Church Transferred To</label>
+                        <input type="text" id="fu-modal-church" placeholder="e.g. Chrisco Upper Room Westlands"
+                               class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1">Notes <span class="text-gray-400 font-normal">(optional)</span></label>
+                        <textarea id="fu-modal-notes" rows="2" placeholder="Any additional details…"
+                                  class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:border-blue-500 resize-none"></textarea>
+                    </div>
+
+                    <div id="fu-modal-err" class="hidden mb-3 text-sm text-red-600 font-semibold"></div>
+                </div>
+                <div class="px-5 pb-4 flex items-center gap-3">
+                    <button onclick="saveFollowup()"
+                            class="flex-1 py-2 rounded-lg text-sm font-bold text-white"
+                            style="background:#0a1f44;">
+                        <i class="fas fa-save mr-1"></i> Save
+                    </button>
+                    <button id="fu-modal-clear-btn" onclick="clearFollowup()"
+                            class="px-4 py-2 rounded-lg border border-gray-300 text-sm font-semibold text-gray-600 hover:bg-gray-50 hidden">
+                        <i class="fas fa-trash mr-1"></i> Clear
+                    </button>
+                    <button onclick="closeFollowupModal()"
+                            class="px-4 py-2 rounded-lg border border-gray-300 text-sm font-semibold text-gray-600 hover:bg-gray-50">
+                        Cancel
+                    </button>
+                </div>
+            </div>
+        </div>
     </div>
 
     {{-- ── IRREGULAR MEMBERS ── --}}
@@ -358,3 +450,99 @@
 
 </div>
 @endsection
+
+@push('scripts')
+<script>
+const FU_SAVE_URL   = '{{ route('admin.attendance.followup.save') }}';
+const FU_DELETE_URL = '{{ route('admin.attendance.followup.delete') }}';
+const CSRF          = document.querySelector('meta[name="csrf-token"]').content;
+const REPORT_YEAR   = {{ $year }};
+const REPORT_MONTH  = {{ $month }};
+
+let _fuModalUid = null;
+
+function openFollowupModal(uid, name) {
+    _fuModalUid = uid;
+    document.body.style.overflow = 'hidden';
+    document.getElementById('fu-modal-name').textContent = name;
+    document.getElementById('fu-modal-uid').value = uid;
+    document.getElementById('fu-modal-err').classList.add('hidden');
+
+    const existing = (window._fuData || {})[uid] || {};
+    const reason = existing.reason || '';
+    document.getElementById('fu-modal-reason').value = reason;
+    document.getElementById('fu-modal-church').value = existing.transferred_to || '';
+    document.getElementById('fu-modal-notes').value  = existing.notes || '';
+    document.getElementById('fu-church-wrap').style.display = reason === 'transferred' ? 'block' : 'none';
+    document.getElementById('fu-modal-clear-btn').classList.toggle('hidden', !reason);
+
+    document.getElementById('fu-modal').classList.remove('hidden');
+}
+
+function closeFollowupModal() {
+    document.getElementById('fu-modal').classList.add('hidden');
+    document.body.style.overflow = '';
+    _fuModalUid = null;
+}
+
+async function saveFollowup() {
+    const uid    = _fuModalUid;
+    const reason = document.getElementById('fu-modal-reason').value;
+    const church = document.getElementById('fu-modal-church').value.trim();
+    const notes  = document.getElementById('fu-modal-notes').value.trim();
+    const errEl  = document.getElementById('fu-modal-err');
+
+    if (!reason) { errEl.textContent = 'Please select a reason.'; errEl.classList.remove('hidden'); return; }
+    if (reason === 'transferred' && !church) { errEl.textContent = 'Please enter the church name.'; errEl.classList.remove('hidden'); return; }
+    errEl.classList.add('hidden');
+
+    try {
+        const res = await fetch(FU_SAVE_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' },
+            body: JSON.stringify({ user_id: uid, year: REPORT_YEAR, month: REPORT_MONTH, reason, transferred_to: church, notes }),
+        });
+        const d = await res.json();
+        if (!d.success) throw new Error('Server error');
+
+        // Update local cache
+        window._fuData = window._fuData || {};
+        window._fuData[uid] = { reason, transferred_to: church, notes };
+
+        // Update the row badge
+        document.getElementById('fu-label-' + uid).textContent = d.reason_label;
+        const churchEl = document.getElementById('fu-church-' + uid);
+        if (d.transferred_to) { churchEl.textContent = '→ ' + d.transferred_to; churchEl.classList.remove('hidden'); }
+        else { churchEl.textContent = ''; churchEl.classList.add('hidden'); }
+        document.getElementById('fu-badge-' + uid).classList.remove('hidden');
+        document.getElementById('fu-btn-' + uid).classList.add('hidden');
+
+        closeFollowupModal();
+    } catch(e) {
+        errEl.textContent = 'Failed to save. Please try again.';
+        errEl.classList.remove('hidden');
+    }
+}
+
+async function clearFollowup() {
+    const uid = _fuModalUid;
+    try {
+        await fetch(FU_DELETE_URL, {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' },
+            body: JSON.stringify({ user_id: uid, year: REPORT_YEAR, month: REPORT_MONTH }),
+        });
+        window._fuData = window._fuData || {};
+        window._fuData[uid] = { reason: '', transferred_to: '', notes: '' };
+        document.getElementById('fu-badge-' + uid).classList.add('hidden');
+        document.getElementById('fu-btn-' + uid).classList.remove('hidden');
+        closeFollowupModal();
+    } catch(e) {}
+}
+
+// Close modal on backdrop click
+document.getElementById('fu-modal').addEventListener('click', function(e) {
+    if (e.target === this) closeFollowupModal();
+});
+</script>
+@endpush

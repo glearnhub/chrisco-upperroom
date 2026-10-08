@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\ServiceSession;
 use App\Models\ServiceAttendance;
+use App\Models\AttendanceFollowup;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
@@ -272,12 +273,68 @@ class AttendanceController extends Controller
 
         $monthName = $startOfMonth->format('F Y');
 
+        // Load existing follow-ups for this month
+        $memberIds = $members->pluck('id')->toArray();
+        $followups = AttendanceFollowup::where('year', $year)
+            ->where('month', $month)
+            ->whereIn('user_id', $memberIds)
+            ->with('recordedBy')
+            ->get()
+            ->keyBy('user_id');
+
+        $reasonLabels = AttendanceFollowup::$reasonLabels;
+
         return view('admin.attendance.report', compact(
             'year', 'month', 'monthName', 'sundays', 'totalSundays',
             'sessions', 'sundaysWithSession',
             'members', 'activeMembers', 'inactiveMembers', 'irregularMembers',
-            'startOfMonth'
+            'startOfMonth', 'followups', 'reasonLabels'
         ));
+    }
+
+    // POST /admin/attendance/followup — save/update a follow-up reason for an inactive member
+    public function saveFollowup(Request $request)
+    {
+        $data = $request->validate([
+            'user_id'        => 'required|exists:users,id',
+            'year'           => 'required|integer|min:2020|max:2100',
+            'month'          => 'required|integer|min:1|max:12',
+            'reason'         => 'required|in:transferred,left_church,unwell,job_related,mission_field,other',
+            'transferred_to' => 'nullable|string|max:200',
+            'notes'          => 'nullable|string|max:500',
+        ]);
+
+        $followup = AttendanceFollowup::updateOrCreate(
+            ['user_id' => $data['user_id'], 'year' => $data['year'], 'month' => $data['month']],
+            array_merge($data, ['recorded_by' => auth()->id()])
+        );
+
+        $followup->load('recordedBy');
+
+        return response()->json([
+            'success'       => true,
+            'reason_label'  => AttendanceFollowup::$reasonLabels[$followup->reason] ?? $followup->reason,
+            'transferred_to'=> $followup->transferred_to,
+            'notes'         => $followup->notes,
+            'recorded_by'   => $followup->recordedBy?->full_name ?? 'Unknown',
+        ]);
+    }
+
+    // DELETE /admin/attendance/followup — clear a follow-up record
+    public function deleteFollowup(Request $request)
+    {
+        $request->validate([
+            'user_id' => 'required|exists:users,id',
+            'year'    => 'required|integer',
+            'month'   => 'required|integer',
+        ]);
+
+        AttendanceFollowup::where('user_id', $request->user_id)
+            ->where('year', $request->year)
+            ->where('month', $request->month)
+            ->delete();
+
+        return response()->json(['success' => true]);
     }
 
     // GET /admin/attendance/qr-codes — static QR download page
