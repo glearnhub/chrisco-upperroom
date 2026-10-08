@@ -273,6 +273,7 @@
                 </tr>
             </thead>
             <tbody class="divide-y divide-gray-50">
+                @php $fuDataPrinted = []; @endphp
                 @foreach($inactiveMembers as $i => $m)
                 @php $fu = $followups[$m->id] ?? null; @endphp
                 <tr class="hover:bg-red-50" id="row-{{ $m->id }}">
@@ -319,7 +320,7 @@
                         </button>
                     </td>
                 </tr>
-                {{-- Hidden data for JS --}}
+                @php $fuDataPrinted[$m->id] = true; @endphp
                 <script>
                 window._fuData = window._fuData || {};
                 window._fuData[{{ $m->id }}] = {
@@ -419,11 +420,13 @@
                     <th class="px-4 py-3 text-center text-xs font-semibold text-yellow-700 uppercase tracking-wide">Attended</th>
                     <th class="px-4 py-3 text-center text-xs font-semibold text-yellow-700 uppercase tracking-wide">Missed</th>
                     <th class="px-4 py-3 text-left text-xs font-semibold text-yellow-700 uppercase tracking-wide hidden md:table-cell">Sundays Present</th>
+                    <th class="px-4 py-3 text-left text-xs font-semibold text-yellow-700 uppercase tracking-wide no-print">Follow-Up</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-gray-50">
                 @foreach($irregularMembers as $i => $m)
-                <tr class="hover:bg-yellow-50">
+                @php $fu = $followups[$m->id] ?? null; @endphp
+                <tr class="hover:bg-yellow-50" id="row-{{ $m->id }}">
                     <td class="px-4 py-3 text-gray-400 text-xs">{{ $i + 1 }}</td>
                     <td class="px-4 py-3">
                         <div class="font-semibold text-gray-800">{{ $m->full_name }}</div>
@@ -440,7 +443,38 @@
                     <td class="px-4 py-3 text-xs text-gray-500 hidden md:table-cell">
                         {{ count($m->attended_dates) ? implode(', ', array_map(fn($d) => \Carbon\Carbon::parse($d)->format('d M'), $m->attended_dates)) : 'None' }}
                     </td>
+                    <td class="px-4 py-3 no-print" style="min-width:160px;">
+                        <div id="fu-badge-{{ $m->id }}" class="{{ $fu ? '' : 'hidden' }}">
+                            <span id="fu-label-{{ $m->id }}"
+                                  class="inline-block px-2 py-0.5 rounded text-xs font-semibold bg-blue-100 text-blue-700 cursor-pointer"
+                                  onclick="openFollowupModal({{ $m->id }}, '{{ addslashes($m->full_name) }}')">
+                                {{ $fu ? $fu->reason_label : '' }}
+                            </span>
+                            @if($fu && $fu->transferred_to)
+                            <div id="fu-church-{{ $m->id }}" class="text-xs text-gray-500 mt-0.5">→ {{ $fu->transferred_to }}</div>
+                            @else
+                            <div id="fu-church-{{ $m->id }}" class="text-xs text-gray-500 mt-0.5 hidden"></div>
+                            @endif
+                        </div>
+                        <button id="fu-btn-{{ $m->id }}"
+                                onclick="openFollowupModal({{ $m->id }}, '{{ addslashes($m->full_name) }}')"
+                                class="text-xs px-2 py-1 rounded border font-semibold {{ $fu ? 'hidden' : '' }}"
+                                style="border-color:#d97706;color:#d97706;">
+                            <i class="fas fa-plus mr-1"></i>Record Reason
+                        </button>
+                    </td>
                 </tr>
+                @if(!isset($fuDataPrinted[$m->id]))
+                <script>
+                window._fuData = window._fuData || {};
+                window._fuData[{{ $m->id }}] = window._fuData[{{ $m->id }}] || {
+                    reason: '{{ $fu?->reason ?? '' }}',
+                    transferred_to: '{{ addslashes($fu?->transferred_to ?? '') }}',
+                    notes: '{{ addslashes($fu?->notes ?? '') }}',
+                };
+                </script>
+                @php $fuDataPrinted[$m->id] = true; @endphp
+                @endif
                 @endforeach
             </tbody>
         </table>
