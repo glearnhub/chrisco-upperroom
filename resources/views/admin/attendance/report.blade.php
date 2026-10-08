@@ -210,8 +210,6 @@
                 <tr>
                     <th class="px-4 py-3 text-left text-xs font-semibold text-green-700 uppercase tracking-wide">#</th>
                     <th class="px-4 py-3 text-left text-xs font-semibold text-green-700 uppercase tracking-wide">Name</th>
-                    <th class="px-4 py-3 text-left text-xs font-semibold text-green-700 uppercase tracking-wide hidden sm:table-cell">Phone</th>
-                    <th class="px-4 py-3 text-left text-xs font-semibold text-green-700 uppercase tracking-wide hidden lg:table-cell">Department</th>
                     <th class="px-4 py-3 text-center text-xs font-semibold text-green-700 uppercase tracking-wide">Attended</th>
                     <th class="px-4 py-3 text-center text-xs font-semibold text-green-700 uppercase tracking-wide">Missed</th>
                     <th class="px-4 py-3 text-left text-xs font-semibold text-green-700 uppercase tracking-wide hidden md:table-cell">Sundays Present</th>
@@ -221,12 +219,7 @@
                 @foreach($activeMembers as $i => $m)
                 <tr class="hover:bg-green-50">
                     <td class="px-4 py-3 text-gray-400 text-xs">{{ $i + 1 }}</td>
-                    <td class="px-4 py-3">
-                        <div class="font-semibold text-gray-800">{{ $m->full_name }}</div>
-                        @if($m->office)<div class="text-xs text-gray-400">{{ $m->office }}</div>@endif
-                    </td>
-                    <td class="px-4 py-3 text-gray-600 hidden sm:table-cell">{{ $m->phone ?: '—' }}</td>
-                    <td class="px-4 py-3 text-gray-500 text-xs hidden lg:table-cell">{{ $m->department ?: '—' }}</td>
+                    <td class="px-4 py-3 font-semibold text-gray-800">{{ $m->full_name }}</td>
                     <td class="px-4 py-3 text-center">
                         <span class="inline-block px-2 py-0.5 rounded-full text-xs font-bold bg-green-100 text-green-700">
                             {{ $m->sundays_attended }} / {{ $totalSundays }}
