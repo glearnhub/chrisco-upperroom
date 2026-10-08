@@ -28,7 +28,7 @@
                     $sc = $statusColors[$req->status];
                 @endphp
                 <div class="p-5 {{ $req->status === 'pending' ? 'bg-yellow-50' : '' }}">
-                    <div class="flex items-start justify-between gap-4">
+                    <div class="flex flex-col sm:flex-row items-start gap-4">
                         <div class="flex items-start gap-4 flex-1">
                             <div class="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 text-sm" style="background: #0a1f44;">
                                 {{ strtoupper(substr($req->user->name ?? 'U', 0, 1)) }}
@@ -57,7 +57,7 @@
                         </div>
 
                         {{-- Quick update form --}}
-                        <form method="POST" action="{{ route('admin.corrections.update', $req) }}" class="flex-shrink-0 w-52">
+                        <form method="POST" action="{{ route('admin.corrections.update', $req) }}" class="flex-shrink-0 w-full sm:w-52">
                             @csrf @method('PATCH')
                             <select name="status" class="w-full border border-gray-300 rounded px-2 py-1.5 text-xs mb-2">
                                 <option value="pending"  {{ $req->status === 'pending'  ? 'selected' : '' }}>Pending</option>

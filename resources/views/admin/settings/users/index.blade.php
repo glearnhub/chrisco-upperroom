@@ -12,6 +12,7 @@
 </div>
 
 <div class="bg-white rounded-xl shadow overflow-hidden">
+    <div class="overflow-x-auto">
     <table class="w-full text-sm">
         <thead style="background:#0a1f44; color:#fff;">
             <tr>
@@ -72,6 +73,7 @@
             @endforelse
         </tbody>
     </table>
+    </div>{{-- /overflow-x-auto --}}
 </div>
 
 <div class="mt-4">{{ $users->links() }}</div>

@@ -10,38 +10,172 @@
     <p class="text-gray-500 text-sm">Welcome back, {{ auth()->user()->name }}</p>
 </div>
 
-{{-- Stats Cards --}}
-<div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
-    <div class="bg-white rounded-xl shadow p-4 text-center">
-        <i class="fas fa-users text-2xl mb-2" style="color: #0a1f44;"></i>
-        <p class="text-2xl font-bold" style="color: #0a1f44;">{{ $totalMembers ?? 0 }}</p>
-        <p class="text-xs text-gray-500 mt-1">Members</p>
+{{-- Member Stats Cards --}}
+<div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
+
+    {{-- Total Members --}}
+    <a href="{{ route('admin.members.index') }}"
+        class="bg-white rounded-xl shadow p-4 flex items-center gap-4 hover:shadow-md transition group">
+        <div class="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0" style="background:#eef2ff;">
+            <i class="fas fa-users text-xl" style="color:#0a1f44;"></i>
+        </div>
+        <div>
+            <p class="text-2xl font-bold leading-none" style="color:#0a1f44;">{{ $memberStats['total'] ?? 0 }}</p>
+            <p class="text-xs text-gray-500 mt-1">Total Members</p>
+        </div>
+    </a>
+
+    {{-- Leaders --}}
+    <div class="bg-white rounded-xl shadow p-4 hover:shadow-md transition cursor-default leader-card" style="position:relative;">
+        <div class="flex items-center gap-4">
+            <div class="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0" style="background:#fff8e1;">
+                <i class="fas fa-crown text-xl" style="color:#f0a500;"></i>
+            </div>
+            <div>
+                <p class="text-2xl font-bold leading-none" style="color:#0a1f44;">{{ $memberStats['leaders'] ?? 0 }}</p>
+                <p class="text-xs text-gray-500 mt-1">Leaders <i class="fas fa-chevron-down text-xs ml-1 text-gray-400"></i></p>
+            </div>
+        </div>
+        {{-- Breakdown dropdown --}}
+        <div class="leader-breakdown absolute left-0 top-full mt-1 z-20 bg-white border border-gray-100 rounded-xl shadow-xl p-3 w-52 text-xs"
+            style="display:none;">
+            @foreach([
+                ['Presbyters',  $memberStats['presbyters']  ?? 0, 'fa-star'],
+                ['Pastors',     $memberStats['pastors']     ?? 0, 'fa-user-tie'],
+                ['Elders',      $memberStats['elders']      ?? 0, 'fa-church'],
+                ['Deacons',     $memberStats['deacons']     ?? 0, 'fa-hand-holding-heart'],
+                ['Deaconesses', $memberStats['deaconesses'] ?? 0, 'fa-hand-holding-heart'],
+            ] as [$label, $count, $icon])
+            <div class="flex items-center justify-between py-1.5 border-b border-gray-50 last:border-0">
+                <span class="flex items-center gap-2 text-gray-600">
+                    <i class="fas {{ $icon }} w-4 text-center" style="color:#f0a500;"></i> {{ $label }}
+                </span>
+                <span class="font-bold" style="color:#0a1f44;">{{ $count }}</span>
+            </div>
+            @endforeach
+        </div>
     </div>
-    <div class="bg-white rounded-xl shadow p-4 text-center">
-        <i class="fas fa-bible text-2xl mb-2" style="color: #c0392b;"></i>
-        <p class="text-2xl font-bold" style="color: #0a1f44;">{{ $totalSermons ?? 0 }}</p>
-        <p class="text-xs text-gray-500 mt-1">Sermons</p>
+
+    {{-- Total Men --}}
+    <div class="bg-white rounded-xl shadow p-4 flex items-center gap-4 hover:shadow-md transition">
+        <div class="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0" style="background:#eff6ff;">
+            <i class="fas fa-male text-xl" style="color:#0a1f44;"></i>
+        </div>
+        <div>
+            <p class="text-2xl font-bold leading-none" style="color:#0a1f44;">{{ $memberStats['men'] ?? 0 }}</p>
+            <p class="text-xs text-gray-500 mt-1">Total Men</p>
+        </div>
     </div>
-    <div class="bg-white rounded-xl shadow p-4 text-center">
-        <i class="fas fa-chart-line text-2xl mb-2" style="color: #f0a500;"></i>
-        <p class="text-2xl font-bold" style="color: #0a1f44;">{{ number_format($totalVisits ?? 0) }}</p>
-        <p class="text-xs text-gray-500 mt-1">Unique Visitors</p>
-        <p class="text-xs font-semibold mt-0.5" style="color:#f0a500;">{{ $todayVisits ?? 0 }} today</p>
+
+    {{-- Total Women --}}
+    <div class="bg-white rounded-xl shadow p-4 flex items-center gap-4 hover:shadow-md transition">
+        <div class="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0" style="background:#fdf2f8;">
+            <i class="fas fa-female text-xl" style="color:#9d174d;"></i>
+        </div>
+        <div>
+            <p class="text-2xl font-bold leading-none" style="color:#0a1f44;">{{ $memberStats['women'] ?? 0 }}</p>
+            <p class="text-xs text-gray-500 mt-1">Total Women</p>
+        </div>
     </div>
-    <div class="bg-white rounded-xl shadow p-4 text-center">
-        <i class="fas fa-calendar-alt text-2xl mb-2" style="color: #0a1f44;"></i>
-        <p class="text-2xl font-bold" style="color: #0a1f44;">{{ $upcomingEvents ?? 0 }}</p>
-        <p class="text-xs text-gray-500 mt-1">Events</p>
+
+</div>
+
+{{-- Spiritual Status Cards --}}
+<div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
+
+    {{-- Committed Members --}}
+    <div class="bg-white rounded-xl shadow p-4 flex items-center gap-4 hover:shadow-md transition">
+        <div class="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0" style="background:#f0fdf4;">
+            <i class="fas fa-certificate text-xl" style="color:#16a34a;"></i>
+        </div>
+        <div>
+            <p class="text-2xl font-bold leading-none" style="color:#0a1f44;">{{ $memberStats['committed'] ?? 0 }}</p>
+            <p class="text-xs text-gray-500 mt-1">Committed Members</p>
+        </div>
     </div>
-    <div class="bg-white rounded-xl shadow p-4 text-center">
-        <i class="fas fa-praying-hands text-2xl mb-2" style="color: #c0392b;"></i>
-        <p class="text-2xl font-bold" style="color: #0a1f44;">{{ $pendingPrayers ?? 0 }}</p>
-        <p class="text-xs text-gray-500 mt-1">Pending Prayers</p>
+
+    {{-- In Commitment Class --}}
+    <div class="bg-white rounded-xl shadow p-4 flex items-center gap-4 hover:shadow-md transition">
+        <div class="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0" style="background:#fef9f0;">
+            <i class="fas fa-book-open text-xl" style="color:#f0a500;"></i>
+        </div>
+        <div>
+            <p class="text-2xl font-bold leading-none" style="color:#0a1f44;">{{ $memberStats['in_class'] ?? 0 }}</p>
+            <p class="text-xs text-gray-500 mt-1">In Commitment Class</p>
+        </div>
     </div>
-    <div class="bg-white rounded-xl shadow p-4 text-center">
-        <i class="fas fa-broadcast-tower text-2xl mb-2" style="{{ ($activeLivestream ?? false) ? 'color: #c0392b;' : 'color: #9ca3af;' }}"></i>
-        <p class="text-lg font-bold" style="color: #0a1f44;">{{ ($activeLivestream ?? false) ? 'LIVE' : 'OFF' }}</p>
-        <p class="text-xs text-gray-500 mt-1">Livestream</p>
+
+    {{-- Young Converts --}}
+    <div class="bg-white rounded-xl shadow p-4 flex items-center gap-4 hover:shadow-md transition">
+        <div class="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0" style="background:#f0f9ff;">
+            <i class="fas fa-seedling text-xl" style="color:#0284c7;"></i>
+        </div>
+        <div>
+            <p class="text-2xl font-bold leading-none" style="color:#0a1f44;">{{ $memberStats['young_converts'] ?? 0 }}</p>
+            <p class="text-xs text-gray-500 mt-0.5">Young Converts</p>
+            <p class="text-gray-400 mt-0.5" style="font-size:10px;">Not committed &amp; not in commitment class</p>
+        </div>
+    </div>
+
+    {{-- Not Baptised --}}
+    <div class="bg-white rounded-xl shadow p-4 flex items-center gap-4 hover:shadow-md transition">
+        <div class="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0" style="background:#fef2f2;">
+            <i class="fas fa-water text-xl" style="color:#c0392b;"></i>
+        </div>
+        <div>
+            <p class="text-2xl font-bold leading-none" style="color:#0a1f44;">{{ $memberStats['not_baptised'] ?? 0 }}</p>
+            <p class="text-xs text-gray-500 mt-1">Not Baptised</p>
+        </div>
+    </div>
+</div>
+
+{{-- Fellowship & Marital Status Cards --}}
+<div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
+
+    {{-- Sunday School --}}
+    <div class="bg-white rounded-xl shadow p-4 flex items-center gap-4 hover:shadow-md transition">
+        <div class="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0" style="background:#fff8e1;">
+            <i class="fas fa-child text-xl" style="color:#f0a500;"></i>
+        </div>
+        <div>
+            <p class="text-2xl font-bold leading-none" style="color:#0a1f44;">{{ $memberStats['sunday_school'] ?? 0 }}</p>
+            <p class="text-xs text-gray-500 mt-1">Sunday School</p>
+        </div>
+    </div>
+
+    {{-- Youths / Singles --}}
+    <div class="bg-white rounded-xl shadow p-4 flex items-center gap-4 hover:shadow-md transition">
+        <div class="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0" style="background:#f0f9ff;">
+            <i class="fas fa-users text-xl" style="color:#0284c7;"></i>
+        </div>
+        <div>
+            <p class="text-2xl font-bold leading-none" style="color:#0a1f44;">{{ $memberStats['youths'] ?? 0 }}</p>
+            <p class="text-xs text-gray-500 mt-0.5">Youths / Singles</p>
+            <p class="text-gray-400 mt-0.5" style="font-size:10px;">Above 18, not married</p>
+        </div>
+    </div>
+
+    {{-- Married --}}
+    <div class="bg-white rounded-xl shadow p-4 flex items-center gap-4 hover:shadow-md transition">
+        <div class="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0" style="background:#fdf4ff;">
+            <i class="fas fa-rings-wedding text-xl" style="color:#7c3aed;"></i>
+        </div>
+        <div>
+            <p class="text-2xl font-bold leading-none" style="color:#0a1f44;">{{ $memberStats['married'] ?? 0 }}</p>
+            <p class="text-xs text-gray-500 mt-1">Married</p>
+        </div>
+    </div>
+
+    {{-- Pearls Fellowship --}}
+    <div class="bg-white rounded-xl shadow p-4 flex items-center gap-4 hover:shadow-md transition">
+        <div class="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0" style="background:#fffbeb;">
+            <i class="fas fa-gem text-xl" style="color:#f0a500;"></i>
+        </div>
+        <div>
+            <p class="text-2xl font-bold leading-none" style="color:#0a1f44;">{{ $memberStats['pearls'] ?? 0 }}</p>
+            <p class="text-xs text-gray-500 mt-0.5">Pearls Fellowship</p>
+            <p class="text-gray-400 mt-0.5" style="font-size:10px;">Above 30, not married</p>
+        </div>
     </div>
 </div>
 
@@ -322,5 +456,21 @@
 </div>
 
 @endsection
+
+@push('scripts')
+<script>
+// Leaders card hover/tap breakdown
+document.querySelectorAll('.leader-card').forEach(function(card) {
+    var bd = card.querySelector('.leader-breakdown');
+    card.addEventListener('mouseenter', function() { bd.style.display = 'block'; });
+    card.addEventListener('mouseleave', function() { bd.style.display = 'none'; });
+    card.addEventListener('click', function(e) {
+        var shown = bd.style.display === 'block';
+        document.querySelectorAll('.leader-breakdown').forEach(function(x) { x.style.display = 'none'; });
+        if (!shown) bd.style.display = 'block';
+    });
+});
+</script>
+@endpush
 
 

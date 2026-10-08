@@ -223,7 +223,7 @@
 <div id="bulk-bar"
      class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 hidden
             flex items-center gap-4 px-6 py-3 rounded-2xl shadow-2xl border border-blue-200"
-     style="background:#0a1f44; min-width:340px;">
+     style="background:#0a1f44; min-width:min(340px, calc(100vw - 2rem));">
     <span class="text-white text-sm font-semibold">
         <i class="fas fa-check-square mr-2 text-yellow-400"></i>
         <span id="selected-count">0</span> selected

@@ -72,7 +72,7 @@
         <form method="GET" class="flex flex-wrap items-center gap-3">
             <input type="text" name="search" value="{{ request('search') }}"
                    placeholder="Search name, phone, email…"
-                   class="border border-gray-300 rounded px-3 py-2 text-sm w-56 focus:outline-none focus:ring-2 focus:ring-blue-300">
+                   class="border border-gray-300 rounded px-3 py-2 text-sm flex-1 min-w-0 focus:outline-none focus:ring-2 focus:ring-blue-300">
 
             <select name="follow_up" class="border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300">
                 <option value="">All Follow-up Status</option>
@@ -114,6 +114,7 @@
             </p>
         </div>
         @else
+        <div class="overflow-x-auto">
         <table class="w-full text-sm">
             <thead>
                 <tr class="text-left text-xs uppercase tracking-wider text-gray-500 border-b border-gray-100">
@@ -173,7 +174,7 @@
                                 <i class="fas fa-edit"></i>
                             </a>
                             <form method="POST" action="{{ route('admin.visitors.destroy', $v) }}"
-                                  onsubmit="return confirm('Delete this visitor record?')">
+                                  data-confirm="Delete this visitor record?" data-confirm-ok="Delete">
                                 @csrf @method('DELETE')
                                 <button type="submit" class="text-red-500 hover:text-red-700" title="Delete">
                                     <i class="fas fa-trash-alt"></i>
@@ -185,6 +186,7 @@
                 @endforeach
             </tbody>
         </table>
+        </div>{{-- /overflow-x-auto --}}
         <div class="px-4 py-3 border-t border-gray-100">
             {{ $visitors->withQueryString()->links() }}
         </div>

@@ -18,6 +18,13 @@
     body { background:#fff !important; }
     .cal-cell { min-height:80px; }
 }
+@media (max-width: 640px) {
+    .cal-scroll-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .cal-grid { min-width: 560px; }
+    .cal-cell { min-height: 70px; padding: 4px; }
+    .cal-header-cell { padding: 6px 2px; font-size: 9px; }
+    .cal-day-num { font-size: 12px; }
+}
 </style>
 @endpush
 
@@ -119,7 +126,8 @@
             </a>
         </div>
 
-        {{-- Day headers --}}
+        {{-- Day headers + grid --}}
+        <div class="cal-scroll-wrap">
         <div class="cal-grid">
             @foreach(['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'] as $dh)
             <div class="cal-header-cell">{{ $dh }}</div>
@@ -162,6 +170,7 @@
                 <div class="cal-notes-cell">Notes:</div>
             @endif
         </div>
+        </div>{{-- /cal-scroll-wrap --}}
     </div>
 
     {{-- Event list for this month --}}
@@ -170,6 +179,7 @@
         <div class="px-5 py-3 border-b border-gray-100">
             <h2 class="font-bold text-gray-800"><i class="fas fa-list mr-1"></i> Events — {{ $months[$month] }} {{ $year }}</h2>
         </div>
+        <div class="overflow-x-auto">
         <table class="w-full text-sm">
             <thead style="background:#1e3a6e;">
                 <tr>
@@ -224,7 +234,7 @@
                                 <i class="fas fa-paper-plane"></i> <span class="hidden sm:inline">Make Event</span>
                             </a>
                             <form method="POST" action="{{ route('admin.calendar.destroy', $ev) }}"
-                                  onsubmit="return confirm('Delete this event?')">
+                                  data-confirm="Delete this event?" data-confirm-ok="Delete">
                                 @csrf @method('DELETE')
                                 <button class="px-2 py-1 rounded text-xs bg-red-100 text-red-700 hover:bg-red-200">
                                     <i class="fas fa-trash"></i>
@@ -236,6 +246,7 @@
                 @endforeach
             </tbody>
         </table>
+        </div>{{-- /overflow-x-auto --}}
     </div>
     @else
     <div class="mt-5 text-center py-10 text-gray-400 bg-white rounded-xl border border-gray-100">
