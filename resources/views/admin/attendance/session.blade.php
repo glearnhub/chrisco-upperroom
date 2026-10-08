@@ -423,10 +423,13 @@
 
 @push('scripts')
 <script>
-const SESSION_ID   = {{ $session->id }};
-const CAN_EDIT     = {{ $session->isOpen() ? 'true' : 'false' }};
-const CSRF         = document.querySelector('meta[name="csrf-token"]').content;
-const TOTAL_MEMBERS= {{ $totalMembers }};
+const SESSION_ID    = {{ $session->id }};
+const CAN_EDIT      = {{ $session->isOpen() ? 'true' : 'false' }};
+const CSRF          = document.querySelector('meta[name="csrf-token"]').content;
+const TOTAL_MEMBERS = {{ $totalMembers }};
+const URL_SEARCH    = '{{ route('admin.attendance.session.search', $session) }}';
+const URL_CHECKIN   = '{{ route('admin.attendance.session.checkin', $session) }}';
+const URL_UNDO_BASE = '{{ url('/admin/attendance/checkin/') }}';
 let searchTimer    = null;
 
 const box        = document.getElementById('search-box');
@@ -464,7 +467,7 @@ function initials(name) {
 
 async function doSearch(q) {
     try {
-        const r = await fetch(`/admin/attendance/session/${SESSION_ID}/search?q=${encodeURIComponent(q)}`, {
+        const r = await fetch(`${URL_SEARCH}?q=${encodeURIComponent(q)}`, {
             headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' }
         });
         const d = await r.json();
@@ -498,7 +501,7 @@ async function doSearch(q) {
 async function checkIn(userId, evt) {
     if (evt) evt.stopPropagation();
     try {
-        const r = await fetch(`/admin/attendance/session/${SESSION_ID}/checkin`, {
+        const r = await fetch(URL_CHECKIN, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': CSRF },
             body: JSON.stringify({ user_id: userId }),
@@ -550,7 +553,7 @@ document.getElementById('btn-confirm-undo').addEventListener('click', async func
     const id = pendingUndoId;
     closeUndoModal();
     try {
-        const r = await fetch(`/admin/attendance/checkin/${id}`, {
+        const r = await fetch(`${URL_UNDO_BASE}${id}`, {
             method: 'DELETE',
             headers: { 'X-CSRF-TOKEN': CSRF },
         });
