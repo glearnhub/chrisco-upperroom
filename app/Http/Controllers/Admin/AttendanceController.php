@@ -402,6 +402,23 @@ class AttendanceController extends Controller
             array_merge($data, ['recorded_by' => auth()->id()])
         );
 
+        // Keep users.transfer_type in sync with followup reason
+        $user = \App\Models\User::find($data['user_id']);
+        if ($data['reason'] === 'transferred') {
+            $user->update([
+                'transfer_type'   => 'out',
+                'transfer_church' => $data['transferred_to'] ?? null,
+            ]);
+        } else {
+            // Reason changed away from transferred — clear flag only if no other transferred record exists
+            $stillTransferred = AttendanceFollowup::where('user_id', $data['user_id'])
+                ->where('reason', 'transferred')
+                ->exists();
+            if (!$stillTransferred) {
+                $user->update(['transfer_type' => null, 'transfer_church' => null]);
+            }
+        }
+
         $followup->load('recordedBy');
 
         return response()->json([
@@ -426,6 +443,15 @@ class AttendanceController extends Controller
             ->where('year', $request->year)
             ->where('month', $request->month)
             ->delete();
+
+        // Clear transfer flag if no transferred followup remains
+        $stillTransferred = AttendanceFollowup::where('user_id', $request->user_id)
+            ->where('reason', 'transferred')
+            ->exists();
+        if (!$stillTransferred) {
+            \App\Models\User::where('id', $request->user_id)
+                ->update(['transfer_type' => null, 'transfer_church' => null]);
+        }
 
         return response()->json(['success' => true]);
     }

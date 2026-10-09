@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\Child;
-use App\Models\AttendanceFollowup;
 use App\Models\ServiceSession;
 use App\Models\ServiceAttendance;
 use Illuminate\Http\Request;
@@ -620,19 +619,15 @@ class ReportController extends Controller
     }
 
     // ── Transferred Out ─────────────────────────────────────────────────────
-    public function transferredOut()
+    public function transferredOut(Request $request)
     {
-        // Sourced from follow-up records where reason = 'transferred' (most recent per member)
-        $userIds = AttendanceFollowup::where('reason', 'transferred')
-            ->orderByDesc('year')->orderByDesc('month')
-            ->get()
-            ->groupBy('user_id')
-            ->keys();
-
-        $members = User::whereIn('id', $userIds)
+        $members = User::where('role', 'member')
+            ->where('transfer_type', 'out')
             ->orderByRaw($this->officeOrderSql())
             ->orderBy('name')
             ->get();
+
+        if ($request->boolean('export')) return $this->filterExport($members, 'Transferred Out');
 
         return view('admin.reports.filter', compact('members'), [
             'title'    => 'Transferred Out',

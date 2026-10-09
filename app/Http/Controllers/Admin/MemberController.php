@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
-use App\Models\AttendanceFollowup;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -333,17 +332,11 @@ class MemberController extends Controller
 
     public function transferredOut(Request $request)
     {
-        // Members flagged as transferred out via follow-up records (reason = 'transferred')
-        $followups = AttendanceFollowup::where('reason', 'transferred')
-            ->with(['member', 'recordedBy'])
-            ->orderByDesc('year')
-            ->orderByDesc('month')
-            ->get()
-            // Deduplicate: keep only the most recent follow-up per member
-            ->groupBy('user_id')
-            ->map(fn($group) => $group->first())
-            ->values();
+        $members = User::where('role', 'member')
+            ->where('transfer_type', 'out')
+            ->orderBy('name')
+            ->get(['id', 'name', 'middle_name', 'last_name', 'phone', 'department', 'office', 'transfer_church', 'created_at']);
 
-        return view('admin.members.transferred-out', compact('followups'));
+        return view('admin.members.transferred-out', compact('members'));
     }
 }
