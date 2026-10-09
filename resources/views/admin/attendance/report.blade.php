@@ -6,6 +6,7 @@
 @media print {
     .no-print { display: none !important; }
     .sidebar, header { display: none !important; }
+    #fu-modal { display: none !important; }
     body { background: white !important; }
     .print-header { display: block !important; }
     .section-card { box-shadow: none !important; border: 1px solid #ddd !important; }
