@@ -34,9 +34,14 @@
 
     <div class="header">
         <div class="header-logo-row">
-            @php $logoPath = public_path('images/logo-email.png'); @endphp
-            @if(file_exists($logoPath))
-                <img src="{{ $logoPath }}" alt="Logo" class="header-logo">
+            @php
+                $logoPath = public_path('images/logo-email.png');
+                $logoSrc  = file_exists($logoPath)
+                    ? 'data:image/png;base64,' . base64_encode(file_get_contents($logoPath))
+                    : null;
+            @endphp
+            @if($logoSrc)
+                <img src="{{ $logoSrc }}" alt="Logo" class="header-logo">
             @endif
             <div>
                 <div class="header-org">Chrisco Upperroom Fellowship</div>

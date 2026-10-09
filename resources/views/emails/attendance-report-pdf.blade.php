@@ -102,9 +102,14 @@
 {{-- Cover Header --}}
 <div class="cover">
     <div class="cover-logo-row">
-        @php $logoPath = public_path('images/logo-email.png'); @endphp
-        @if(file_exists($logoPath))
-            <img src="{{ $logoPath }}" alt="Logo" class="cover-logo">
+        @php
+            $logoPath = public_path('images/logo-email.png');
+            $logoSrc  = file_exists($logoPath)
+                ? 'data:image/png;base64,' . base64_encode(file_get_contents($logoPath))
+                : null;
+        @endphp
+        @if($logoSrc)
+            <img src="{{ $logoSrc }}" alt="Logo" class="cover-logo">
         @endif
         <div>
             <div class="cover-org">Chrisco Upperroom Fellowship</div>
