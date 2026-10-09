@@ -10,27 +10,99 @@ use Illuminate\Http\Request;
 
 class ChildAttendanceController extends Controller
 {
-    /** Attendance scanner page */
+    /** Attendance check-in page */
     public function scanner(Request $request)
     {
-        $date     = $request->date ?? today()->toDateString();
-        $class    = $request->class;
-        $classes  = Child::sundaySchoolClasses();
-
-        // Children with photos/descriptors for the chosen class
-        $query = Child::whereNotNull('face_descriptor');
-        if ($class) $query->where('sunday_school_class', $class);
-        $enrolled = $query->count();
+        $date    = $request->date ?? today()->toDateString();
+        $class   = $request->class ?? '';
+        $classes = Child::sundaySchoolClasses();
 
         // Who is already marked today
         $alreadyMarked = ChildAttendance::where('attendance_date', $date)
             ->when($class, fn($q) => $q->whereHas('child', fn($c) => $c->where('sunday_school_class', $class)))
             ->with('child')
+            ->orderByDesc('created_at')
             ->get();
 
         return view('admin.children.attendance.scanner', compact(
-            'date', 'class', 'classes', 'enrolled', 'alreadyMarked'
+            'date', 'class', 'classes', 'alreadyMarked'
         ));
+    }
+
+    /** AJAX: search children by name for check-in */
+    public function searchChild(Request $request)
+    {
+        $q     = trim($request->get('q', ''));
+        $date  = $request->get('date', today()->toDateString());
+        $class = $request->get('class', '');
+
+        $query = Child::query();
+        if ($q) {
+            $query->where(function ($sq) use ($q) {
+                $sq->where('first_name', 'like', "%{$q}%")
+                   ->orWhere('last_name', 'like', "%{$q}%")
+                   ->orWhereRaw("CONCAT(first_name,' ',last_name) LIKE ?", ["%{$q}%"]);
+            });
+        }
+        if ($class) {
+            $query->where('sunday_school_class', $class);
+        }
+
+        $children = $query->orderBy('first_name')->limit(10)->get(['id','first_name','last_name','sunday_school_class','photo']);
+
+        $markedIds = ChildAttendance::where('attendance_date', $date)
+            ->whereIn('child_id', $children->pluck('id'))
+            ->pluck('child_id')
+            ->toArray();
+
+        return response()->json($children->map(fn($c) => [
+            'id'         => $c->id,
+            'name'       => $c->full_name,
+            'class'      => $c->sunday_school_class ?? '—',
+            'photo'      => $c->photo ? asset('storage/' . $c->photo) : null,
+            'already_in' => in_array($c->id, $markedIds),
+        ]));
+    }
+
+    /** AJAX: mark one child present */
+    public function checkin(Request $request)
+    {
+        $request->validate([
+            'child_id' => 'required|exists:children,id',
+            'date'     => 'required|date',
+        ]);
+
+        $exists = ChildAttendance::where('child_id', $request->child_id)
+            ->where('attendance_date', $request->date)->exists();
+
+        if ($exists) {
+            return response()->json(['error' => 'already_in'], 409);
+        }
+
+        $record = ChildAttendance::create([
+            'child_id'        => $request->child_id,
+            'attendance_date' => $request->date,
+            'method'          => 'manual',
+            'confidence'      => 100,
+            'marked_by'       => auth()->id(),
+        ]);
+
+        $child = Child::find($request->child_id);
+        SystemLog::record('attendance', 'Children', "Marked {$child->full_name} present on {$request->date}");
+
+        return response()->json([
+            'success' => true,
+            'id'      => $record->id,
+            'name'    => $child->full_name,
+            'class'   => $child->sunday_school_class ?? '—',
+        ]);
+    }
+
+    /** AJAX: undo a check-in */
+    public function undoCheckin(ChildAttendance $attendance)
+    {
+        $attendance->delete();
+        return response()->json(['success' => true]);
     }
 
     /** Return all face descriptors for a class (used by JS) */
@@ -154,9 +226,30 @@ class ChildAttendanceController extends Controller
 
         // Save base64 photo to disk if provided
         if ($request->photo) {
-            $data     = preg_replace('/^data:image\/\w+;base64,/', '', $request->photo);
+            // Only accept known image MIME prefixes
+            if (!preg_match('/^data:image\/(jpeg|png|webp);base64,/', $request->photo)) {
+                return response()->json(['error' => 'Invalid image format.'], 422);
+            }
+
+            $data    = preg_replace('/^data:image\/\w+;base64,/', '', $request->photo);
+            $decoded = base64_decode($data, strict: true);
+
+            if ($decoded === false) {
+                return response()->json(['error' => 'Invalid base64 data.'], 422);
+            }
+
+            // Reject payloads over 2 MB
+            if (strlen($decoded) > 2 * 1024 * 1024) {
+                return response()->json(['error' => 'Image exceeds 2 MB limit.'], 422);
+            }
+
+            // Verify the decoded bytes are actually an image
+            if (!@getimagesizefromstring($decoded)) {
+                return response()->json(['error' => 'Uploaded file is not a valid image.'], 422);
+            }
+
             $filename = 'children/' . $child->id . '_' . time() . '.jpg';
-            \Illuminate\Support\Facades\Storage::disk('public')->put($filename, base64_decode($data));
+            \Illuminate\Support\Facades\Storage::disk('public')->put($filename, $decoded);
 
             // Delete old photo
             if ($child->photo && $child->photo !== $filename) {

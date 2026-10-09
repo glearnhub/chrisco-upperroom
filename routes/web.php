@@ -84,7 +84,7 @@ Route::get('/events', [EventController::class, 'index'])->name('events.index');
 Route::get('/events/{event}', [EventController::class, 'show'])->name('events.show');
 
 Route::get('/give', [DonationController::class, 'index'])->name('give');
-Route::post('/give', [DonationController::class, 'store'])->name('give.store');
+Route::post('/give', [DonationController::class, 'store'])->name('give.store')->middleware('throttle:10,1');
 
 Route::get('/livestream', [LivestreamController::class, 'index'])->name('livestream');
 
@@ -101,9 +101,9 @@ Route::get('/announcements/{announcement}', [AnnouncementController::class, 'sho
 Route::post('/events/lookup-email', [EventController::class, 'lookupEmail'])->name('events.lookup-email')->middleware('throttle:20,1');
 Route::post('/events/send-otp',    [EventController::class, 'sendOtp'])->name('events.send-otp')->middleware('throttle:5,10');
 Route::post('/events/verify-otp',  [EventController::class, 'verifyOtp'])->name('events.verify-otp')->middleware('throttle:10,1');
-Route::post('/events/{event}/register', [EventController::class, 'register'])->name('events.register');
+Route::post('/events/{event}/register', [EventController::class, 'register'])->name('events.register')->middleware('throttle:10,1');
 
-Route::post('/prayer', [PrayerController::class, 'store'])->name('prayer.store');
+Route::post('/prayer', [PrayerController::class, 'store'])->name('prayer.store')->middleware('throttle:10,1');
 
 // -------------------------------------------------------
 // QR code image generator (public)
