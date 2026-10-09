@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\ServiceSession;
 use App\Models\ServiceAttendance;
 use App\Models\User;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 
 class AttendanceController extends Controller
@@ -89,13 +90,20 @@ class AttendanceController extends Controller
             return response()->json(['error' => 'already_checked_in', 'name' => $user->full_name], 409);
         }
 
-        ServiceAttendance::create([
-            'session_id'    => $session->id,
-            'user_id'       => $user->id,
-            'door'          => $request->door,
-            'method'        => 'self',
-            'checked_in_at' => now(),
-        ]);
+        try {
+            ServiceAttendance::create([
+                'session_id'    => $session->id,
+                'user_id'       => $user->id,
+                'door'          => $request->door,
+                'method'        => 'self',
+                'checked_in_at' => now(),
+            ]);
+        } catch (QueryException $e) {
+            if (str_contains($e->getMessage(), '23000')) {
+                return response()->json(['error' => 'already_checked_in', 'name' => $user->full_name], 409);
+            }
+            throw $e;
+        }
 
         return response()->json([
             'success' => true,

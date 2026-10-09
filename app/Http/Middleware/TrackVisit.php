@@ -23,14 +23,22 @@ class TrackVisit
             !$request->is('confirm-password*') &&
             $response->isSuccessful()
         ) {
-            $sessionId = $request->session()->getId();
-            $ip        = $request->ip();
-            $cacheKey  = 'visit_session_' . $sessionId . '_' . today()->toDateString();
-            $isNew     = !Cache::has($cacheKey);
+            $sessionId    = $request->session()->getId();
+            $ip           = $request->ip();
+            $cacheKey     = 'visit_session_' . $sessionId . '_' . today()->toDateString();
+            $isNew        = !Cache::has($cacheKey);
 
             if ($isNew) {
                 Cache::put($cacheKey, true, now()->endOfDay());
             }
+
+            // Cap rows per IP per day to prevent table inflation from a single source
+            $ipDayKey   = 'visit_ip_count_' . sha1($ip) . '_' . today()->toDateString();
+            $ipDayCount = (int) Cache::get($ipDayKey, 0);
+            if ($ipDayCount >= 200) {
+                return $response;
+            }
+            Cache::put($ipDayKey, $ipDayCount + 1, now()->endOfDay());
 
             // For local addresses resolve synchronously (no HTTP call needed)
             $isLocal = in_array($ip, ['127.0.0.1', '::1', 'localhost']);

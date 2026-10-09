@@ -13,7 +13,7 @@ class AdminMiddleware
         $user = $request->user();
 
         if (!$user || $user->role !== 'admin') {
-            return redirect('/dashboard')->with('error', 'Access denied. Admin privileges required.');
+            abort(403);
         }
 
         if ($user->is_active === false) {

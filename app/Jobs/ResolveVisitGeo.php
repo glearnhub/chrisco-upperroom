@@ -32,7 +32,7 @@ class ResolveVisitGeo implements ShouldQueue
         [$country, $countryCode] = Cache::remember('geoip_' . $this->ip, now()->addDay(), function () {
             try {
                 $response = @file_get_contents(
-                    "http://ip-api.com/json/{$this->ip}?fields=country,countryCode",
+                    "https://ip-api.com/json/{$this->ip}?fields=country,countryCode",
                     false,
                     stream_context_create(['http' => ['timeout' => 3]])
                 );

@@ -17,6 +17,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'verify.access'         => \App\Http\Middleware\CheckVerifyAccess::class,
             'force.password.change' => \App\Http\Middleware\RequirePasswordChange::class,
         ]);
+        $middleware->append(\App\Http\Middleware\SecurityHeaders::class);
         $middleware->append(\App\Http\Middleware\TrackVisit::class);
     })
     ->withExceptions(function (Exceptions $exceptions) {

@@ -164,20 +164,30 @@ class EventController extends Controller
             }
         }
 
-        if ($event->registration_required && $event->isFull()) {
+        $result = \DB::transaction(function () use ($event, $validated) {
+            $locked = \App\Models\Event::lockForUpdate()->find($event->id);
+
+            if ($locked->registration_required && $locked->isFull()) {
+                return 'full';
+            }
+
+            EventRegistration::create([
+                'event_id'  => $locked->id,
+                'user_id'   => auth()->id() ?? null,
+                'member_id' => $validated['member_id'] ?? null,
+                'full_name' => $validated['full_name'],
+                'phone'     => $validated['phone'],
+                'email'     => $validated['email'] ?? null,
+                'category'  => $validated['category'],
+                'status'    => 'registered',
+            ]);
+
+            return 'ok';
+        });
+
+        if ($result === 'full') {
             return back()->with('error', 'Sorry, this event is fully booked.');
         }
-
-        EventRegistration::create([
-            'event_id'  => $event->id,
-            'user_id'   => auth()->id() ?? null,
-            'member_id' => $validated['member_id'] ?? null,
-            'full_name' => $validated['full_name'],
-            'phone'     => $validated['phone'],
-            'email'     => $validated['email'] ?? null,
-            'category'  => $validated['category'],
-            'status'    => 'registered',
-        ]);
 
         return back()->with('success', 'You have been successfully registered for ' . $event->title . '!');
     }

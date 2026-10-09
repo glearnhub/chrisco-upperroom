@@ -18,14 +18,20 @@ class MemberLookupController extends Controller
     {
         $request->validate(['email' => 'required|email']);
 
-        $member = User::where('email', $request->email)->first();
+        $member = User::where('email', $request->email)
+            ->select('id', 'name', 'middle_name', 'last_name', 'email', 'profile_photo', 'department', 'office')
+            ->first();
 
         $children = null;
         if ($member) {
             $children = Child::where('parent1_id', $member->id)
                 ->orWhere('parent2_id', $member->id)
                 ->orderBy('first_name')
+                ->select('id', 'first_name', 'last_name', 'date_of_birth', 'class_group')
                 ->get();
+
+            // Store member ID in session for correction request to prevent IDOR
+            session(['lookup_member_id' => $member->id]);
         }
 
         return view('member-lookup.index', compact('member', 'children'))->with('searched', true);
@@ -34,21 +40,19 @@ class MemberLookupController extends Controller
     public function requestCorrection(Request $request)
     {
         $request->validate([
-            'email'   => 'required|email',
             'message' => 'required|string|min:10|max:1000',
         ]);
 
-        $member = User::where('email', $request->email)->first();
+        $memberId = session('lookup_member_id');
 
-        // Always return the same success response regardless of whether the email
-        // matched a member — prevents email enumeration via response-code differences
-        if ($member) {
+        if ($memberId) {
             CorrectionRequest::create([
-                'user_id' => $member->id,
+                'user_id' => $memberId,
                 'message' => $request->message,
             ]);
+            session()->forget('lookup_member_id');
         }
 
-        return back()->with('correction_sent', true)->with('lookup_email', $request->email);
+        return back()->with('correction_sent', true);
     }
 }
