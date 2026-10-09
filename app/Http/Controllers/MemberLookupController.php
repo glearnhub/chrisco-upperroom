@@ -38,12 +38,16 @@ class MemberLookupController extends Controller
             'message' => 'required|string|min:10|max:1000',
         ]);
 
-        $member = User::where('email', $request->email)->firstOrFail();
+        $member = User::where('email', $request->email)->first();
 
-        CorrectionRequest::create([
-            'user_id' => $member->id,
-            'message' => $request->message,
-        ]);
+        // Always return the same success response regardless of whether the email
+        // matched a member — prevents email enumeration via response-code differences
+        if ($member) {
+            CorrectionRequest::create([
+                'user_id' => $member->id,
+                'message' => $request->message,
+            ]);
+        }
 
         return back()->with('correction_sent', true)->with('lookup_email', $request->email);
     }

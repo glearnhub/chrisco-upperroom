@@ -80,27 +80,37 @@ class DashboardController extends Controller
             ->groupBy('gender')
             ->pluck('total', 'gender');
 
-        $today    = Carbon::today();
-        $ageBuckets = [
-            'Under 18' => [null,          $today->copy()->subYears(18)->addDay()],
-            '18–25'    => [$today->copy()->subYears(25), $today->copy()->subYears(18)],
-            '26–35'    => [$today->copy()->subYears(35), $today->copy()->subYears(26)->addDay()],
-            '36–45'    => [$today->copy()->subYears(45), $today->copy()->subYears(36)->addDay()],
-            '46–55'    => [$today->copy()->subYears(55), $today->copy()->subYears(46)->addDay()],
-            '56+'      => [null,          $today->copy()->subYears(56)->addDay()],
-        ];
+        $today = Carbon::today();
+        // Single query — date boundaries computed in PHP, passed as bound parameters
+        $d18 = $today->copy()->subYears(18)->toDateString();
+        $d25 = $today->copy()->subYears(25)->toDateString();
+        $d26 = $today->copy()->subYears(26)->toDateString();
+        $d35 = $today->copy()->subYears(35)->toDateString();
+        $d36 = $today->copy()->subYears(36)->toDateString();
+        $d45 = $today->copy()->subYears(45)->toDateString();
+        $d46 = $today->copy()->subYears(46)->toDateString();
+        $d55 = $today->copy()->subYears(55)->toDateString();
+        $d56 = $today->copy()->subYears(56)->toDateString();
 
-        $ageStats = collect($ageBuckets)->map(function ($range, $label) use ($today) {
-            $q = User::where('role', 'member')->whereNotNull('date_of_birth');
-            if ($label === 'Under 18') {
-                $q->where('date_of_birth', '>', $today->copy()->subYears(18));
-            } elseif ($label === '56+') {
-                $q->where('date_of_birth', '<=', $today->copy()->subYears(56));
-            } else {
-                $q->whereBetween('date_of_birth', [$range[0], $range[1]]);
-            }
-            return $q->count();
-        });
+        $ageRow = User::where('role', 'member')->whereNotNull('date_of_birth')
+            ->selectRaw("
+                SUM(CASE WHEN date_of_birth > ? THEN 1 ELSE 0 END) AS `Under 18`,
+                SUM(CASE WHEN date_of_birth BETWEEN ? AND ? THEN 1 ELSE 0 END) AS `18-25`,
+                SUM(CASE WHEN date_of_birth BETWEEN ? AND ? THEN 1 ELSE 0 END) AS `26-35`,
+                SUM(CASE WHEN date_of_birth BETWEEN ? AND ? THEN 1 ELSE 0 END) AS `36-45`,
+                SUM(CASE WHEN date_of_birth BETWEEN ? AND ? THEN 1 ELSE 0 END) AS `46-55`,
+                SUM(CASE WHEN date_of_birth <= ? THEN 1 ELSE 0 END) AS `56plus`
+            ", [$d18, $d25, $d18, $d35, $d26, $d45, $d36, $d55, $d46, $d56])
+            ->first();
+
+        $ageStats = collect([
+            'Under 18' => (int) ($ageRow->{'Under 18'} ?? 0),
+            '18–25'    => (int) ($ageRow->{'18-25'}    ?? 0),
+            '26–35'    => (int) ($ageRow->{'26-35'}    ?? 0),
+            '36–45'    => (int) ($ageRow->{'36-45'}    ?? 0),
+            '46–55'    => (int) ($ageRow->{'46-55'}    ?? 0),
+            '56+'      => (int) ($ageRow->{'56plus'}   ?? 0),
+        ]);
 
         $recentMembers = User::where('role', 'member')
             ->orderBy('created_at', 'desc')

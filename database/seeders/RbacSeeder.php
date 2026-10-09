@@ -98,6 +98,7 @@ class RbacSeeder extends Seeder
             ['module' => 'Settings',       'slug' => 'settings.users',             'name' => 'Manage System Users'],
             ['module' => 'Settings',       'slug' => 'settings.roles',             'name' => 'Manage Roles & Permissions'],
             ['module' => 'Settings',       'slug' => 'settings.logs',              'name' => 'View System Logs'],
+            ['module' => 'Settings',       'slug' => 'settings.verify_access',     'name' => 'Manage Member Verify Portal Access'],
 
             // Visitors
             ['module' => 'Visitors',       'slug' => 'visitors.view',              'name' => 'View Visitors'],

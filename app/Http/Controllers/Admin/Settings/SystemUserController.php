@@ -98,10 +98,17 @@ class SystemUserController extends Controller
 
         // Handle individual permission overrides
         if ($request->has('perm_overrides')) {
-            UserPermission::where('user_id', $user->id)->delete();
-            foreach ($request->perm_overrides as $permId => $type) {
-                if (in_array($type, ['grant', 'revoke'])) {
-                    UserPermission::create(['user_id' => $user->id, 'permission_id' => $permId, 'type' => $type]);
+            $overrides = $request->perm_overrides;
+            if (is_array($overrides)) {
+                $permIds = array_map('intval', array_keys($overrides));
+                $validIds = Permission::whereIn('id', $permIds)->pluck('id')->flip();
+
+                UserPermission::where('user_id', $user->id)->delete();
+                foreach ($overrides as $permId => $type) {
+                    $permId = (int) $permId;
+                    if (in_array($type, ['grant', 'revoke']) && $validIds->has($permId)) {
+                        UserPermission::create(['user_id' => $user->id, 'permission_id' => $permId, 'type' => $type]);
+                    }
                 }
             }
         }

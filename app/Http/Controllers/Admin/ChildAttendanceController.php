@@ -69,7 +69,7 @@ class ChildAttendanceController extends Controller
     {
         $request->validate([
             'child_id' => 'required|exists:children,id',
-            'date'     => 'required|date',
+            'date'     => 'required|date|before_or_equal:today|after:2020-01-01',
         ]);
 
         $exists = ChildAttendance::where('child_id', $request->child_id)
@@ -128,7 +128,7 @@ class ChildAttendanceController extends Controller
     public function saveAttendance(Request $request)
     {
         $request->validate([
-            'date'          => 'required|date',
+            'date'          => 'required|date|before_or_equal:today|after:2020-01-01',
             'matches'       => 'required|array',
             'matches.*.id'  => 'required|exists:children,id',
             'matches.*.confidence' => 'required|numeric|min:0|max:100',

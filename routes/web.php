@@ -391,7 +391,7 @@ Route::middleware(['auth', 'admin'])
             Route::middleware('permission:settings.logs')->group(function () {
                 Route::get('/logs', [AdminSysLog::class, 'index'])->name('logs.index');
             });
-            Route::middleware('permission:settings.social')->group(function () {
+            Route::middleware('permission:settings.verify_access')->group(function () {
                 Route::get('/verify-access',  [AdminVerifyAccess::class, 'index'])->name('verify-access.index');
                 Route::post('/verify-access', [AdminVerifyAccess::class, 'update'])->name('verify-access.update');
             });

@@ -52,7 +52,7 @@ class ChildController extends Controller
 
     public function create()
     {
-        $members = User::orderBy('name')->get(['id', 'name', 'phone']);
+        $members = User::where('role', 'member')->orderBy('name')->get(['id', 'name', 'phone']);
         $classes = Child::sundaySchoolClasses();
         return view('admin.children.create', compact('members', 'classes'));
     }
@@ -101,7 +101,7 @@ class ChildController extends Controller
 
     public function edit(Child $child)
     {
-        $members = User::orderBy('name')->get(['id', 'name', 'phone']);
+        $members = User::where('role', 'member')->orderBy('name')->get(['id', 'name', 'phone']);
         $classes = Child::sundaySchoolClasses();
         return view('admin.children.edit', compact('child', 'members', 'classes'));
     }
