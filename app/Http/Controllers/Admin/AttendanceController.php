@@ -384,7 +384,7 @@ class AttendanceController extends Controller
     public function saveFollowup(Request $request)
     {
         $data = $request->validate([
-            'user_id'        => 'required|exists:users,id',
+            'user_id'        => 'required|exists:users,id,role,member',
             'year'           => 'required|integer|min:2020|max:2100',
             'month'          => 'required|integer|min:1|max:12',
             'reason'         => 'required|in:transferred,left_church,unwell,job_related,mission_field,other',

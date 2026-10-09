@@ -45,12 +45,12 @@ class SystemUserController extends Controller
             return back()->withErrors(['member_id' => 'This person is already an admin user.']);
         }
 
-        $user->update([
+        $user->forceFill([
             'role'                 => 'admin',
             'password'             => Hash::make(Str::random(32)),
             'is_active'            => true,
             'must_change_password' => true,
-        ]);
+        ])->save();
 
         if ($request->roles) {
             $user->roles()->sync($request->roles);
@@ -126,8 +126,9 @@ class SystemUserController extends Controller
         if ($user->isSuperAdmin()) {
             return back()->with('error', 'Cannot deactivate the Super Admin.');
         }
-        $user->update(['is_active' => !$user->is_active]);
-        $action = $user->is_active ? 'activated' : 'deactivated';
+        $newState = !$user->is_active;
+        $user->forceFill(['is_active' => $newState])->save();
+        $action = $newState ? 'activated' : 'deactivated';
         SystemLog::record('update', 'Settings', "Admin user {$user->email} {$action}.", $user);
         return back()->with('success', "User {$action} successfully.");
     }

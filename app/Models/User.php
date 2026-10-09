@@ -12,7 +12,7 @@ class User extends Authenticatable
 
     protected $fillable = [
         'name', 'middle_name', 'last_name', 'gender', 'marital_status',
-        'email', 'password', 'member_type', 'is_active',
+        'email', 'password', 'member_type', 'role',
         'phone', 'address', 'date_of_birth', 'profile_photo', 'membership_date',
         'county', 'sub_county', 'sub_location',
         'salvation_date', 'is_born_again', 'is_baptized', 'baptism_date',

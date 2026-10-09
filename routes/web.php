@@ -154,23 +154,25 @@ Route::middleware(['auth', 'admin'])
 
         Route::get('/dashboard', [AdminDashboard::class, 'index'])->middleware('permission:dashboard.view')->name('dashboard');
 
-        // Reports
-        Route::get('/reports/membership',      [AdminReport::class, 'membership'])->middleware('permission:reports.membership')->name('reports.membership');
-        Route::get('/reports/leaders',         [AdminReport::class, 'leaders'])->middleware('permission:reports.membership')->name('reports.leaders');
-        Route::get('/reports/mentorship',      [AdminReport::class, 'mentorship'])->middleware('permission:reports.membership')->name('reports.mentorship');
-        Route::get('/reports/children-parent', [AdminReport::class, 'childrenByParent'])->middleware('permission:reports.children')->name('reports.children-parent');
-        Route::get('/reports/by-department',   [AdminReport::class, 'byDepartment'])->middleware('permission:reports.membership')->name('reports.by-department');
-        Route::get('/reports/committed',       [AdminReport::class, 'committed'])->middleware('permission:reports.membership')->name('reports.committed');
-        Route::get('/reports/in-commitment',   [AdminReport::class, 'inCommitment'])->middleware('permission:reports.membership')->name('reports.in-commitment');
-        Route::get('/reports/young-converts',  [AdminReport::class, 'youngConverts'])->middleware('permission:reports.membership')->name('reports.young-converts');
-        Route::get('/reports/not-baptised',    [AdminReport::class, 'notBaptised'])->middleware('permission:reports.membership')->name('reports.not-baptised');
-        Route::get('/reports/married',         [AdminReport::class, 'married'])->middleware('permission:reports.membership')->name('reports.married');
-        Route::get('/reports/pearls',          [AdminReport::class, 'pearls'])->middleware('permission:reports.membership')->name('reports.pearls');
-        Route::get('/reports/singles-youths',   [AdminReport::class, 'singlesYouths'])->middleware('permission:reports.membership')->name('reports.singles-youths');
-        Route::get('/reports/transferred-in',   [AdminReport::class, 'transferredIn'])->middleware('permission:reports.membership')->name('reports.transferred-in');
-        Route::get('/reports/transferred-out',  [AdminReport::class, 'transferredOut'])->middleware('permission:reports.membership')->name('reports.transferred-out');
-        Route::get('/reports/active-members',   [AdminReport::class, 'activeMembers'])->middleware('permission:reports.membership')->name('reports.active-members');
-        Route::get('/reports/inactive-members', [AdminReport::class, 'inactiveMembers'])->middleware('permission:reports.membership')->name('reports.inactive-members');
+        // Reports (throttled to prevent DoS via unbounded exports)
+        Route::middleware('throttle:20,1')->group(function () {
+            Route::get('/reports/membership',      [AdminReport::class, 'membership'])->middleware('permission:reports.membership')->name('reports.membership');
+            Route::get('/reports/leaders',         [AdminReport::class, 'leaders'])->middleware('permission:reports.membership')->name('reports.leaders');
+            Route::get('/reports/mentorship',      [AdminReport::class, 'mentorship'])->middleware('permission:reports.membership')->name('reports.mentorship');
+            Route::get('/reports/children-parent', [AdminReport::class, 'childrenByParent'])->middleware('permission:reports.children')->name('reports.children-parent');
+            Route::get('/reports/by-department',   [AdminReport::class, 'byDepartment'])->middleware('permission:reports.membership')->name('reports.by-department');
+            Route::get('/reports/committed',       [AdminReport::class, 'committed'])->middleware('permission:reports.membership')->name('reports.committed');
+            Route::get('/reports/in-commitment',   [AdminReport::class, 'inCommitment'])->middleware('permission:reports.membership')->name('reports.in-commitment');
+            Route::get('/reports/young-converts',  [AdminReport::class, 'youngConverts'])->middleware('permission:reports.membership')->name('reports.young-converts');
+            Route::get('/reports/not-baptised',    [AdminReport::class, 'notBaptised'])->middleware('permission:reports.membership')->name('reports.not-baptised');
+            Route::get('/reports/married',         [AdminReport::class, 'married'])->middleware('permission:reports.membership')->name('reports.married');
+            Route::get('/reports/pearls',          [AdminReport::class, 'pearls'])->middleware('permission:reports.membership')->name('reports.pearls');
+            Route::get('/reports/singles-youths',   [AdminReport::class, 'singlesYouths'])->middleware('permission:reports.membership')->name('reports.singles-youths');
+            Route::get('/reports/transferred-in',   [AdminReport::class, 'transferredIn'])->middleware('permission:reports.membership')->name('reports.transferred-in');
+            Route::get('/reports/transferred-out',  [AdminReport::class, 'transferredOut'])->middleware('permission:reports.membership')->name('reports.transferred-out');
+            Route::get('/reports/active-members',   [AdminReport::class, 'activeMembers'])->middleware('permission:reports.membership')->name('reports.active-members');
+            Route::get('/reports/inactive-members', [AdminReport::class, 'inactiveMembers'])->middleware('permission:reports.membership')->name('reports.inactive-members');
+        });
 
         // Visitors
         Route::get('/visitors/import/template', [AdminVisitor::class, 'downloadTemplate'])->middleware('permission:visitors.view')->name('visitors.import.template');
@@ -361,8 +363,8 @@ Route::middleware(['auth', 'admin'])
 
         // My Profile (all admin users)
         Route::get('/my-profile',          [AdminMyProfile::class, 'edit'])->name('my-profile.edit');
-        Route::patch('/my-profile',        [AdminMyProfile::class, 'update'])->name('my-profile.update');
-        Route::patch('/my-profile/password',[AdminMyProfile::class, 'updatePassword'])->name('my-profile.password');
+        Route::patch('/my-profile',        [AdminMyProfile::class, 'update'])->middleware('throttle:10,1')->name('my-profile.update');
+        Route::patch('/my-profile/password',[AdminMyProfile::class, 'updatePassword'])->middleware('throttle:5,1')->name('my-profile.password');
 
         // Settings (Super Admin only — isSuperAdmin() bypasses permission check in CheckPermission middleware)
         Route::prefix('settings')->name('settings.')->group(function () {
@@ -403,7 +405,7 @@ Route::middleware(['auth', 'admin'])
         Route::get('/members/transferred-out', [AdminMember::class, 'transferredOut'])->middleware('permission:members.view')->name('members.transferred-out');
         Route::get('/members/import',         [MemberImportController::class, 'showForm'])->middleware('permission:members.import')->name('members.import');
         Route::post('/members/import',        [MemberImportController::class, 'import'])->middleware('permission:members.import')->name('members.import.store');
-        Route::get('/members',                [AdminMember::class, 'index'])->middleware('permission:members.view')->name('members.index');
+        Route::get('/members',                [AdminMember::class, 'index'])->middleware(['permission:members.view', 'throttle:30,1'])->name('members.index');
         Route::get('/members/report',         [AdminMember::class, 'report'])->middleware('permission:members.view')->name('members.report');
         Route::get('/members/create',         [AdminMember::class, 'create'])->middleware('permission:members.create')->name('members.create');
         Route::post('/members',               [AdminMember::class, 'store'])->middleware('permission:members.create')->name('members.store');
