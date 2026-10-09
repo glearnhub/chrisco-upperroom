@@ -347,7 +347,7 @@ Route::middleware(['auth', 'admin'])
         // Attendance
         Route::get('/attendance',                                           [AdminAttendance::class, 'index'])->middleware('permission:attendance.view')->name('attendance.index');
         Route::post('/attendance/open',                                     [AdminAttendance::class, 'open'])->middleware('permission:attendance.manage')->name('attendance.open');
-        Route::post('/attendance/close/{session}',                         [AdminAttendance::class, 'close'])->middleware('permission:attendance.manage')->name('attendance.close');
+        Route::post('/attendance/close/{session}',                         [AdminAttendance::class, 'close'])->middleware('permission:attendance.close')->name('attendance.close');
         Route::get('/attendance/qr-codes',                                  [AdminAttendance::class, 'qrCodes'])->middleware('permission:attendance.view')->name('attendance.qr-codes');
         Route::get('/attendance/report',                                    [AdminAttendance::class, 'report'])->middleware('permission:attendance.view')->name('attendance.report');
         Route::get('/attendance/session/{session}',                        [AdminAttendance::class, 'session'])->middleware('permission:attendance.view')->name('attendance.session');

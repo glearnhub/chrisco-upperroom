@@ -61,6 +61,7 @@
            style="background:#0a1f44;">
             <i class="fas fa-user-check"></i> Usher Check-In Panel
         </a>
+        @if(auth()->user()->hasPermission('attendance.close'))
         <form method="POST" action="{{ route('admin.attendance.close', $openSession) }}"
               data-confirm="Close this session? Members will no longer be able to check in." data-confirm-ok="Close Session" data-confirm-type="warning">
             @csrf
@@ -70,6 +71,7 @@
                 <i class="fas fa-stop-circle"></i> Close Session
             </button>
         </form>
+        @endif
     </div>
 </div>
 @else

@@ -68,11 +68,6 @@ class AttendanceController extends Controller
     // POST /admin/attendance/close/{session}
     public function close(ServiceSession $session)
     {
-        if (!auth()->user()->isSuperAdmin()) {
-            return redirect()->route('admin.attendance.index')
-                ->with('error', 'Only a Super Admin can close an attendance session.');
-        }
-
         if (!$session->isOpen()) {
             return back()->with('error', 'This session is not open.');
         }

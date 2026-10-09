@@ -183,7 +183,7 @@ class VisitorController extends Controller
                 'residence'    => $row['C'] ?? null,
                 'occupation'   => $row['D'] ?? null,
                 'phone'        => $phone,
-                'email'        => $row['F'] ?? null,
+                'email'        => filter_var($row['F'] ?? '', FILTER_VALIDATE_EMAIL) ? $row['F'] : null,
                 'visit_date'   => today(),
                 'how_heard'    => null,
             ]);

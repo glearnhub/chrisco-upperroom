@@ -37,6 +37,7 @@ class RbacSeeder extends Seeder
             // Attendance
             ['module' => 'Attendance',     'slug' => 'attendance.view',            'name' => 'View Attendance'],
             ['module' => 'Attendance',     'slug' => 'attendance.manage',          'name' => 'Manage Attendance Sessions'],
+            ['module' => 'Attendance',     'slug' => 'attendance.close',           'name' => 'Close Attendance Sessions'],
             ['module' => 'Attendance',     'slug' => 'attendance.followup',        'name' => 'Record Attendance Follow-Up'],
 
             // Sermons
