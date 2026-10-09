@@ -10,9 +10,35 @@
     .print-header { display: block !important; }
     .section-card { box-shadow: none !important; border: 1px solid #ddd !important; }
     .page-break { page-break-before: always; }
-    .section-body { display: block !important; } /* always show all on print */
+    .section-body { display: block !important; }
+    /* Selective print classes */
+    body.print-active   .section-card-inactive,
+    body.print-active   .section-card-irregular  { display: none !important; }
+    body.print-inactive .section-card-active,
+    body.print-inactive .section-card-irregular  { display: none !important; }
+    body.print-irregular .section-card-active,
+    body.print-irregular .section-card-inactive  { display: none !important; }
 }
 .print-header { display: none; }
+/* Print dropdown */
+.print-dropdown { position: relative; display: inline-block; }
+.print-dropdown-menu {
+    display: none; position: absolute; right: 0; top: calc(100% + 4px);
+    background: white; border: 1px solid #e5e7eb; border-radius: 8px;
+    box-shadow: 0 4px 16px rgba(0,0,0,.10); min-width: 200px; z-index: 50; overflow: hidden;
+}
+.print-dropdown-menu.open { display: block; }
+.print-dropdown-menu button {
+    display: flex; align-items: center; gap-10px; width: 100%;
+    padding: 9px 14px; text-align: left; font-size: 13px; font-weight: 500;
+    color: #374151; background: none; border: none; cursor: pointer;
+    border-bottom: 1px solid #f3f4f6;
+}
+.print-dropdown-menu button:last-child { border-bottom: none; }
+.print-dropdown-menu button:hover { background: #f9fafb; }
+.print-dropdown-menu .dot {
+    width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; margin-right: 8px;
+}
 
 /* Accordion */
 .section-header { cursor: pointer; user-select: none; }
@@ -52,10 +78,28 @@
                class="flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-300 bg-white text-sm font-semibold text-gray-700">
                 <i class="fas fa-arrow-left"></i> <span class="hidden sm:inline">Back</span>
             </a>
-            <button onclick="window.print()"
-                    class="flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-300 bg-white text-sm font-semibold text-gray-700">
-                <i class="fas fa-print"></i> <span class="hidden sm:inline">Print</span>
-            </button>
+            <div class="print-dropdown" id="printDropdown">
+                <button onclick="togglePrintMenu(event)"
+                        class="flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-300 bg-white text-sm font-semibold text-gray-700">
+                    <i class="fas fa-print"></i>
+                    <span class="hidden sm:inline">Print</span>
+                    <i class="fas fa-chevron-down text-xs text-gray-400"></i>
+                </button>
+                <div class="print-dropdown-menu" id="printMenu">
+                    <button onclick="printSection('all')">
+                        <span class="dot" style="background:#6b7280;"></span> Print All
+                    </button>
+                    <button onclick="printSection('active')">
+                        <span class="dot" style="background:#16a34a;"></span> Active Members Only
+                    </button>
+                    <button onclick="printSection('inactive')">
+                        <span class="dot" style="background:#dc2626;"></span> Inactive Members Only
+                    </button>
+                    <button onclick="printSection('irregular')">
+                        <span class="dot" style="background:#d97706;"></span> Irregular Members Only
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -203,7 +247,7 @@
     @endif
 
     {{-- ── ACTIVE MEMBERS ── --}}
-    <div class="bg-white rounded-xl shadow-sm border-l-4 overflow-hidden mb-6 section-card" style="border-color:#16a34a;">
+    <div class="bg-white rounded-xl shadow-sm border-l-4 overflow-hidden mb-6 section-card section-card-active" style="border-color:#16a34a;">
         <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between gap-3 flex-wrap section-header no-print"
              onclick="toggleSection('active')" role="button" aria-expanded="false" aria-controls="body-active">
             <h2 class="font-bold flex items-center gap-2" style="color:#16a34a;">
@@ -260,7 +304,7 @@
     </div>
 
     {{-- ── INACTIVE MEMBERS ── --}}
-    <div class="bg-white rounded-xl shadow-sm border-l-4 overflow-hidden mb-6 section-card page-break" style="border-color:#dc2626;">
+    <div class="bg-white rounded-xl shadow-sm border-l-4 overflow-hidden mb-6 section-card section-card-inactive page-break" style="border-color:#dc2626;">
         <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between gap-3 flex-wrap section-header no-print"
              onclick="toggleSection('inactive')" role="button" aria-expanded="false" aria-controls="body-inactive">
             <h2 class="font-bold flex items-center gap-2" style="color:#dc2626;">
@@ -418,7 +462,7 @@
 
     {{-- ── IRREGULAR MEMBERS ── --}}
     @if($irregularCount)
-    <div class="bg-white rounded-xl shadow-sm border-l-4 overflow-hidden mb-6 section-card" style="border-color:#d97706;">
+    <div class="bg-white rounded-xl shadow-sm border-l-4 overflow-hidden mb-6 section-card section-card-irregular" style="border-color:#d97706;">
         <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between gap-3 flex-wrap section-header no-print"
              onclick="toggleSection('irregular')" role="button" aria-expanded="false" aria-controls="body-irregular">
             <h2 class="font-bold flex items-center gap-2" style="color:#d97706;">
@@ -626,5 +670,38 @@ async function clearFollowup() {
 document.getElementById('fu-modal').addEventListener('click', function(e) {
     if (e.target === this) closeFollowupModal();
 });
+
+// ── Print dropdown ─────────────────────────────────────────────────────────
+function togglePrintMenu(e) {
+    e.stopPropagation();
+    document.getElementById('printMenu').classList.toggle('open');
+}
+document.addEventListener('click', function(e) {
+    if (!document.getElementById('printDropdown').contains(e.target)) {
+        document.getElementById('printMenu').classList.remove('open');
+    }
+});
+
+function printSection(type) {
+    document.getElementById('printMenu').classList.remove('open');
+    // Expand all sections so they are visible on print
+    ['active', 'inactive', 'irregular'].forEach(s => {
+        document.getElementById('body-' + s)?.classList.add('open');
+    });
+    // Apply body class to filter sections
+    document.body.classList.remove('print-active', 'print-inactive', 'print-irregular');
+    if (type !== 'all') document.body.classList.add('print-' + type);
+    // Update print header label
+    const labels = { all: 'Full Report', active: 'Active Members', inactive: 'Inactive Members', irregular: 'Irregular Members' };
+    document.querySelector('.print-header p[style*="font-size:15px"]').textContent =
+        'Sunday Attendance Report — {{ $monthName }} — ' + labels[type];
+    window.print();
+    // Clean up after print dialog closes
+    setTimeout(() => {
+        document.body.classList.remove('print-active', 'print-inactive', 'print-irregular');
+        document.querySelector('.print-header p[style*="font-size:15px"]').textContent =
+            'Sunday Attendance Report — {{ $monthName }}';
+    }, 1000);
+}
 </script>
 @endpush
