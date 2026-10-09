@@ -34,7 +34,9 @@
 
     <div class="header">
         <div class="header-logo-row">
-            <img src="{{ rtrim(config('app.url'), '/') }}/images/logo-email.png" alt="Logo" class="header-logo">
+            @if(!empty($logoSrc))
+                <img src="{{ $logoSrc }}" alt="Logo" class="header-logo">
+            @endif
             <div>
                 <div class="header-org">Chrisco Upperroom Fellowship</div>
                 <div class="header-tagline">Church Management System</div>
