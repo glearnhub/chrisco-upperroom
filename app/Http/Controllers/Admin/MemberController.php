@@ -235,6 +235,7 @@ class MemberController extends Controller
 
     public function show(User $user)
     {
+        abort_if($user->role !== 'member', 404);
         $member = $user;
         $donations = $member->donations()->latest()->get();
         $eventRegistrations = $member->eventRegistrations()->with('event')->latest()->get();
@@ -243,11 +244,14 @@ class MemberController extends Controller
 
     public function edit(User $user)
     {
+        abort_if($user->role !== 'member', 404);
         return view('admin.members.edit', ['member' => $user]);
     }
 
     public function update(Request $request, User $user)
     {
+        abort_if($user->role !== 'member', 404);
+
         $validated = $request->validate([
             'name'                    => 'required|string|max:255',
             'middle_name'             => 'nullable|string|max:255',
@@ -309,6 +313,12 @@ class MemberController extends Controller
 
     public function updateRole(Request $request, User $user)
     {
+        abort_if($user->role !== 'member' && !$user->isSuperAdmin(), 404);
+
+        if ($user->isSuperAdmin()) {
+            return back()->with('error', 'The Super Admin role cannot be changed.');
+        }
+
         $validated = $request->validate(['role' => 'required|in:admin,member']);
 
         if ($user->id === auth()->id() && $validated['role'] !== 'admin') {
