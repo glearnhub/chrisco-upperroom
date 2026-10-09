@@ -63,7 +63,7 @@
                             <i class="fas fa-edit"></i>
                         </a>
                         <form method="POST" action="{{ route('admin.resources.destroy', $resource) }}"
-                              onsubmit="return confirm('Delete this resource?')">
+                              data-confirm="Delete this resource?" data-confirm-ok="Delete">
                             @csrf @method('DELETE')
                             <button type="submit" class="text-red-500 hover:text-red-700 text-xs" title="Delete">
                                 <i class="fas fa-trash"></i>

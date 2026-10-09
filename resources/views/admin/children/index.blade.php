@@ -133,7 +133,7 @@
                                 <i class="fas fa-edit"></i>
                             </a>
                             <form method="POST" action="{{ route('admin.children.destroy', $child) }}"
-                                  onsubmit="return confirm('Delete {{ $child->first_name }}?')">
+                                  data-confirm="Delete {{ $child->first_name }}?" data-confirm-ok="Delete">
                                 @csrf @method('DELETE')
                                 <button type="submit"
                                         class="text-xs px-2 py-1 rounded font-semibold text-white"

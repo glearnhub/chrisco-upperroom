@@ -71,7 +71,7 @@
                                     <i class="fas fa-edit mr-1"></i>Edit
                                 </a>
                                 <form method="POST" action="{{ route('admin.sermons.destroy', $sermon) }}"
-                                    onsubmit="return confirm('Delete this sermon?')">
+                                    data-confirm="Delete this sermon?" data-confirm-ok="Delete">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" class="bg-red-100 text-red-700 hover:bg-red-200 px-2 py-1 rounded text-xs font-medium">

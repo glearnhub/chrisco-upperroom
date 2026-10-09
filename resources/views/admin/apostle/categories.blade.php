@@ -63,7 +63,7 @@
             <div class="flex items-center justify-between mt-2">
                 <span class="text-xs text-gray-400">{{ $cat->teachings_count }} teaching{{ $cat->teachings_count !== 1 ? 's' : '' }}</span>
                 <form method="POST" action="{{ route('admin.apostle.categories.destroy', $cat) }}"
-                    onsubmit="return confirm('Delete this category? Teachings will become uncategorised.')">
+                    data-confirm="Delete this category? Teachings will become uncategorised." data-confirm-ok="Delete">
                     @csrf @method('DELETE')
                     <button type="submit" class="text-red-500 hover:text-red-700 text-xs">
                         <i class="fas fa-trash mr-1"></i>Delete

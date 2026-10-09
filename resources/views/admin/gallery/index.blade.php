@@ -33,7 +33,7 @@
                 <i class="fas fa-edit"></i>
             </a>
             <form method="POST" action="{{ route('admin.gallery.destroy', $item) }}"
-                  onsubmit="return confirm('Delete this photo?')">
+                  data-confirm="Delete this photo?" data-confirm-ok="Delete">
                 @csrf @method('DELETE')
                 <button type="submit"
                         class="w-7 h-7 flex items-center justify-center rounded bg-red-600 text-white text-xs shadow">

@@ -160,7 +160,7 @@
                     <td class="px-4 py-3 text-gray-400 text-xs">{{ $r->created_at->format('g:i A') }}</td>
                     <td class="px-4 py-3 no-print">
                         <form method="POST" action="{{ route('admin.children.attendance.remove', $r) }}"
-                              onsubmit="return confirm('Remove this record?')">
+                              data-confirm="Remove this record?" data-confirm-ok="Remove">
                             @csrf @method('DELETE')
                             <button type="submit" class="text-red-500 hover:text-red-700 text-xs">
                                 <i class="fas fa-trash-alt"></i>
@@ -197,7 +197,7 @@
                         </div>
                     </div>
                     <form method="POST" action="{{ route('admin.children.attendance.remove', $r) }}"
-                          onsubmit="return confirm('Remove this record?')" class="flex-shrink-0">
+                          data-confirm="Remove this record?" data-confirm-ok="Remove" class="flex-shrink-0">
                         @csrf @method('DELETE')
                         <button type="submit" class="text-red-400 hover:text-red-600 p-1">
                             <i class="fas fa-trash-alt text-sm"></i>

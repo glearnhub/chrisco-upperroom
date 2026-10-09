@@ -138,7 +138,7 @@
                 <h2 class="text-lg font-bold text-red-700 mb-2">Danger Zone</h2>
                 <p class="text-xs text-gray-500 mb-3">This action cannot be undone.</p>
                 <form method="POST" action="{{ route('admin.settings.users.destroy', $user) }}"
-                      onsubmit="return confirm('Delete {{ $user->name }}? This cannot be undone.')">
+                      data-confirm="Delete {{ $user->name }}? This cannot be undone." data-confirm-ok="Delete" data-confirm-title="Delete User">
                     @csrf @method('DELETE')
                     <button type="submit" class="w-full py-2 rounded-lg text-white text-sm font-semibold bg-red-600 hover:bg-red-700">
                         <i class="fas fa-trash mr-1"></i> Delete User

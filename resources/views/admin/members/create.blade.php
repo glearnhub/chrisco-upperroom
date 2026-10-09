@@ -35,6 +35,13 @@
                    class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400">
         </div>
         <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-1">Member Type <span class="text-red-500">*</span></label>
+            <select name="member_type" class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400">
+                <option value="adult" {{ old('member_type', 'adult') === 'adult' ? 'selected' : '' }}>Adult</option>
+                <option value="child" {{ old('member_type') === 'child' ? 'selected' : '' }}>Child (Sunday School)</option>
+            </select>
+        </div>
+        <div>
             <label class="block text-sm font-semibold text-gray-700 mb-1">Gender</label>
             <select name="gender" class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none">
                 <option value="">— Select —</option>
@@ -90,13 +97,14 @@
                    class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400">
         </div>
         <div>
-            <label class="block text-sm font-semibold text-gray-700 mb-1">Sub Location / Estate</label>
+            <label class="block text-sm font-semibold text-gray-700 mb-1">Estate</label>
             <input type="text" name="sub_location" value="{{ old('sub_location') }}"
                    class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400">
         </div>
         <div>
-            <label class="block text-sm font-semibold text-gray-700 mb-1">Physical Address</label>
+            <label class="block text-sm font-semibold text-gray-700 mb-1">Additional Directions</label>
             <input type="text" name="address" value="{{ old('address') }}"
+                   placeholder="e.g. Near the market, blue gate"
                    class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400">
         </div>
     </div>
@@ -106,9 +114,34 @@
     <h2 class="font-bold text-lg mb-4 pb-2 border-b" style="color: #0a1f44;">Church Information</h2>
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-1">Are you Born Again?</label>
+            <select name="is_born_again" onchange="toggleField('salvation_date_row', this.value === '1')"
+                    class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none">
+                <option value="0" {{ old('is_born_again', '0') == '0' ? 'selected' : '' }}>No</option>
+                <option value="1" {{ old('is_born_again') == '1' ? 'selected' : '' }}>Yes</option>
+            </select>
+        </div>
+        <div id="salvation_date_row" class="{{ old('is_born_again') == '1' ? '' : 'hidden' }}">
             <label class="block text-sm font-semibold text-gray-700 mb-1">Month &amp; Year of Salvation</label>
             <input type="text" name="salvation_date" value="{{ old('salvation_date') }}"
                    placeholder="e.g. March 2019"
+                   class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400">
+        </div>
+        <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-1">
+                Are you Baptized?
+                <span class="font-normal text-gray-400 text-xs ml-1">(Full immersion on Many Waters)</span>
+            </label>
+            <select name="is_baptized" onchange="toggleField('baptism_date_row', this.value === '1')"
+                    class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none">
+                <option value="0" {{ old('is_baptized', '0') == '0' ? 'selected' : '' }}>No</option>
+                <option value="1" {{ old('is_baptized') == '1' ? 'selected' : '' }}>Yes</option>
+            </select>
+        </div>
+        <div id="baptism_date_row" class="{{ old('is_baptized') == '1' ? '' : 'hidden' }}">
+            <label class="block text-sm font-semibold text-gray-700 mb-1">Month &amp; Year of Baptism</label>
+            <input type="text" name="baptism_date" value="{{ old('baptism_date') }}"
+                   placeholder="e.g. June 2019"
                    class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400">
         </div>
         <div>
@@ -118,16 +151,32 @@
         </div>
         <div>
             <label class="block text-sm font-semibold text-gray-700 mb-1">Are you a Committed Member?</label>
-            <select name="is_committed_member" onchange="toggleField('committed_date_row', this.value === '1')"
+            <select name="commitment_status" onchange="toggleField('committed_date_row', this.value === 'committed')"
                     class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none">
-                <option value="0" {{ old('is_committed_member', '0') == '0' ? 'selected' : '' }}>No</option>
-                <option value="1" {{ old('is_committed_member') == '1' ? 'selected' : '' }}>Yes</option>
+                <option value="committed" {{ old('commitment_status') === 'committed'                        ? 'selected' : '' }}>Yes</option>
+                <option value="in_class"  {{ old('commitment_status') === 'in_class'                         ? 'selected' : '' }}>No (Currently in Commitment Class)</option>
+                <option value="none"      {{ old('commitment_status', 'none') === 'none'                     ? 'selected' : '' }}>No (Not in Commitment Class)</option>
             </select>
         </div>
-        <div id="committed_date_row" class="{{ old('is_committed_member') == '1' ? '' : 'hidden' }}">
+        <div id="committed_date_row" class="{{ old('commitment_status') === 'committed' ? '' : 'hidden' }}">
             <label class="block text-sm font-semibold text-gray-700 mb-1">Month &amp; Year Committed</label>
             <input type="text" name="committed_date" value="{{ old('committed_date') }}"
                    placeholder="e.g. January 2020"
+                   class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400">
+        </div>
+        <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-1">Transfer Status</label>
+            <select name="transfer_type" id="transfer_type_create"
+                    onchange="document.getElementById('transfer_church_wrap_create').style.display = this.value === 'in' ? 'block' : 'none'"
+                    class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none">
+                <option value="" {{ old('transfer_type') == '' ? 'selected' : '' }}>Not Transferred</option>
+                <option value="in" {{ old('transfer_type') == 'in' ? 'selected' : '' }}>Transferred In (from another Chrisco Church)</option>
+            </select>
+        </div>
+        <div id="transfer_church_wrap_create" style="{{ old('transfer_type') === 'in' ? '' : 'display:none;' }}">
+            <label class="block text-sm font-semibold text-gray-700 mb-1">Church Transferred From</label>
+            <input type="text" name="transfer_church" value="{{ old('transfer_church') }}"
+                   placeholder="e.g. Chrisco Upper Room Westlands"
                    class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400">
         </div>
         <div>
@@ -163,7 +212,7 @@
                    class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400">
         </div>
         <div>
-            <label class="block text-sm font-semibold text-gray-700 mb-1">Assigned to a Deacon / Deaconess?</label>
+            <label class="block text-sm font-semibold text-gray-700 mb-1">Are you Assigned to a Deacon / Deaconess?</label>
             <select name="assigned_to_deacon" id="assigned_deacon" onchange="toggleField('deacon_row', this.value === '1')"
                     class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none">
                 <option value="0" {{ old('assigned_to_deacon', '0') == '0' ? 'selected' : '' }}>No</option>
@@ -191,8 +240,11 @@
 </div>
 
 <div class="bg-white rounded-xl shadow p-6">
-    <h2 class="font-bold text-lg mb-4 pb-2 border-b" style="color: #0a1f44;">Next of Kin (Emergency Contact)</h2>
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <h2 class="font-bold text-lg mb-4 pb-2 border-b" style="color: #0a1f44;">Next of Kin (Emergency Contacts)</h2>
+
+    {{-- Contact 1 --}}
+    <p class="text-xs font-bold uppercase tracking-wider mb-2" style="color:#f0a500;">Contact 1</p>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-5">
         <div>
             <label class="block text-sm font-semibold text-gray-700 mb-1">Full Name</label>
             <input type="text" name="next_of_kin_name" value="{{ old('next_of_kin_name') }}"
@@ -210,31 +262,101 @@
                    class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400">
         </div>
     </div>
-</div>
 
-<div class="bg-white rounded-xl shadow p-6">
-    <h2 class="font-bold text-lg mb-4 pb-2 border-b" style="color: #0a1f44;">Portal Account</h2>
+    {{-- Contact 2 --}}
+    <p class="text-xs font-bold uppercase tracking-wider mb-2" style="color:#f0a500;">Contact 2</p>
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div>
-            <label class="block text-sm font-semibold text-gray-700 mb-1">Role <span class="text-red-500">*</span></label>
-            <select name="role" class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none" required>
-                <option value="member" {{ old('role', 'member') === 'member' ? 'selected' : '' }}>Member</option>
-                <option value="admin" {{ old('role') === 'admin' ? 'selected' : '' }}>IT Support</option>
-            </select>
+            <label class="block text-sm font-semibold text-gray-700 mb-1">Full Name</label>
+            <input type="text" name="next_of_kin2_name" value="{{ old('next_of_kin2_name') }}"
+                   class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400">
         </div>
         <div>
-            <label class="block text-sm font-semibold text-gray-700 mb-1">Password <span class="text-red-500">*</span></label>
-            <input type="password" name="password" required
-                   class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 @error('password') border-red-400 @enderror">
-            @error('password')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
+            <label class="block text-sm font-semibold text-gray-700 mb-1">Relationship</label>
+            <input type="text" name="next_of_kin2_relationship" value="{{ old('next_of_kin2_relationship') }}"
+                   placeholder="e.g. Spouse, Parent, Sibling"
+                   class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400">
         </div>
         <div>
-            <label class="block text-sm font-semibold text-gray-700 mb-1">Confirm Password <span class="text-red-500">*</span></label>
-            <input type="password" name="password_confirmation" required
+            <label class="block text-sm font-semibold text-gray-700 mb-1">Phone Number</label>
+            <input type="text" name="next_of_kin2_phone" value="{{ old('next_of_kin2_phone') }}"
                    class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400">
         </div>
     </div>
 </div>
+
+{{-- Medical Information --}}
+<div class="rounded-xl shadow p-6" style="background:#fff; border-left: 4px solid #0a1f44;">
+    <h2 class="font-bold text-lg mb-1 pb-2 border-b" style="color: #0a1f44;">
+        <i class="fas fa-notes-medical mr-2" style="color:#f0a500;"></i>Medical Information
+    </h2>
+    <p class="text-xs text-gray-400 mb-5">This information is confidential and used only for the member's welfare and safety.</p>
+
+    {{-- Medical condition toggle --}}
+    <div class="mb-5">
+        <label class="block text-sm font-semibold text-gray-700 mb-2">Does this member have any underlying medical condition(s)?</label>
+        <div class="flex gap-6">
+            <label class="flex items-center gap-2 text-sm cursor-pointer">
+                <input type="radio" name="has_medical_condition" value="1" id="med-yes"
+                    onchange="document.getElementById('medical-details').classList.remove('hidden')"
+                    {{ old('has_medical_condition') == '1' ? 'checked' : '' }}>
+                Yes
+            </label>
+            <label class="flex items-center gap-2 text-sm cursor-pointer">
+                <input type="radio" name="has_medical_condition" value="0" id="med-no"
+                    onchange="document.getElementById('medical-details').classList.add('hidden')"
+                    {{ old('has_medical_condition', '0') == '0' ? 'checked' : '' }}>
+                No
+            </label>
+        </div>
+    </div>
+
+    {{-- Condition details (shown only when Yes) --}}
+    <div id="medical-details" class="{{ old('has_medical_condition') == '1' ? '' : 'hidden' }}">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-1">Condition(s) / Diagnosis</label>
+                <textarea name="medical_conditions" rows="2"
+                    class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                    placeholder="e.g. Diabetes, Hypertension">{{ old('medical_conditions') }}</textarea>
+            </div>
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-1">Medication(s) Currently Taking</label>
+                <textarea name="medications" rows="2"
+                    class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                    placeholder="e.g. Metformin 500mg">{{ old('medications') }}</textarea>
+            </div>
+        </div>
+    </div>
+
+    {{-- Always visible --}}
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-1">Allergies <span class="font-normal text-gray-400">(if any)</span></label>
+            <input type="text" name="allergies" value="{{ old('allergies') }}"
+                placeholder="e.g. Penicillin, Peanuts"
+                class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400">
+        </div>
+        <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-1">Emergency Medical Contact <span class="font-normal text-gray-400">(if different from Next of Kin)</span></label>
+            <input type="text" name="emergency_medical_contact" value="{{ old('emergency_medical_contact') }}"
+                placeholder="Full name"
+                class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400">
+        </div>
+        <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-1">Their Phone Number</label>
+            <input type="text" name="emergency_medical_phone" value="{{ old('emergency_medical_phone') }}"
+                class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400">
+        </div>
+        <div class="md:col-span-3">
+            <label class="block text-sm font-semibold text-gray-700 mb-1">Any Special Needs / Disability we should be aware of</label>
+            <textarea name="special_needs" rows="2"
+                class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                placeholder="e.g. Wheelchair user, hearing impaired">{{ old('special_needs') }}</textarea>
+        </div>
+    </div>
+</div>
+
 
 <div class="flex gap-3">
     <button type="submit" class="btn-red px-8 py-2 font-semibold">

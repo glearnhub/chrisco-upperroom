@@ -59,7 +59,7 @@
                     </div>
                     @if(!$role->is_super_admin)
                     <form method="POST" action="{{ route('admin.settings.roles.destroy', $role) }}"
-                          onsubmit="return confirm('Delete role {{ $role->name }}?')">
+                          data-confirm="Delete role {{ $role->name }}?" data-confirm-ok="Delete">
                         @csrf @method('DELETE')
                         <button type="submit" class="text-red-400 hover:text-red-600 text-xs">
                             <i class="fas fa-trash"></i>
@@ -168,7 +168,7 @@
                         <td class="py-1 text-gray-500 font-mono">{{ $perm->slug }}</td>
                         <td class="py-1 text-right">
                             <form method="POST" action="{{ route('admin.settings.permissions.destroy', $perm) }}"
-                                  onsubmit="return confirm('Delete permission {{ $perm->slug }}?')">
+                                  data-confirm="Delete permission {{ $perm->slug }}?" data-confirm-ok="Delete">
                                 @csrf @method('DELETE')
                                 <button type="submit" class="text-red-400 hover:text-red-600">
                                     <i class="fas fa-trash"></i>

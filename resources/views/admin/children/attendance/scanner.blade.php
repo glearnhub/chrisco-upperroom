@@ -1,15 +1,13 @@
 @extends('layouts.admin')
-@section('title', 'Attendance Scanner')
+@section('title', 'Children Check-In')
+@section('page-title', 'Children Check-In')
 
 @push('styles')
 <style>
-#video-wrap { position:relative; display:block; width:100%; }
-#video      { display:block; width:100%; height:auto; max-height:280px; object-fit:cover; background:#111; border-radius:0.75rem; }
-#overlay    { position:absolute; top:0; left:0; width:100%; height:100%; }
-.match-card { transition: all 0.3s; }
-.match-card.new-match { animation: pop 0.4s ease; }
-@keyframes pop { 0%{transform:scale(0.8);opacity:0} 60%{transform:scale(1.08)} 100%{transform:scale(1);opacity:1} }
-#scan-status { transition: background 0.3s; }
+.child-card { transition: transform .15s, box-shadow .15s; }
+.child-card:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,.08); }
+.checked-in-row { animation: slideIn .3s ease; }
+@keyframes slideIn { from { opacity:0; transform:translateX(-8px); } to { opacity:1; transform:translateX(0); } }
 </style>
 @endpush
 
@@ -17,15 +15,21 @@
 <div class="p-3 sm:p-6">
 
     {{-- Header --}}
-    <div class="flex items-start justify-between gap-3 mb-5">
+    <div class="flex flex-wrap items-center justify-between gap-3 mb-5">
         <div>
-            <h1 class="text-xl sm:text-2xl font-bold" style="color:#0a1f44;">Attendance Scanner</h1>
-            <p class="text-xs sm:text-sm text-gray-500 mt-0.5">Face recognition — {{ \Carbon\Carbon::parse($date)->format('l, d M Y') }}</p>
+            <h1 class="text-xl sm:text-2xl font-bold" style="color:#0a1f44;">Children Check-In</h1>
+            <p class="text-sm text-gray-500 mt-0.5" id="date-display">
+                {{ \Carbon\Carbon::parse($date)->format('l, d M Y') }}
+            </p>
         </div>
         <div class="flex gap-2 flex-shrink-0">
+            <a href="{{ route('admin.children.attendance.report') }}"
+               class="inline-flex items-center gap-1 px-3 py-2 text-xs sm:text-sm rounded border border-gray-300 bg-white text-gray-700">
+                <i class="fas fa-chart-bar"></i> <span class="hidden sm:inline">Report</span>
+            </a>
             <a href="{{ route('admin.children.attendance.history') }}"
                class="inline-flex items-center gap-1 px-3 py-2 text-xs sm:text-sm rounded border border-gray-300 bg-white text-gray-700">
-                <i class="fas fa-history"></i> <span class="hidden sm:inline">View History</span>
+                <i class="fas fa-history"></i> <span class="hidden sm:inline">History</span>
             </a>
             <a href="{{ route('admin.children.index') }}"
                class="inline-flex items-center gap-1 px-3 py-2 text-xs sm:text-sm rounded border border-gray-300 bg-white text-gray-700">
@@ -34,558 +38,254 @@
         </div>
     </div>
 
-    @if(session('success'))
-    <div class="mb-4 bg-green-100 border border-green-400 text-green-800 px-4 py-3 rounded flex items-center justify-between">
-        <span><i class="fas fa-check-circle mr-2"></i>{{ session('success') }}</span>
-        <button onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button>
-    </div>
-    @endif
-
-    @if($enrolled === 0)
-    <div class="bg-yellow-50 border border-yellow-300 rounded-xl p-6 text-center">
-        <i class="fas fa-exclamation-triangle text-yellow-500 text-3xl mb-3 block"></i>
-        <p class="font-semibold text-yellow-800">No face profiles enrolled yet</p>
-        <p class="text-sm text-yellow-700 mt-1">
-            Open each child's record and upload a clear face photo first.
-            Once saved, the system computes their face profile automatically.
-        </p>
-        <a href="{{ route('admin.children.index') }}"
-           class="inline-block mt-3 px-4 py-2 rounded text-white text-sm font-semibold" style="background:#0a1f44;">
-            Go to Children Records
-        </a>
-    </div>
-    @else
-
-    {{-- Settings bar --}}
+    {{-- Date + Class filter --}}
     <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 mb-5">
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
-                <label class="block text-xs font-semibold text-gray-500 mb-1 uppercase tracking-wider">Date</label>
+                <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Date</label>
                 <input type="date" id="att-date" value="{{ $date }}"
-                       class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300">
+                       class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300">
             </div>
             <div>
-                <label class="block text-xs font-semibold text-gray-500 mb-1 uppercase tracking-wider">Class Filter</label>
-                <select id="att-class" class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300">
-                    <option value="">All Classes ({{ $enrolled }} enrolled)</option>
+                <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Class</label>
+                <select id="att-class"
+                        class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300">
+                    <option value="">All Classes</option>
                     @foreach($classes as $key => $label)
-                    <option value="{{ $key }}" {{ $class == $key ? 'selected' : '' }}>{{ $label }}</option>
+                    <option value="{{ $key }}" {{ $class === $key ? 'selected' : '' }}>{{ $label }}</option>
                     @endforeach
                 </select>
             </div>
-        </div>
-        <div class="flex flex-wrap items-center justify-between gap-3">
-            <div>
-                <label class="block text-xs font-semibold text-gray-500 mb-1 uppercase tracking-wider">Match Sensitivity</label>
-                <div class="flex items-center gap-2">
-                    <span class="text-xs text-gray-400">Strict</span>
-                    <input type="range" id="threshold" min="40" max="80" value="55" class="w-28 sm:w-36">
-                    <span class="text-xs text-gray-400">Lenient</span>
-                    <span id="threshold-label" class="text-sm font-semibold text-gray-700 ml-1">55%</span>
+            <div class="flex items-end">
+                <div class="w-full px-4 py-2 rounded-lg text-center font-bold text-white text-sm" style="background:#0a1f44;">
+                    <span id="checked-in-count">{{ $alreadyMarked->count() }}</span> checked in today
                 </div>
             </div>
-            <button id="load-btn"
-                    class="px-4 py-2 text-sm rounded text-white font-semibold" style="background:#0a1f44;">
-                <i class="fas fa-sync-alt mr-1"></i> Load Profiles
-            </button>
         </div>
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
 
-        {{-- Left: Camera / Upload --}}
+        {{-- LEFT: Search & check-in --}}
         <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
-            <div id="scan-status" class="mb-3 px-3 py-2 rounded text-sm font-semibold text-center bg-gray-100 text-gray-600">
-                <i class="fas fa-circle-notch fa-spin mr-1 hidden" id="spinner"></i>
-                <span id="status-text">Loading face recognition models…</span>
+            <h2 class="font-bold text-gray-800 mb-4"><i class="fas fa-search mr-2 text-blue-600"></i>Find & Check In</h2>
+
+            <div class="relative mb-4">
+                <input type="text" id="search-input" placeholder="Type child's name…"
+                       class="w-full border border-gray-300 rounded-lg pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300"
+                       autocomplete="off">
+                <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
             </div>
 
-            {{-- Mode tabs --}}
-            <div class="flex rounded-lg border border-gray-200 mb-4 overflow-hidden">
-                <button id="tab-camera" onclick="setMode('camera')"
-                        class="flex-1 py-2 text-sm font-semibold bg-navy text-white" style="background:#0a1f44;">
-                    <i class="fas fa-camera mr-1"></i> Live Camera
-                </button>
-                <button id="tab-upload" onclick="setMode('upload')"
-                        class="flex-1 py-2 text-sm font-semibold text-gray-600 hover:bg-gray-50">
-                    <i class="fas fa-upload mr-1"></i> Upload Photo
-                </button>
+            <div id="search-results" class="space-y-2 min-h-[60px]">
+                <p class="text-sm text-gray-400 text-center py-6" id="search-placeholder">
+                    <i class="fas fa-child text-2xl block mb-2"></i>
+                    Start typing to search children
+                </p>
+            </div>
+        </div>
+
+        {{-- RIGHT: Already checked in --}}
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5 flex flex-col">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="font-bold text-gray-800"><i class="fas fa-check-circle mr-2 text-green-600"></i>Checked In</h2>
+                <span id="present-badge"
+                      class="px-2 py-0.5 rounded-full text-xs font-bold bg-green-100 text-green-700">
+                    {{ $alreadyMarked->count() }} present
+                </span>
             </div>
 
-            {{-- Camera panel --}}
-            <div id="panel-camera">
-                <div class="mb-3">
-                    <div id="video-wrap" class="rounded-xl overflow-hidden border-2 border-gray-200 w-full">
-                        <video id="video" autoplay muted playsinline></video>
-                        <canvas id="overlay"></canvas>
+            <div id="checked-list" class="space-y-2 flex-1 overflow-y-auto" style="max-height:420px;">
+                @forelse($alreadyMarked as $rec)
+                <div class="checked-in-row flex items-center justify-between bg-green-50 border border-green-200 rounded-lg px-3 py-2"
+                     id="row-{{ $rec->id }}">
+                    <div class="flex items-center gap-2 min-w-0">
+                        <span class="w-7 h-7 rounded-full bg-green-200 flex items-center justify-center flex-shrink-0 text-green-700 text-xs font-bold">
+                            {{ strtoupper(substr($rec->child->first_name ?? '?', 0, 1)) }}
+                        </span>
+                        <div class="min-w-0">
+                            <p class="font-semibold text-gray-800 text-sm truncate">{{ $rec->child->full_name ?? 'Unknown' }}</p>
+                            <p class="text-xs text-gray-500">{{ $rec->child->sunday_school_class ?? '—' }}</p>
+                        </div>
                     </div>
-                </div>
-                <div class="grid grid-cols-3 gap-2">
-                    <button id="start-camera" onclick="startCamera()"
-                            class="py-2 text-sm rounded text-white font-semibold" style="background:#059669;">
-                        <i class="fas fa-play mr-1"></i> <span class="hidden sm:inline">Start </span>Camera
-                    </button>
-                    <button id="scan-btn" onclick="scanFrame()" disabled
-                            class="py-2 text-sm rounded text-white font-semibold bg-gray-400 cursor-not-allowed">
-                        <i class="fas fa-search mr-1"></i> Scan Now
-                    </button>
-                    <button id="auto-btn" onclick="toggleAuto()"
-                            class="py-2 text-sm rounded border border-gray-300 text-gray-600 hover:bg-gray-50">
-                        <i class="fas fa-redo mr-1"></i> Auto
+                    <button onclick="undoCheckin({{ $rec->id }}, this)"
+                            class="text-red-400 hover:text-red-600 flex-shrink-0 ml-2 text-xs" title="Undo">
+                        <i class="fas fa-times"></i>
                     </button>
                 </div>
-            </div>
-
-            {{-- Upload panel --}}
-            <div id="panel-upload" class="hidden">
-                <label class="block w-full border-2 border-dashed border-gray-300 rounded-xl p-8 text-center cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition" id="drop-zone">
-                    <i class="fas fa-cloud-upload-alt text-3xl text-gray-400 mb-2 block"></i>
-                    <p class="text-sm text-gray-600">Drop a photo here or <span class="text-blue-600 font-semibold">click to browse</span></p>
-                    <p class="text-xs text-gray-400 mt-1">JPG, PNG — group or individual photos supported</p>
-                    <input type="file" id="photo-upload" accept="image/*" class="hidden" onchange="handleUpload(this)">
-                </label>
-                <div id="upload-preview" class="mt-4 hidden">
-                    <img id="upload-img" class="max-w-full rounded-xl border border-gray-200 mx-auto block" style="max-height:300px;">
-                    <canvas id="upload-canvas" class="hidden"></canvas>
+                @empty
+                <div id="empty-checked" class="text-center text-gray-400 py-10">
+                    <i class="fas fa-user-clock text-3xl mb-2 block"></i>
+                    <p class="text-sm">No children checked in yet</p>
                 </div>
-                <div class="mt-3 text-center hidden" id="scan-upload-btn-wrap">
-                    <button onclick="scanUploadedImage()"
-                            class="px-5 py-2 text-sm rounded text-white font-semibold" style="background:#0a1f44;">
-                        <i class="fas fa-search mr-1"></i> Detect Faces in Photo
-                    </button>
-                </div>
+                @endforelse
             </div>
         </div>
 
-        {{-- Right: Matched children --}}
-        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-5 flex flex-col">
-            <div class="flex items-center justify-between mb-3 gap-2">
-                <h2 class="font-bold text-gray-800 text-sm sm:text-base">
-                    <i class="fas fa-user-check mr-1 text-green-600"></i>
-                    Detected Today
-                    <span id="match-count" class="ml-1 text-sm font-normal text-gray-500">(0)</span>
-                </h2>
-                <button onclick="saveAll()"
-                        class="px-3 py-2 text-xs sm:text-sm rounded text-white font-semibold disabled:opacity-40 flex-shrink-0" style="background:#059669;"
-                        id="save-btn" disabled>
-                    <i class="fas fa-save mr-1"></i> Save
-                </button>
-            </div>
-
-            {{-- Already saved today --}}
-            @if($alreadyMarked->count())
-            <div class="mb-3 p-3 bg-green-50 border border-green-200 rounded-lg text-xs sm:text-sm text-green-800">
-                <i class="fas fa-check-circle mr-1"></i>
-                <strong>{{ $alreadyMarked->count() }}</strong> already saved:
-                {{ $alreadyMarked->pluck('child.first_name')->implode(', ') }}
-            </div>
-            @endif
-
-            <div id="matches-grid" class="grid grid-cols-2 gap-2 sm:gap-3 flex-1 overflow-y-auto" style="max-height:320px;">
-                <div class="col-span-2 text-center text-gray-400 py-10" id="empty-state">
-                    <i class="fas fa-face-smile text-3xl mb-2 block"></i>
-                    <p class="text-sm">Matched children will appear here</p>
-                </div>
-            </div>
-
-            {{-- Manual add --}}
-            <div class="mt-3 border-t border-gray-100 pt-3">
-                <p class="text-xs text-gray-500 mb-2 font-semibold uppercase tracking-wider">Add manually</p>
-                <div class="flex gap-2">
-                    <select id="manual-select" class="flex-1 border border-gray-300 rounded px-2 py-1.5 text-sm focus:outline-none min-w-0">
-                        <option value="">Select child…</option>
-                    </select>
-                    <button onclick="addManual()"
-                            class="px-3 py-1.5 rounded text-white text-sm font-semibold flex-shrink-0" style="background:#0a1f44;">
-                        Add
-                    </button>
-                </div>
-            </div>
-        </div>
     </div>
-    @endif
 </div>
 @endsection
 
 @push('scripts')
-{{-- face-api.js from CDN --}}
-<script src="{{ asset('face-models/face-api.min.js') }}"></script>
-
 <script>
-const MODELS_URL = '{{ asset('face-models') }}';
-const SAVE_URL   = @json(route('admin.children.attendance.save'));
-const DESC_URL   = @json(route('admin.children.attendance.descriptors'));
-const CSRF       = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+const SEARCH_URL  = '{{ route('admin.children.attendance.search') }}';
+const CHECKIN_URL = '{{ route('admin.children.attendance.checkin') }}';
+const UNDO_BASE   = '{{ url('/admin/children/attendance/undo/') }}/';
+const CSRF        = document.querySelector('meta[name="csrf-token"]').content;
 
-var labeledDescriptors = [];
-var allProfiles        = [];
-var matchedMap         = {};
-var videoStream        = null;
-var autoInterval       = null;
-var modelsReady        = false;
+let searchTimer = null;
 
-// ── Status helper ─────────────────────────────────────────────────
-function setStatus(text, type = 'info') {
-    const el = document.getElementById('scan-status');
-    const colors = { info: 'bg-blue-50 text-blue-700', success: 'bg-green-50 text-green-700',
-                     error: 'bg-red-50 text-red-700',  scanning: 'bg-yellow-50 text-yellow-700' };
-    el.className = 'mb-3 px-3 py-2 rounded text-sm font-semibold text-center ' + (colors[type] || colors.info);
-    document.getElementById('status-text').textContent = text;
-    document.getElementById('spinner').classList.toggle('hidden', type !== 'scanning');
-}
+function getDate()  { return document.getElementById('att-date').value; }
+function getClass() { return document.getElementById('att-class').value; }
 
-// ── Load face-api models ──────────────────────────────────────────
-async function loadModels() {
-    try {
-        setStatus('Loading model 1/3: face detector…', 'scanning');
-        await faceapi.nets.tinyFaceDetector.loadFromUri(MODELS_URL);
-
-        setStatus('Loading model 2/3: landmarks…', 'scanning');
-        await faceapi.nets.faceLandmark68Net.loadFromUri(MODELS_URL);
-
-        setStatus('Loading model 3/3: recognition (largest file)…', 'scanning');
-        await faceapi.nets.faceRecognitionNet.loadFromUri(MODELS_URL);
-
-        modelsReady = true;
-        setStatus('Models ready — loading profiles…', 'scanning');
-        await loadProfiles();
-    } catch (e) {
-        console.error('Model load error:', e);
-        setStatus('Failed to load models: ' + e.message, 'error');
-    }
-}
-
-// ── Load child profiles from server ──────────────────────────────
-document.getElementById('load-btn').addEventListener('click', loadProfiles);
-
-async function loadProfiles() {
-    if (!modelsReady) return setStatus('Models not ready yet.', 'error');
-    const cls = document.getElementById('att-class').value;
-    setStatus('Loading child profiles…', 'scanning');
-    try {
-        const res  = await fetch(DESC_URL + '?class=' + encodeURIComponent(cls));
-        const data = await res.json();
-        allProfiles = data;
-
-        if (!data.length) {
-            setStatus('No enrolled children found for this class.', 'error');
-            return;
-        }
-
-        labeledDescriptors = data.map(p => {
-            const arr  = Array.isArray(p.descriptor) ? p.descriptor : Object.values(p.descriptor);
-            const desc = new Float32Array(arr);
-            console.log(`Profile loaded: ${p.name} (id=${p.id}) descriptor length=${desc.length}`);
-            return new faceapi.LabeledFaceDescriptors(String(p.id), [desc]);
-        });
-
-        // Populate manual select
-        const sel = document.getElementById('manual-select');
-        sel.innerHTML = '<option value="">Select child…</option>';
-        data.forEach(p => {
-            const o = document.createElement('option');
-            o.value = p.id; o.textContent = p.name;
-            sel.appendChild(o);
-        });
-
-        setStatus(`${data.length} profile(s) loaded — ready to scan!`, 'success');
-    } catch (e) {
-        console.error('loadProfiles error:', e);
-        setStatus('Failed to load profiles: ' + e.message, 'error');
-    }
-}
-
-// ── Camera ───────────────────────────────────────────────────────
-async function startCamera() {
-    setStatus('Starting camera…', 'scanning');
-    try {
-        // Try with constraints first, fall back to bare {video:true} if driver rejects
-        try {
-            videoStream = await navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480, facingMode: 'user' } });
-        } catch (constraintErr) {
-            console.warn('Constraint getUserMedia failed, retrying bare:', constraintErr.name);
-            videoStream = await navigator.mediaDevices.getUserMedia({ video: true });
-        }
-        var vid = document.getElementById('video');
-        vid.srcObject = videoStream;
-        // Sync overlay canvas size to actual video dimensions once metadata loads
-        vid.onloadedmetadata = function() {
-            var ov = document.getElementById('overlay');
-            ov.width  = vid.videoWidth;
-            ov.height = vid.videoHeight;
-        };
-        setMode('camera');
-        document.getElementById('scan-btn').disabled = false;
-        document.getElementById('scan-btn').className = 'py-2 text-sm rounded text-white font-semibold cursor-pointer';
-        document.getElementById('scan-btn').style.background = '#0a1f44';
-        setStatus('Camera active. Click "Scan Now" or enable Auto.', 'success');
-    } catch (e) {
-        console.warn('Camera error:', e.name, e.message);
-        if (e.name === 'NotAllowedError' || e.name === 'PermissionDeniedError') {
-            setMode('upload');
-            setStatus('Camera permission denied — upload a photo below, or allow camera access in browser settings.', 'error');
-        } else if (e.name === 'NotFoundError' || e.name === 'DevicesNotFoundError') {
-            setStatus('No camera found on this device. Use Upload mode.', 'error');
-            setMode('upload');
-        } else if (e.name === 'NotReadableError' || e.name === 'TrackStartError') {
-            setStatus('Camera is in use by another app. Close other camera apps or tabs, then click Start Camera again.', 'error');
-        } else {
-            setStatus('Camera error: ' + e.message + '. Try closing other apps using the camera.', 'error');
-        }
-    }
-}
-
-async function scanFrame() {
-    if (!modelsReady) return setStatus('Models still loading, please wait…', 'scanning');
-    if (!labeledDescriptors.length) {
-        setStatus('No profiles loaded yet — click "Load Profiles" above.', 'error');
+// ── Search ──────────────────────────────────────────────────────────
+document.getElementById('search-input').addEventListener('input', function () {
+    clearTimeout(searchTimer);
+    const q = this.value.trim();
+    if (!q) {
+        document.getElementById('search-results').innerHTML =
+            '<p class="text-sm text-gray-400 text-center py-6"><i class="fas fa-child text-2xl block mb-2"></i>Start typing to search children</p>';
         return;
     }
-    const video = document.getElementById('video');
-    if (!videoStream || video.readyState < 2) {
-        return setStatus('Camera not ready. Click "Start Camera" first.', 'error');
-    }
-    setStatus('Scanning…', 'scanning');
-    const results = await detectAndMatch(video);
-    if (!results) return;
-    results.forEach(r => addMatch(r.id, r.name, r.confidence, 'face'));
-    if (results.length) {
-        setStatus(`Scan complete — ${results.length} face(s) matched!`, 'success');
-    } else {
-        setStatus('No match found. Try adjusting lighting or lowering the confidence threshold.', 'info');
-    }
-}
-
-let autoOn = false;
-function toggleAuto() {
-    autoOn = !autoOn;
-    const btn = document.getElementById('auto-btn');
-    if (autoOn) {
-        btn.style.background = '#c0392b'; btn.style.color = '#fff'; btn.textContent = '⏹ Stop Auto';
-        autoInterval = setInterval(scanFrame, 2500);
-    } else {
-        btn.style.background = ''; btn.style.color = ''; btn.textContent = '↺ Auto';
-        clearInterval(autoInterval);
-    }
-}
-
-// ── Upload mode ───────────────────────────────────────────────────
-function setMode(mode) {
-    document.getElementById('panel-camera').classList.toggle('hidden', mode !== 'camera');
-    document.getElementById('panel-upload').classList.toggle('hidden', mode !== 'upload');
-    document.getElementById('tab-camera').style.background = mode === 'camera' ? '#0a1f44' : '';
-    document.getElementById('tab-camera').style.color      = mode === 'camera' ? '#fff' : '';
-    document.getElementById('tab-upload').style.background = mode === 'upload' ? '#0a1f44' : '';
-    document.getElementById('tab-upload').style.color      = mode === 'upload' ? '#fff' : '';
-}
-
-function handleUpload(input) {
-    const file = input.files[0]; if (!file) return;
-    const reader = new FileReader();
-    reader.onload = e => {
-        const img = document.getElementById('upload-img');
-        img.src = e.target.result;
-        document.getElementById('upload-preview').classList.remove('hidden');
-        document.getElementById('scan-upload-btn-wrap').classList.remove('hidden');
-    };
-    reader.readAsDataURL(file);
-}
-
-// Drag and drop
-const dz = document.getElementById('drop-zone');
-dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('border-blue-500'); });
-dz.addEventListener('dragleave', () => dz.classList.remove('border-blue-500'));
-dz.addEventListener('drop', e => {
-    e.preventDefault(); dz.classList.remove('border-blue-500');
-    const file = e.dataTransfer.files[0];
-    if (file) { document.getElementById('photo-upload').files = e.dataTransfer.files; handleUpload({ files: [file] }); }
+    searchTimer = setTimeout(() => doSearch(q), 280);
 });
 
-async function scanUploadedImage() {
-    if (!modelsReady) return setStatus('Models are still loading, please wait a moment…', 'scanning');
-    if (!labeledDescriptors.length) return setStatus('No enrolled children found. Enroll a child\'s face first via Children → Edit.', 'error');
-    const img = document.getElementById('upload-img');
-    if (!img || !img.naturalWidth) return setStatus('Photo not loaded yet — please wait a second and try again.', 'error');
-    setStatus('Analysing photo…', 'scanning');
-    try {
-        const results = await detectAndMatch(img);
-        if (!results) return;
-        if (results.length === 0) return; // status already set inside detectAndMatch
-        results.forEach(r => addMatch(r.id, r.name, r.confidence, 'face'));
-        setStatus(`Done — ${results.length} face(s) matched.`, 'success');
-    } catch (err) {
-        console.error('Detection error:', err);
-        setStatus('Detection failed: ' + err.message, 'error');
-    }
-}
+document.getElementById('att-date').addEventListener('change', () => {
+    const q = document.getElementById('search-input').value.trim();
+    if (q) doSearch(q);
+    reloadCheckedList();
+});
+document.getElementById('att-class').addEventListener('change', () => {
+    const q = document.getElementById('search-input').value.trim();
+    if (q) doSearch(q);
+    reloadCheckedList();
+});
 
-// ── Core detection & matching ─────────────────────────────────────
-async function detectAndMatch(source) {
-    if (!labeledDescriptors.length) { setStatus('Load profiles first.', 'error'); return null; }
+async function doSearch(q) {
+    const url = `${SEARCH_URL}?q=${encodeURIComponent(q)}&date=${getDate()}&class=${encodeURIComponent(getClass())}`;
+    const res  = await fetch(url, { headers: { 'Accept': 'application/json' } });
+    const list = await res.json();
 
-    // For video: snapshot to canvas first (much faster than reading live frames)
-    var inputEl = source;
-    if (source.tagName === 'VIDEO') {
-        var snap = document.createElement('canvas');
-        snap.width  = source.videoWidth  || 400;
-        snap.height = source.videoHeight || 300;
-        snap.getContext('2d').drawImage(source, 0, 0, snap.width, snap.height);
-        inputEl = snap;
-    }
-
-    const w = inputEl.naturalWidth || inputEl.width || inputEl.videoWidth;
-    const h = inputEl.naturalHeight || inputEl.height || inputEl.videoHeight;
-    console.log('Running detectAllFaces on', inputEl.tagName, w, 'x', h);
-    if (!w || !h) {
-        setStatus('Image has no dimensions — try a different photo.', 'error');
-        return null;
-    }
-
-    // inputSize must be a multiple of 32; pick closest ≥ longest side, max 416
-    const longest = Math.max(w, h);
-    const sizes = [128, 160, 224, 320, 416];
-    const inputSize = sizes.find(s => s >= longest) || 416;
-    const opts = new faceapi.TinyFaceDetectorOptions({ inputSize, scoreThreshold: 0.2 });
-    console.log('Using inputSize:', inputSize);
-    const detections = await faceapi.detectAllFaces(inputEl, opts)
-        .withFaceLandmarks()
-        .withFaceDescriptors();
-
-    console.log('Detections found:', detections.length);
-
-    if (!detections.length) {
-        setStatus('No face detected — ensure face fills the frame, good lighting, camera facing you.', 'info');
-        return [];
-    }
-
-    const sliderVal    = parseInt(document.getElementById('threshold').value);
-    const distThreshold = sliderVal / 100;
-    console.log('Matching against', labeledDescriptors.length, 'profiles, distance threshold:', distThreshold);
-    const matcher = new faceapi.FaceMatcher(labeledDescriptors, distThreshold);
-    const results = [];
-
-    detections.forEach((d, i) => {
-        const match    = matcher.findBestMatch(d.descriptor);
-        const distance = match.distance;
-        const pct      = Math.round((1 - distance) * 100);
-        console.log(`Face ${i+1}: best match="${match.label}" distance=${distance.toFixed(3)} confidence=${pct}%`);
-        if (match.label !== 'unknown') {
-            const profile = allProfiles.find(p => String(p.id) === match.label);
-            if (profile) results.push({ id: profile.id, name: profile.name, confidence: pct });
-        }
-    });
-
-    // Draw boxes on overlay (camera mode)
-    const canvas = document.getElementById('overlay');
-    const ctx = canvas.getContext('2d');
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    detections.forEach((d, i) => {
-        const box = d.detection.box;
-        ctx.strokeStyle = results[i] ? '#16a34a' : '#dc2626';
-        ctx.lineWidth = 2;
-        ctx.strokeRect(box.x, box.y, box.width, box.height);
-        if (results[i]) {
-            ctx.fillStyle = '#16a34a';
-            ctx.font = '12px Arial';
-            ctx.fillText(results[i].name, box.x, box.y - 4);
-        }
-    });
-
-    return results;
-}
-
-// ── Match card management ─────────────────────────────────────────
-function addMatch(id, name, confidence, method) {
-    if (matchedMap[id]) {
-        // Update confidence if better
-        if (confidence > matchedMap[id].confidence) {
-            matchedMap[id].confidence = confidence;
-            document.getElementById('match-conf-' + id).textContent = confidence + '%';
-        }
+    const container = document.getElementById('search-results');
+    if (!list.length) {
+        container.innerHTML = '<p class="text-sm text-gray-400 text-center py-4">No children found</p>';
         return;
     }
-    matchedMap[id] = { id, name, confidence, method };
-    document.getElementById('empty-state').classList.add('hidden');
 
-    const card = document.createElement('div');
-    card.id = 'card-' + id;
-    card.className = 'match-card new-match bg-green-50 border border-green-200 rounded-xl p-3 flex items-center gap-2';
-    card.innerHTML = `
-        <div class="w-8 h-8 rounded-full bg-green-200 flex items-center justify-center flex-shrink-0">
-            <i class="fas fa-user-check text-green-700 text-xs"></i>
+    container.innerHTML = list.map(c => `
+        <div class="child-card flex items-center justify-between rounded-lg border px-3 py-2 gap-2
+                    ${c.already_in ? 'bg-green-50 border-green-200' : 'bg-gray-50 border-gray-200 hover:border-blue-300'}"
+             id="sr-${c.id}">
+            <div class="flex items-center gap-2 min-w-0">
+                <span class="w-7 h-7 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0 text-blue-700 text-xs font-bold">
+                    ${c.name.charAt(0).toUpperCase()}
+                </span>
+                <div class="min-w-0">
+                    <p class="font-semibold text-gray-800 text-sm truncate">${c.name}</p>
+                    <p class="text-xs text-gray-500">${c.class}</p>
+                </div>
+            </div>
+            ${c.already_in
+                ? '<span class="text-xs font-semibold text-green-600 flex-shrink-0"><i class="fas fa-check mr-1"></i>Present</span>'
+                : `<button onclick="doCheckin(${c.id}, '${c.name.replace(/'/g,"\\'")}', this)"
+                           class="px-3 py-1 rounded text-xs font-bold text-white flex-shrink-0" style="background:#0a1f44;">
+                       <i class="fas fa-plus mr-1"></i>Check In
+                   </button>`
+            }
+        </div>`).join('');
+}
+
+// ── Check In ────────────────────────────────────────────────────────
+async function doCheckin(childId, name, btn) {
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i>';
+
+    try {
+        const res  = await fetch(CHECKIN_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' },
+            body: JSON.stringify({ child_id: childId, date: getDate() }),
+        });
+        const data = await res.json();
+
+        if (res.status === 409) { btn.innerHTML = '<i class="fas fa-check"></i> Present'; return; }
+        if (!data.success) throw new Error();
+
+        // Mark search card as present
+        const srCard = document.getElementById('sr-' + childId);
+        if (srCard) {
+            const btnWrap = srCard.querySelector('button');
+            if (btnWrap) btnWrap.outerHTML = '<span class="text-xs font-semibold text-green-600 flex-shrink-0"><i class="fas fa-check mr-1"></i>Present</span>';
+            srCard.className = srCard.className.replace('bg-gray-50 border-gray-200 hover:border-blue-300', 'bg-green-50 border-green-200');
+        }
+
+        // Add to checked-in list
+        addToCheckedList(data.id, data.name, data.class);
+        updateCount(1);
+    } catch(e) {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-plus mr-1"></i>Check In';
+    }
+}
+
+function addToCheckedList(recId, name, cls) {
+    document.getElementById('empty-checked')?.remove();
+    const list = document.getElementById('checked-list');
+    const row  = document.createElement('div');
+    row.id = 'row-' + recId;
+    row.className = 'checked-in-row flex items-center justify-between bg-green-50 border border-green-200 rounded-lg px-3 py-2';
+    row.innerHTML = `
+        <div class="flex items-center gap-2 min-w-0">
+            <span class="w-7 h-7 rounded-full bg-green-200 flex items-center justify-center flex-shrink-0 text-green-700 text-xs font-bold">
+                ${name.charAt(0).toUpperCase()}
+            </span>
+            <div class="min-w-0">
+                <p class="font-semibold text-gray-800 text-sm truncate">${name}</p>
+                <p class="text-xs text-gray-500">${cls}</p>
+            </div>
         </div>
-        <div class="flex-1 min-w-0">
-            <p class="font-semibold text-gray-800 text-sm truncate">${name}</p>
-            <p class="text-xs text-gray-500">
-                ${method === 'face' ? '<i class="fas fa-camera"></i>' : '<i class="fas fa-hand-pointer"></i>'}
-                <span id="match-conf-${id}">${confidence}%</span> confidence
-            </p>
-        </div>
-        <button onclick="removeMatch(${id})" class="text-red-400 hover:text-red-600 text-xs flex-shrink-0">
+        <button onclick="undoCheckin(${recId}, this)" class="text-red-400 hover:text-red-600 flex-shrink-0 ml-2 text-xs" title="Undo">
             <i class="fas fa-times"></i>
         </button>`;
-    document.getElementById('matches-grid').appendChild(card);
-
-    updateCount();
+    list.prepend(row);
 }
 
-function removeMatch(id) {
-    delete matchedMap[id];
-    const card = document.getElementById('card-' + id);
-    if (card) card.remove();
-    if (!Object.keys(matchedMap).length) document.getElementById('empty-state').classList.remove('hidden');
-    updateCount();
-}
-
-function updateCount() {
-    const n = Object.keys(matchedMap).length;
-    document.getElementById('match-count').textContent = '(' + n + ')';
-    document.getElementById('save-btn').disabled = n === 0;
-}
-
-function addManual() {
-    const sel = document.getElementById('manual-select');
-    const id  = sel.value;
-    const name = sel.options[sel.selectedIndex].text;
-    if (!id) return;
-    addMatch(parseInt(id), name, 100, 'manual');
-    sel.value = '';
-}
-
-// ── Save attendance ───────────────────────────────────────────────
-async function saveAll() {
-    const matches = Object.values(matchedMap);
-    if (!matches.length) return;
-    const date = document.getElementById('att-date').value;
-
-    setStatus('Saving attendance…', 'scanning');
+// ── Undo ────────────────────────────────────────────────────────────
+async function undoCheckin(recId, btn) {
+    if (!confirm('Remove this check-in?')) return;
+    btn.disabled = true;
     try {
-        const res = await fetch(SAVE_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': CSRF },
-            body: JSON.stringify({ date, matches }),
+        await fetch(UNDO_BASE + recId, {
+            method: 'DELETE',
+            headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' },
         });
-        const data = await res.json();
-        setStatus(`✓ ${data.saved} attendance record(s) saved for ${date}!`, 'success');
-        // Reload after 1.5s to show updated "already saved" panel
-        setTimeout(() => location.reload(), 1500);
-    } catch (e) {
-        setStatus('Failed to save. Please try again.', 'error');
-    }
+        document.getElementById('row-' + recId)?.remove();
+        updateCount(-1);
+        if (!document.getElementById('checked-list').querySelector('[id^="row-"]')) {
+            document.getElementById('checked-list').innerHTML =
+                '<div id="empty-checked" class="text-center text-gray-400 py-10"><i class="fas fa-user-clock text-3xl mb-2 block"></i><p class="text-sm">No children checked in yet</p></div>';
+        }
+        // Re-run search to reflect undo
+        const q = document.getElementById('search-input').value.trim();
+        if (q) doSearch(q);
+    } catch(e) { btn.disabled = false; }
 }
 
-// ── Threshold slider ──────────────────────────────────────────────
-document.getElementById('threshold').addEventListener('input', function () {
-    document.getElementById('threshold-label').textContent = this.value + '%';
-});
+// ── Helpers ─────────────────────────────────────────────────────────
+function updateCount(delta) {
+    const countEl = document.getElementById('checked-in-count');
+    const badgeEl = document.getElementById('present-badge');
+    const n = parseInt(countEl.textContent) + delta;
+    countEl.textContent = n;
+    badgeEl.textContent = n + ' present';
+}
 
-// ── Boot ─────────────────────────────────────────────────────────
-loadModels();
-
-// If the browser has no getUserMedia at all, default to upload
-if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-    setMode('upload');
-    setStatus('Camera not supported in this browser. Use Upload mode.', 'error');
+async function reloadCheckedList() {
+    // Simple page reload to reflect date/class filter change on right panel
+    const url = new URL(window.location.href);
+    url.searchParams.set('date', getDate());
+    url.searchParams.set('class', getClass());
+    window.location.href = url.toString();
 }
 </script>
 @endpush

@@ -10,8 +10,16 @@
     .print-header { display: block !important; }
     .section-card { box-shadow: none !important; border: 1px solid #ddd !important; }
     .page-break { page-break-before: always; }
+    .section-body { display: block !important; } /* always show all on print */
 }
 .print-header { display: none; }
+
+/* Accordion */
+.section-header { cursor: pointer; user-select: none; }
+.section-header:hover { filter: brightness(0.97); }
+.section-chevron { transition: transform .25s ease; flex-shrink: 0; }
+.section-body { overflow: hidden; transition: max-height .3s ease, opacity .25s ease; max-height: 0; opacity: 0; }
+.section-body.open { max-height: 9999px; opacity: 1; }
 </style>
 @endpush
 
@@ -196,13 +204,22 @@
 
     {{-- ── ACTIVE MEMBERS ── --}}
     <div class="bg-white rounded-xl shadow-sm border-l-4 overflow-hidden mb-6 section-card" style="border-color:#16a34a;">
-        <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between gap-3 flex-wrap">
-            <h2 class="font-bold" style="color:#16a34a;">
-                <i class="fas fa-check-circle mr-2"></i>Active Members
-                <span class="ml-2 text-sm font-semibold text-gray-500">(attended 3+ Sundays)</span>
+        <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between gap-3 flex-wrap section-header no-print"
+             onclick="toggleSection('active')" role="button" aria-expanded="false" aria-controls="body-active">
+            <h2 class="font-bold flex items-center gap-2" style="color:#16a34a;">
+                <i class="fas fa-check-circle"></i>Active Members
+                <span class="text-sm font-semibold text-gray-500">(attended 3+ Sundays)</span>
             </h2>
-            <span class="px-3 py-1 rounded-full text-sm font-bold bg-green-100 text-green-700">{{ $activeCount }} members</span>
+            <div class="flex items-center gap-2">
+                <span class="px-3 py-1 rounded-full text-sm font-bold bg-green-100 text-green-700">{{ $activeCount }} members</span>
+                <i class="fas fa-chevron-down section-chevron text-gray-400" id="chevron-active"></i>
+            </div>
         </div>
+        {{-- always-visible header for print --}}
+        <div class="px-5 py-4 border-b border-gray-100 hidden print-only" style="display:none;">
+            <h2 class="font-bold" style="color:#16a34a;"><i class="fas fa-check-circle mr-2"></i>Active Members <span class="text-sm font-semibold text-gray-500">(attended 3+ Sundays)</span></h2>
+        </div>
+        <div class="section-body" id="body-active">
         @if($activeCount)
         <div class="overflow-x-auto">
         <table class="w-full text-sm">
@@ -239,17 +256,23 @@
         @else
         <div class="px-5 py-8 text-center text-gray-400 text-sm">No active members recorded for this month.</div>
         @endif
+        </div>
     </div>
 
     {{-- ── INACTIVE MEMBERS ── --}}
     <div class="bg-white rounded-xl shadow-sm border-l-4 overflow-hidden mb-6 section-card page-break" style="border-color:#dc2626;">
-        <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between gap-3 flex-wrap">
-            <h2 class="font-bold" style="color:#dc2626;">
-                <i class="fas fa-exclamation-circle mr-2"></i>Inactive Members
-                <span class="ml-2 text-sm font-semibold text-gray-500">(missed 3+ Sundays)</span>
+        <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between gap-3 flex-wrap section-header no-print"
+             onclick="toggleSection('inactive')" role="button" aria-expanded="false" aria-controls="body-inactive">
+            <h2 class="font-bold flex items-center gap-2" style="color:#dc2626;">
+                <i class="fas fa-exclamation-circle"></i>Inactive Members
+                <span class="text-sm font-semibold text-gray-500">(missed 3+ Sundays)</span>
             </h2>
-            <span class="px-3 py-1 rounded-full text-sm font-bold bg-red-100 text-red-700">{{ $inactiveCount }} members</span>
+            <div class="flex items-center gap-2">
+                <span class="px-3 py-1 rounded-full text-sm font-bold bg-red-100 text-red-700">{{ $inactiveCount }} members</span>
+                <i class="fas fa-chevron-down section-chevron text-gray-400" id="chevron-inactive"></i>
+            </div>
         </div>
+        <div class="section-body" id="body-inactive">
         @if($inactiveCount)
         <div class="overflow-x-auto">
         <table class="w-full text-sm">
@@ -331,6 +354,7 @@
             <i class="fas fa-check-double mr-2 text-green-400"></i>No inactive members this month.
         </div>
         @endif
+        </div>{{-- /section-body inactive --}}
     </div>
 
     {{-- ── FOLLOW-UP MODAL ── --}}
@@ -395,13 +419,18 @@
     {{-- ── IRREGULAR MEMBERS ── --}}
     @if($irregularCount)
     <div class="bg-white rounded-xl shadow-sm border-l-4 overflow-hidden mb-6 section-card" style="border-color:#d97706;">
-        <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between gap-3 flex-wrap">
-            <h2 class="font-bold" style="color:#d97706;">
-                <i class="fas fa-exclamation-triangle mr-2"></i>Irregular / At Risk
-                <span class="ml-2 text-sm font-semibold text-gray-500">(attended 1–2, missed 1–2)</span>
+        <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between gap-3 flex-wrap section-header no-print"
+             onclick="toggleSection('irregular')" role="button" aria-expanded="false" aria-controls="body-irregular">
+            <h2 class="font-bold flex items-center gap-2" style="color:#d97706;">
+                <i class="fas fa-exclamation-triangle"></i>Irregular / At Risk
+                <span class="text-sm font-semibold text-gray-500">(attended 1–2, missed 1–2)</span>
             </h2>
-            <span class="px-3 py-1 rounded-full text-sm font-bold bg-yellow-100 text-yellow-700">{{ $irregularCount }} members</span>
+            <div class="flex items-center gap-2">
+                <span class="px-3 py-1 rounded-full text-sm font-bold bg-yellow-100 text-yellow-700">{{ $irregularCount }} members</span>
+                <i class="fas fa-chevron-down section-chevron text-gray-400" id="chevron-irregular"></i>
+            </div>
         </div>
+        <div class="section-body" id="body-irregular">
         <div class="overflow-x-auto">
         <table class="w-full text-sm">
             <thead class="bg-yellow-50">
@@ -472,6 +501,7 @@
             </tbody>
         </table>
         </div>
+        </div>{{-- /section-body irregular --}}
     </div>
     @endif
 
@@ -480,6 +510,31 @@
 
 @push('scripts')
 <script>
+// ── Accordion ──────────────────────────────────────────────────────────────
+const SECTIONS = ['active', 'inactive', 'irregular'];
+
+function toggleSection(id) {
+    const isOpen = document.getElementById('body-' + id).classList.contains('open');
+    // collapse all
+    SECTIONS.forEach(s => {
+        document.getElementById('body-' + s)?.classList.remove('open');
+        const ch = document.getElementById('chevron-' + s);
+        if (ch) ch.style.transform = '';
+        const hdr = document.querySelector('[aria-controls="body-' + s + '"]');
+        if (hdr) hdr.setAttribute('aria-expanded', 'false');
+    });
+    // expand clicked one only if it was closed
+    if (!isOpen) {
+        document.getElementById('body-' + id).classList.add('open');
+        const ch = document.getElementById('chevron-' + id);
+        if (ch) ch.style.transform = 'rotate(180deg)';
+        const hdr = document.querySelector('[aria-controls="body-' + id + '"]');
+        if (hdr) hdr.setAttribute('aria-expanded', 'true');
+    }
+}
+// all collapsed on load — nothing to init
+// ─────────────────────────────────────────────────────────────────────────
+
 const FU_SAVE_URL   = '{{ route('admin.attendance.followup.save') }}';
 const FU_DELETE_URL = '{{ route('admin.attendance.followup.delete') }}';
 const CSRF          = document.querySelector('meta[name="csrf-token"]').content;

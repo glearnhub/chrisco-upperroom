@@ -31,6 +31,14 @@ class AuthenticatedSessionController extends Controller
 
         SystemLog::record('login', 'Auth', 'User logged in.');
 
+        $user = Auth::user();
+
+        // Follow-up team members only have attendance.followup permission — send them
+        // straight to the follow-up team view instead of the dashboard (which would 403).
+        if ($user->hasPermission('attendance.followup') && !$user->hasPermission('dashboard.view')) {
+            return redirect()->route('admin.attendance.followup.team');
+        }
+
         return redirect()->route('admin.dashboard');
     }
 

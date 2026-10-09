@@ -119,7 +119,7 @@
                 <a href="{{ route('admin.calendar.index', ['year' => $calendar->calendar_year]) }}"
                    class="px-6 py-2 rounded-lg border border-gray-300 text-sm text-gray-600 hover:bg-gray-50">Cancel</a>
                 <form method="POST" action="{{ route('admin.calendar.destroy', $calendar) }}"
-                      onsubmit="return confirm('Delete this event?')" class="ml-auto">
+                      data-confirm="Delete this event?" data-confirm-ok="Delete" class="ml-auto">
                     @csrf @method('DELETE')
                     <button type="submit" class="px-4 py-2 rounded-lg bg-red-100 text-red-700 text-sm font-semibold hover:bg-red-200">
                         <i class="fas fa-trash mr-1"></i> Delete

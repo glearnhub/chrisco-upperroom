@@ -19,7 +19,7 @@
                 <i class="fas fa-edit"></i> Edit
             </a>
             <form method="POST" action="{{ route('admin.visitors.destroy', $visitor) }}"
-                  onsubmit="return confirm('Delete this visitor record?')">
+                  data-confirm="Delete this visitor record?" data-confirm-ok="Delete">
                 @csrf @method('DELETE')
                 <button type="submit"
                         class="inline-flex items-center gap-2 px-4 py-2 text-sm rounded bg-red-50 border border-red-200 text-red-600 hover:bg-red-100">

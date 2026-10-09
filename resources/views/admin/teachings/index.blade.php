@@ -59,7 +59,7 @@
                             <i class="fas fa-edit"></i>
                         </a>
                         <form method="POST" action="{{ route('admin.teachings.destroy', $teaching) }}"
-                              onsubmit="return confirm('Delete this teaching?')">
+                              data-confirm="Delete this teaching?" data-confirm-ok="Delete">
                             @csrf @method('DELETE')
                             <button type="submit" class="text-red-500 hover:text-red-700 text-xs" title="Delete">
                                 <i class="fas fa-trash"></i>

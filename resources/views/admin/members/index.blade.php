@@ -34,6 +34,16 @@
            style="background:#16a34a;">
             <i class="fas fa-file-csv"></i> Export CSV
         </a>
+        <a href="{{ route('admin.members.transferred-in') }}"
+           class="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold text-white"
+           style="background:#0a1f44;">
+            <i class="fas fa-sign-in-alt"></i> Transferred In
+        </a>
+        <a href="{{ route('admin.members.transferred-out') }}"
+           class="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold text-white"
+           style="background:#dc2626;">
+            <i class="fas fa-sign-out-alt"></i> Transferred Out
+        </a>
         <a href="{{ route('admin.members.print', request()->query()) }}" target="_blank"
            class="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold text-white"
            style="background:#0a1f44;">

@@ -1,5 +1,8 @@
 /.phpunit.cache
 /database/*.sql
+/*.sql
+/*.pdf
+/*.zip
 /node_modules
 /public/build
 /public/hot

@@ -35,7 +35,7 @@
         </div>
     </div>
     <form method="POST" action="{{ route('admin.livestreams.endAll') }}"
-          onsubmit="return confirm('End all active livestreams?')">
+          data-confirm="End all active livestreams?" data-confirm-ok="End All" data-confirm-type="warning">
         @csrf
         <button type="submit"
                 class="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold text-white bg-red-600 hover:bg-red-700 whitespace-nowrap">
@@ -74,22 +74,23 @@
                         {{ $ls->scheduled_at ? $ls->scheduled_at->format('M d, Y g:i A') : '—' }}
                     </td>
                     <td class="px-4 py-3">
-                        <form method="POST" action="{{ route('admin.livestreams.toggleLive', $ls) }}">
+                        @if($ls->is_live)
+                        <form method="POST" action="{{ route('admin.livestreams.toggleLive', $ls) }}"
+                              data-confirm="End this livestream? It will no longer show as live on the website." data-confirm-ok="End Stream" data-confirm-type="warning">
                             @csrf @method('PATCH')
-                            @if($ls->is_live)
-                            <button type="submit"
-                                    onclick="return confirm('End this livestream? It will no longer show as live on the website.')"
-                                    class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-red-600 text-white hover:bg-red-700">
+                            <button type="submit" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-red-600 text-white hover:bg-red-700">
                                 <i class="fas fa-stop-circle"></i> End Stream
                             </button>
-                            @else
-                            <button type="submit"
-                                    onclick="return confirm('Go live with this stream? It will appear as LIVE on the website.')"
-                                    class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-gray-200 text-gray-700 hover:bg-green-100 hover:text-green-800">
+                        </form>
+                        @else
+                        <form method="POST" action="{{ route('admin.livestreams.toggleLive', $ls) }}"
+                              data-confirm="Go live with this stream? It will appear as LIVE on the website." data-confirm-ok="Go Live" data-confirm-type="info">
+                            @csrf @method('PATCH')
+                            <button type="submit" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-gray-200 text-gray-700 hover:bg-green-100 hover:text-green-800">
                                 <i class="fas fa-play-circle"></i> Go Live
                             </button>
-                            @endif
                         </form>
+                        @endif
                     </td>
                     <td class="px-4 py-3">
                         <div class="flex items-center gap-2">
@@ -98,7 +99,7 @@
                                 <i class="fas fa-edit mr-1"></i>Edit
                             </a>
                             <form method="POST" action="{{ route('admin.livestreams.destroy', $ls) }}"
-                                  onsubmit="return confirm('Delete this livestream?')">
+                                  data-confirm="Delete this livestream?" data-confirm-ok="Delete">
                                 @csrf @method('DELETE')
                                 <button type="submit" class="bg-red-100 text-red-700 hover:bg-red-200 px-2 py-1 rounded text-xs font-medium">
                                     <i class="fas fa-trash mr-1"></i>Delete

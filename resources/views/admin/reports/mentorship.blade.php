@@ -36,7 +36,7 @@
             <button class="flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-300 bg-white text-sm font-semibold text-gray-700 hover:bg-gray-50">
                 <i class="fas fa-chart-bar"></i> Reports <i class="fas fa-chevron-down text-xs"></i>
             </button>
-            <div class="absolute right-0 mt-1 w-56 bg-white rounded-lg shadow-lg border border-gray-100 z-50 hidden group-hover:block">
+            <div class="absolute right-0 mt-1 w-60 bg-white rounded-lg shadow-lg border border-gray-100 z-50 hidden group-hover:block">
                 <a href="{{ route('admin.reports.membership') }}" class="flex items-center gap-2 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50">
                     <i class="fas fa-users w-4"></i> Full Membership
                 </a>
@@ -51,6 +51,41 @@
                 </a>
                 <a href="{{ route('admin.reports.by-department') }}" class="flex items-center gap-2 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50">
                     <i class="fas fa-layer-group w-4"></i> By Department
+                </a>
+                <div class="border-t border-gray-100 my-1"></div>
+                <a href="{{ route('admin.reports.committed') }}" class="flex items-center gap-2 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50">
+                    <i class="fas fa-certificate w-4" style="color:#16a34a;"></i> Committed Members
+                </a>
+                <a href="{{ route('admin.reports.in-commitment') }}" class="flex items-center gap-2 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50">
+                    <i class="fas fa-book-open w-4" style="color:#f0a500;"></i> In Commitment Class
+                </a>
+                <a href="{{ route('admin.reports.young-converts') }}" class="flex items-center gap-2 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50">
+                    <i class="fas fa-seedling w-4" style="color:#0284c7;"></i> Young Converts
+                </a>
+                <a href="{{ route('admin.reports.not-baptised') }}" class="flex items-center gap-2 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50">
+                    <i class="fas fa-water w-4" style="color:#c0392b;"></i> Not Baptised
+                </a>
+                <a href="{{ route('admin.reports.married') }}" class="flex items-center gap-2 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50">
+                    <i class="fas fa-rings-wedding w-4" style="color:#7c3aed;"></i> Married
+                </a>
+                <a href="{{ route('admin.reports.pearls') }}" class="flex items-center gap-2 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50">
+                    <i class="fas fa-gem w-4" style="color:#f0a500;"></i> Pearls Fellowship
+                </a>
+                <a href="{{ route('admin.reports.singles-youths') }}" class="flex items-center gap-2 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50">
+                    <i class="fas fa-users w-4" style="color:#0284c7;"></i> Singles / Youths
+                </a>
+                <div class="border-t border-gray-100 my-1"></div>
+                <a href="{{ route('admin.reports.transferred-in') }}" class="flex items-center gap-2 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50">
+                    <i class="fas fa-sign-in-alt w-4" style="color:#0a1f44;"></i> Transferred In
+                </a>
+                <a href="{{ route('admin.reports.transferred-out') }}" class="flex items-center gap-2 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50">
+                    <i class="fas fa-sign-out-alt w-4" style="color:#c0392b;"></i> Transferred Out
+                </a>
+                <a href="{{ route('admin.reports.active-members') }}" class="flex items-center gap-2 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50">
+                    <i class="fas fa-circle-check w-4" style="color:#16a34a;"></i> Active Members
+                </a>
+                <a href="{{ route('admin.reports.inactive-members') }}" class="flex items-center gap-2 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50">
+                    <i class="fas fa-circle-xmark w-4" style="color:#f0a500;"></i> Inactive Members
                 </a>
             </div>
         </div>

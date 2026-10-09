@@ -19,10 +19,57 @@
         class="tab-btn px-5 py-2 text-sm font-semibold border-b-2 border-transparent focus:outline-none">
         <i class="fas fa-columns mr-1"></i> Core Pillars ({{ $pillars->count() }})
     </button>
+    <button onclick="showTab('service-times')" id="tab-service-times"
+        class="tab-btn px-5 py-2 text-sm font-semibold border-b-2 border-transparent focus:outline-none">
+        <i class="fas fa-clock mr-1"></i> Service Times
+    </button>
 </div>
 
 {{-- ── TAB: CHURCH INFO ─────────────────────────────────────────────── --}}
 <div id="pane-info" class="tab-pane">
+
+    {{-- Hero Image Upload --}}
+    <div class="max-w-3xl bg-white rounded-xl shadow p-6 mb-6">
+        <h2 class="text-lg font-bold mb-1" style="color: #0a1f44;"><i class="fas fa-image mr-2"></i>Homepage Hero Background</h2>
+        <p class="text-sm text-gray-500 mb-5">This image appears as the background of the welcome banner on the homepage. Recommended: landscape photo, at least 1400×800px, JPG/PNG/WebP, max 5MB.</p>
+
+        @php $heroImage = \App\Models\ChurchSetting::get('hero_image'); @endphp
+
+        {{-- Current preview --}}
+        @if($heroImage)
+        <div class="mb-4 relative rounded-xl overflow-hidden" style="height: 180px;">
+            <img src="{{ asset('storage/' . $heroImage) }}" alt="Current hero image"
+                class="w-full h-full object-cover">
+            <div class="absolute inset-0 flex items-center justify-center"
+                style="background: rgba(10,31,68,0.45);">
+                <span class="text-white text-sm font-semibold"><i class="fas fa-check-circle mr-1 text-green-400"></i>Current hero image</span>
+            </div>
+        </div>
+        @else
+        <div class="mb-4 rounded-xl border-2 border-dashed border-gray-200 flex items-center justify-center" style="height: 140px; background: #f8fafc;">
+            <span class="text-gray-400 text-sm"><i class="fas fa-image mr-2"></i>No hero image set — using default gradient</span>
+        </div>
+        @endif
+
+        <form method="POST" action="{{ route('admin.about.hero-image.update') }}" enctype="multipart/form-data">
+            @csrf
+            <div class="flex items-center gap-4">
+                <input type="file" name="hero_image" accept="image/*" id="hero-img-input"
+                    class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:cursor-pointer"
+                    style="file-selector-button-background: #0a1f44; file-selector-button-color: white;">
+                <button type="submit" class="btn-red px-5 py-2 text-sm whitespace-nowrap">
+                    <i class="fas fa-upload mr-1"></i> Upload Image
+                </button>
+            </div>
+            @error('hero_image')<p class="text-red-500 text-xs mt-2">{{ $message }}</p>@enderror
+        </form>
+
+        {{-- Live preview before upload --}}
+        <div id="hero-preview-wrap" class="hidden mt-4 rounded-xl overflow-hidden" style="height: 160px;">
+            <img id="hero-preview-img" src="" alt="Preview" class="w-full h-full object-cover">
+        </div>
+    </div>
+
     <div class="max-w-3xl bg-white rounded-xl shadow p-6">
         <h2 class="text-lg font-bold mb-5" style="color: #0a1f44;">Church Information</h2>
         <form method="POST" action="{{ route('admin.about.updateInfo') }}">
@@ -215,7 +262,7 @@
                                 <i class="fas fa-edit"></i> Edit
                             </button>
                             <form method="POST" action="{{ route('admin.about.leaders.destroy', $leader) }}"
-                                onsubmit="return confirm('Remove {{ $leader->name }}?')">
+                                data-confirm="Remove {{ $leader->name }}?" data-confirm-ok="Remove">
                                 @csrf @method('DELETE')
                                 <button class="bg-red-100 text-red-700 hover:bg-red-200 px-2 py-1 rounded text-xs">
                                     <i class="fas fa-trash"></i>
@@ -362,7 +409,7 @@
                                 <i class="fas fa-edit"></i> Edit
                             </button>
                             <form method="POST" action="{{ route('admin.about.pillars.destroy', $pillar) }}"
-                                onsubmit="return confirm('Remove this pillar?')">
+                                data-confirm="Remove this pillar?" data-confirm-ok="Remove">
                                 @csrf @method('DELETE')
                                 <button class="bg-red-100 text-red-700 hover:bg-red-200 px-2 py-1 rounded text-xs">
                                     <i class="fas fa-trash"></i>
@@ -418,6 +465,110 @@
     </div>
 </div>
 
+{{-- ── TAB: SERVICE TIMES ───────────────────────────────────────────── --}}
+<div id="pane-service-times" class="tab-pane hidden">
+    <div class="bg-white rounded-xl shadow p-6">
+        <h2 class="text-lg font-bold mb-1" style="color: #0a1f44;"><i class="fas fa-clock mr-2"></i>Service Times</h2>
+        <p class="text-sm text-gray-500 mb-6">These are displayed on the homepage. Edit each service's name, time, subtitle and icon.</p>
+
+        @if(session('success') && request()->is('*/about*'))
+            <div class="mb-4 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg text-sm">
+                <i class="fas fa-check-circle mr-1"></i> {{ session('success') }}
+            </div>
+        @endif
+
+        <form method="POST" action="{{ route('admin.about.service-times.update') }}">
+            @csrf
+            @php
+                $iconOptions = [
+                    'fas fa-sun'            => 'Sun',
+                    'fas fa-book-open'      => 'Book Open',
+                    'fas fa-praying-hands'  => 'Praying Hands',
+                    'fas fa-church'         => 'Church',
+                    'fas fa-cross'          => 'Cross',
+                    'fas fa-dove'           => 'Dove',
+                    'fas fa-hands'          => 'Hands',
+                    'fas fa-star'           => 'Star',
+                    'fas fa-fire'           => 'Fire',
+                    'fas fa-music'          => 'Music',
+                    'fas fa-bible'          => 'Bible',
+                    'fas fa-moon'           => 'Moon',
+                ];
+                $colorOptions = [
+                    '#c0392b' => 'Red',
+                    '#0a1f44' => 'Navy',
+                    '#f0a500' => 'Gold',
+                    '#27ae60' => 'Green',
+                    '#8e44ad' => 'Purple',
+                    '#2980b9' => 'Blue',
+                ];
+            @endphp
+
+            @foreach([1,2,3] as $i)
+            @php $s = $serviceTimes[$i]; @endphp
+            <div class="border border-gray-200 rounded-xl p-5 mb-5">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
+                         style="background: {{ $s['color'] ?: '#0a1f44' }};">
+                        <i class="{{ $s['icon'] ?: 'fas fa-church' }} text-white text-sm"></i>
+                    </div>
+                    <h3 class="font-bold text-gray-700">Service {{ $i }}</h3>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 mb-1">Service Name <span class="text-red-500">*</span></label>
+                        <input type="text" name="service[{{ $i }}][name]" value="{{ old("service.{$i}.name", $s['name']) }}"
+                            class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                            placeholder="e.g. Sunday Service">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 mb-1">Subtitle</label>
+                        <input type="text" name="service[{{ $i }}][subtitle]" value="{{ old("service.{$i}.subtitle", $s['subtitle']) }}"
+                            class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                            placeholder="e.g. Main Worship Service">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 mb-1">Time <span class="text-red-500">*</span></label>
+                        <input type="text" name="service[{{ $i }}][time]" value="{{ old("service.{$i}.time", $s['time']) }}"
+                            class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                            placeholder="e.g. 9:00 AM or 8:00 PM – 5:00 AM">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 mb-1">Border / Icon Colour</label>
+                        <select name="service[{{ $i }}][color]"
+                            class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none">
+                            @foreach($colorOptions as $hex => $label)
+                                <option value="{{ $hex }}" {{ old("service.{$i}.color", $s['color']) === $hex ? 'selected' : '' }}>
+                                    {{ $label }} ({{ $hex }})
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="block text-xs font-semibold text-gray-600 mb-1">Icon</label>
+                        <select name="service[{{ $i }}][icon]"
+                            class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none">
+                            @foreach($iconOptions as $class => $label)
+                                <option value="{{ $class }}" {{ old("service.{$i}.icon", $s['icon']) === $class ? 'selected' : '' }}>
+                                    {{ $label }} ({{ $class }})
+                                </option>
+                            @endforeach
+                        </select>
+                        <p class="text-xs text-gray-400 mt-1">Visit <span class="font-mono">fontawesome.com/icons</span> for more icon names.</p>
+                    </div>
+                </div>
+            </div>
+            @endforeach
+
+            <div class="mt-2">
+                <button type="submit" class="btn-red px-6 py-2 text-sm">
+                    <i class="fas fa-save mr-1"></i> Save Service Times
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
 @endsection
 
 @push('scripts')
@@ -442,8 +593,21 @@ function toggleEdit(id) {
 // Auto-open tab based on hash or default
 document.addEventListener('DOMContentLoaded', function () {
     const hash = window.location.hash.replace('#','') || 'info';
-    const valid = ['info','leaders','pillars'];
+    const valid = ['info','leaders','pillars','service-times'];
     showTab(valid.includes(hash) ? hash : 'info');
+
+    // Hero image live preview
+    const heroInput = document.getElementById('hero-img-input');
+    if (heroInput) {
+        heroInput.addEventListener('change', function () {
+            const file = this.files[0];
+            if (!file) return;
+            const wrap = document.getElementById('hero-preview-wrap');
+            const img  = document.getElementById('hero-preview-img');
+            img.src = URL.createObjectURL(file);
+            wrap.classList.remove('hidden');
+        });
+    }
 
     // ── Member search / auto-populate (couple-aware) ───────────────
     const members = @json($memberJson);

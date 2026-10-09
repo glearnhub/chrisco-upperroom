@@ -7,9 +7,11 @@
 
 <div class="flex items-center justify-between mb-6">
     <h1 class="text-2xl font-bold" style="color: #0a1f44;">Events</h1>
-    <a href="{{ route('admin.events.create') }}" class="btn-red px-4 py-2 text-sm">
-        <i class="fas fa-plus mr-2"></i>Add Event
-    </a>
+    <div class="flex gap-2">
+<a href="{{ route('admin.events.create') }}" class="btn-red px-4 py-2 text-sm">
+            <i class="fas fa-plus mr-2"></i>Add Event
+        </a>
+    </div>
 </div>
 
 <div class="bg-white rounded-xl shadow overflow-hidden">
@@ -52,12 +54,26 @@
                                 </span>
                             </td>
                             <td class="px-4 py-3 flex items-center space-x-2">
+                                <a href="{{ route('admin.events.show', $event) }}"
+                                    class="px-2 py-1 rounded text-xs font-medium"
+                                    style="background:#e0e7ff;color:#3730a3;"
+                                    title="View / Check-In">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                @if(auth()->user()->hasPermission('attendance.manage'))
+                                <a href="{{ route('admin.events.checkin', $event) }}"
+                                    class="px-2 py-1 rounded text-xs font-medium"
+                                    style="background:#dcfce7;color:#15803d;"
+                                    title="Usher Check-In Panel">
+                                    <i class="fas fa-user-check"></i>
+                                </a>
+                                @endif
                                 <a href="{{ route('admin.events.edit', $event) }}"
                                     class="bg-blue-100 text-blue-700 hover:bg-blue-200 px-2 py-1 rounded text-xs font-medium">
                                     <i class="fas fa-edit mr-1"></i>Edit
                                 </a>
                                 <form method="POST" action="{{ route('admin.events.destroy', $event) }}"
-                                    onsubmit="return confirm('Delete this event?')">
+                                    data-confirm="Delete this event?" data-confirm-ok="Delete">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" class="bg-red-100 text-red-700 hover:bg-red-200 px-2 py-1 rounded text-xs font-medium">

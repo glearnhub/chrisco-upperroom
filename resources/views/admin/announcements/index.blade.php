@@ -137,7 +137,7 @@
                                         <i class="fas fa-edit mr-1"></i>Edit
                                     </a>
                                     <form method="POST" action="{{ route('admin.announcements.destroy', $ann) }}"
-                                        onsubmit="return confirm('Delete this announcement?')">
+                                        data-confirm="Delete this announcement?" data-confirm-ok="Delete">
                                         @csrf @method('DELETE')
                                         <button type="submit" class="bg-red-100 text-red-700 hover:bg-red-200 px-2 py-1 rounded text-xs font-medium">
                                             <i class="fas fa-trash mr-1"></i>Delete

@@ -6,6 +6,7 @@ use App\Models\Sermon;
 use App\Models\Event;
 use App\Models\Livestream;
 use App\Models\Announcement;
+use App\Models\ChurchSetting;
 
 class HomeController extends Controller
 {
@@ -28,6 +29,24 @@ class HomeController extends Controller
             ->limit(5)
             ->get();
 
-        return view('home.index', compact('sermons', 'events', 'livestream', 'announcements'));
+        $serviceTimes = [];
+        for ($i = 1; $i <= 3; $i++) {
+            $serviceTimes[] = [
+                'name'     => ChurchSetting::get("service_{$i}_name"),
+                'subtitle' => ChurchSetting::get("service_{$i}_subtitle"),
+                'time'     => ChurchSetting::get("service_{$i}_time"),
+                'icon'     => ChurchSetting::get("service_{$i}_icon",  'fas fa-church'),
+                'color'    => ChurchSetting::get("service_{$i}_color", '#0a1f44'),
+            ];
+        }
+
+        $heroImage = ChurchSetting::get('hero_image');
+
+        $cancelledEvents = \App\Models\Event::where('status', 'cancelled')
+            ->where('start_datetime', '>=', now()->startOfDay())
+            ->orderBy('start_datetime')
+            ->get();
+
+        return view('home.index', compact('sermons', 'events', 'livestream', 'announcements', 'serviceTimes', 'heroImage', 'cancelledEvents'));
     }
 }
