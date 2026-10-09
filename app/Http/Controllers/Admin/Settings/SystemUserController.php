@@ -8,6 +8,7 @@ use App\Models\Permission;
 use App\Models\SystemLog;
 use App\Models\User;
 use App\Mail\AdminWelcomeMail;
+use App\Mail\AdminPasswordResetMail;
 use App\Models\UserPermission;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -135,22 +136,25 @@ class SystemUserController extends Controller
     public function resetPassword(Request $request, User $user)
     {
         abort_if($user->role !== 'admin', 404);
-        $user->update([
-            'password'             => Hash::make(Str::random(32)),
-            'must_change_password' => true,
-        ]);
 
-        $token    = Password::createToken($user);
-        $resetUrl = url(route('password.reset', ['token' => $token, 'email' => $user->email], false));
+        // Generate a readable temporary password: 3 segments separated by dashes
+        $tempPassword = ucfirst(Str::random(5)) . '-' . rand(100, 999) . '-' . Str::random(4) . '!';
+
+        $user->forceFill([
+            'password'             => Hash::make($tempPassword),
+            'must_change_password' => true,
+        ])->save();
+
+        $loginUrl = url(route('login'));
 
         try {
-            Mail::to($user->email)->send(new AdminWelcomeMail($user, $resetUrl));
+            Mail::to($user->email)->send(new AdminPasswordResetMail($user, $tempPassword, $loginUrl));
         } catch (\Exception $e) {
             \Log::error("Password reset email failed for {$user->email}: " . $e->getMessage());
         }
 
         SystemLog::record('update', 'Settings', "Password reset for {$user->email}.", $user);
-        return back()->with('success', 'Password reset successfully. A new password-set link has been sent to their email.');
+        return back()->with('success', 'Password reset successfully. New login credentials have been sent to ' . $user->email . '.');
     }
 
     public function destroy(User $user)
