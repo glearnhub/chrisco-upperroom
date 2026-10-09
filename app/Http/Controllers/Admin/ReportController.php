@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Models\Child;
 use App\Models\ServiceSession;
 use App\Models\ServiceAttendance;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
@@ -553,7 +554,7 @@ class ReportController extends Controller
     public function pearls(Request $request)
     {
         $members = User::where('role', 'member')->whereNotNull('date_of_birth')
-            ->whereRaw('TIMESTAMPDIFF(YEAR, date_of_birth, CURDATE()) >= 30')
+            ->where('date_of_birth', '<=', Carbon::today()->subYears(30))
             ->whereNotIn('marital_status', ['married'])->orderByRaw($this->officeOrderSql())->orderBy('name')->get();
         if ($request->boolean('export')) return $this->filterExport($members, 'Pearls Fellowship');
         return view('admin.reports.filter', compact('members'), ['title' => 'Pearls Fellowship', 'subtitle' => 'Above 30 years, not married']);
@@ -563,8 +564,7 @@ class ReportController extends Controller
     public function singlesYouths(Request $request)
     {
         $members = User::where('role', 'member')->whereNotNull('date_of_birth')
-            ->whereRaw('TIMESTAMPDIFF(YEAR, date_of_birth, CURDATE()) >= 18')
-            ->whereRaw('TIMESTAMPDIFF(YEAR, date_of_birth, CURDATE()) < 30')
+            ->whereBetween('date_of_birth', [Carbon::today()->subYears(29), Carbon::today()->subYears(18)])
             ->whereNotIn('marital_status', ['married'])->orderByRaw($this->officeOrderSql())->orderBy('name')->get();
         if ($request->boolean('export')) return $this->filterExport($members, 'Singles / Youths');
         return view('admin.reports.filter', compact('members'), ['title' => 'Singles / Youths', 'subtitle' => 'Above 18, not married']);

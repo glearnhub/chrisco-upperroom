@@ -12,6 +12,7 @@ use App\Models\Announcement;
 use App\Models\Livestream;
 use App\Models\EventRegistration;
 use App\Models\SiteVisit;
+use Carbon\Carbon;
 
 class DashboardController extends Controller
 {
@@ -45,9 +46,9 @@ class DashboardController extends Controller
             'sunday_school'    => User::where('role', 'member')->where('member_type', 'child')->count(),
             'young_converts'   => User::where('role', 'member')->where('is_committed_member', false)->where('in_commitment_class', false)->count(),
             'not_baptised'     => User::where('role', 'member')->where('is_born_again', true)->where('is_baptized', false)->count(),
-            'youths'           => User::where('role', 'member')->whereNotNull('date_of_birth')->whereRaw('TIMESTAMPDIFF(YEAR, date_of_birth, CURDATE()) >= 18')->whereRaw('TIMESTAMPDIFF(YEAR, date_of_birth, CURDATE()) < 30')->whereNotIn('marital_status', ['married'])->count(),
+            'youths'           => User::where('role', 'member')->whereNotNull('date_of_birth')->whereBetween('date_of_birth', [Carbon::today()->subYears(29), Carbon::today()->subYears(18)])->whereNotIn('marital_status', ['married'])->count(),
             'married'          => User::where('role', 'member')->where('marital_status', 'married')->count(),
-            'pearls'           => User::where('role', 'member')->whereNotNull('date_of_birth')->whereRaw('TIMESTAMPDIFF(YEAR, date_of_birth, CURDATE()) >= 30')->whereNotIn('marital_status', ['married'])->count(),
+            'pearls'           => User::where('role', 'member')->whereNotNull('date_of_birth')->where('date_of_birth', '<=', Carbon::today()->subYears(30))->whereNotIn('marital_status', ['married'])->count(),
         ];
 
         // Visit stats — unique by session per day
@@ -79,20 +80,27 @@ class DashboardController extends Controller
             ->groupBy('gender')
             ->pluck('total', 'gender');
 
-        $ageRows = User::where('role', 'member')
-            ->whereNotNull('date_of_birth')
-            ->selectRaw("
-                SUM(CASE WHEN TIMESTAMPDIFF(YEAR, date_of_birth, CURDATE()) < 18 THEN 1 ELSE 0 END) AS `Under 18`,
-                SUM(CASE WHEN TIMESTAMPDIFF(YEAR, date_of_birth, CURDATE()) BETWEEN 18 AND 25 THEN 1 ELSE 0 END) AS `18–25`,
-                SUM(CASE WHEN TIMESTAMPDIFF(YEAR, date_of_birth, CURDATE()) BETWEEN 26 AND 35 THEN 1 ELSE 0 END) AS `26–35`,
-                SUM(CASE WHEN TIMESTAMPDIFF(YEAR, date_of_birth, CURDATE()) BETWEEN 36 AND 45 THEN 1 ELSE 0 END) AS `36–45`,
-                SUM(CASE WHEN TIMESTAMPDIFF(YEAR, date_of_birth, CURDATE()) BETWEEN 46 AND 55 THEN 1 ELSE 0 END) AS `46–55`,
-                SUM(CASE WHEN TIMESTAMPDIFF(YEAR, date_of_birth, CURDATE()) >= 56 THEN 1 ELSE 0 END) AS `56+`
-            ")
-            ->first();
+        $today    = Carbon::today();
+        $ageBuckets = [
+            'Under 18' => [null,          $today->copy()->subYears(18)->addDay()],
+            '18–25'    => [$today->copy()->subYears(25), $today->copy()->subYears(18)],
+            '26–35'    => [$today->copy()->subYears(35), $today->copy()->subYears(26)->addDay()],
+            '36–45'    => [$today->copy()->subYears(45), $today->copy()->subYears(36)->addDay()],
+            '46–55'    => [$today->copy()->subYears(55), $today->copy()->subYears(46)->addDay()],
+            '56+'      => [null,          $today->copy()->subYears(56)->addDay()],
+        ];
 
-        $ageOrder = ['Under 18', '18–25', '26–35', '36–45', '46–55', '56+'];
-        $ageStats = collect($ageOrder)->mapWithKeys(fn($k) => [$k => (int) ($ageRows->{$k} ?? 0)]);
+        $ageStats = collect($ageBuckets)->map(function ($range, $label) use ($today) {
+            $q = User::where('role', 'member')->whereNotNull('date_of_birth');
+            if ($label === 'Under 18') {
+                $q->where('date_of_birth', '>', $today->copy()->subYears(18));
+            } elseif ($label === '56+') {
+                $q->where('date_of_birth', '<=', $today->copy()->subYears(56));
+            } else {
+                $q->whereBetween('date_of_birth', [$range[0], $range[1]]);
+            }
+            return $q->count();
+        });
 
         $recentMembers = User::where('role', 'member')
             ->orderBy('created_at', 'desc')
