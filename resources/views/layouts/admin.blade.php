@@ -358,7 +358,7 @@
             @endif
 
             {{-- Correction Requests --}}
-            @if($u->hasPermission('members.view'))
+            @if($u->hasPermission('corrections.view'))
             @php $pendingCorrections = \App\Models\CorrectionRequest::where('status','pending')->count(); @endphp
             <a href="{{ route('admin.corrections.index') }}" class="sidebar-link {{ request()->routeIs('admin.corrections.*') ? 'active' : '' }}" style="position:relative;">
                 <i class="fas fa-edit main-icon"></i> Correction Requests
