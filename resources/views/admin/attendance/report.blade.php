@@ -4,27 +4,55 @@
 @push('styles')
 <style>
 @media print {
-    .no-print { display: none !important; }
-    .sidebar, header { display: none !important; }
-    #fu-modal { display: none !important; }
-    body { background: white !important; }
+    * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+    .no-print, #fu-modal, .sidebar, header, nav { display: none !important; }
+    body { background: white !important; margin: 0 !important; }
+
+    /* Always show print header and all section bodies */
     .print-header { display: block !important; }
-    .section-card { box-shadow: none !important; border: 1px solid #ddd !important; }
+    .section-body { display: block !important; max-height: none !important; opacity: 1 !important; overflow: visible !important; }
+    .section-header { display: none !important; }  /* hide accordion toggles — section title shown via table header */
+
+    /* Clean card styling */
+    .section-card {
+        box-shadow: none !important;
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 6px !important;
+        margin-bottom: 16px !important;
+        page-break-inside: avoid;
+    }
+
+    /* Only use page-break when printing ALL — suppress for single-group prints */
     .page-break { page-break-before: always; }
-    .section-body { display: block !important; }
-    /* Selective print classes */
+    body.print-active   .page-break,
+    body.print-inactive .page-break,
+    body.print-irregular .page-break { page-break-before: auto !important; }
+
+    /* Selective group filters */
     body.print-active   .section-card-inactive,
     body.print-active   .section-card-irregular  { display: none !important; }
     body.print-inactive .section-card-active,
     body.print-inactive .section-card-irregular  { display: none !important; }
     body.print-irregular .section-card-active,
     body.print-irregular .section-card-inactive  { display: none !important; }
-    /* Hide stats and sessions when printing a specific group */
-    body.print-active .print-hide-on-group,
+
+    /* Hide stats and sessions on single-group prints */
+    body.print-active   .print-hide-on-group,
     body.print-inactive .print-hide-on-group,
     body.print-irregular .print-hide-on-group   { display: none !important; }
+
+    /* Section heading shown above table on print */
+    .print-section-label { display: block !important; }
+
+    /* Typography */
+    body { font-size: 11px !important; }
+    table { font-size: 10.5px !important; width: 100% !important; border-collapse: collapse !important; }
+    th, td { padding: 6px 8px !important; }
+    th { font-size: 9px !important; }
+    a { text-decoration: none !important; color: inherit !important; }
 }
 .print-header { display: none; }
+.print-section-label { display: none; }
 /* Print dropdown */
 .print-dropdown { position: relative; display: inline-block; }
 .print-dropdown-menu {
@@ -58,17 +86,22 @@
 <div class="p-3 sm:p-6">
 
     {{-- Print header --}}
-    <div class="print-header mb-6">
-        <div style="display:flex;align-items:center;gap:20px;border-bottom:3px solid #0a1f44;padding-bottom:14px;margin-bottom:10px;">
-            <img src="{{ asset('images/logo.png') }}" alt="Chrisco Upper Room" style="height:60px;width:auto;object-fit:contain;flex-shrink:0;">
-            <div>
-                <h1 style="font-size:18px;font-weight:900;color:#0a1f44;line-height:1.1;">Chrisco Upper Room Fellowship</h1>
-                <p style="font-size:10px;color:#c0392b;font-weight:700;text-transform:uppercase;letter-spacing:.8px;margin-top:2px;">Where God Dwells</p>
+    <div class="print-header" style="margin-bottom:18px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;border-bottom:3px solid #0a1f44;padding-bottom:10px;margin-bottom:10px;">
+            <div style="display:flex;align-items:center;gap:14px;">
+                <img src="{{ asset('images/logo.png') }}" alt="Chrisco Upper Room" style="height:52px;width:auto;object-fit:contain;flex-shrink:0;">
+                <div>
+                    <div style="font-size:16px;font-weight:900;color:#0a1f44;line-height:1.1;">Chrisco Upper Room Fellowship</div>
+                    <div style="font-size:9px;color:#c0392b;font-weight:700;text-transform:uppercase;letter-spacing:.8px;margin-top:2px;">Where God Dwells</div>
+                </div>
+            </div>
+            <div style="text-align:right;font-size:9px;color:#888;line-height:1.6;">
+                <div>Printed: {{ now()->format('d M Y, g:i A') }}</div>
+                <div>Confidential — Internal Use Only</div>
             </div>
         </div>
-        <div style="text-align:center;margin-top:6px;">
-            <p style="font-size:15px;font-weight:800;color:#0a1f44;text-transform:uppercase;">Sunday Attendance Report — {{ $monthName }}</p>
-            <p style="font-size:10px;color:#888;margin-top:2px;">Printed: {{ now()->format('d M Y, g:i A') }}</p>
+        <div style="text-align:center;">
+            <p style="font-size:13px;font-weight:800;color:#0a1f44;text-transform:uppercase;letter-spacing:.5px;margin:0;" id="print-report-title">Sunday Attendance Report — {{ $monthName }}</p>
         </div>
     </div>
 
@@ -269,6 +302,9 @@
             <h2 class="font-bold" style="color:#16a34a;"><i class="fas fa-check-circle mr-2"></i>Active Members <span class="text-sm font-semibold text-gray-500">(attended 3+ Sundays)</span></h2>
         </div>
         <div class="section-body" id="body-active">
+        <div class="print-section-label px-5 pt-4 pb-1 font-bold text-sm" style="color:#16a34a;">
+            ✓ Active Members <span class="text-gray-500 font-normal">(attended 3+ Sundays)</span>
+        </div>
         @if($activeCount)
         <div class="overflow-x-auto">
         <table class="w-full text-sm">
@@ -322,6 +358,9 @@
             </div>
         </div>
         <div class="section-body" id="body-inactive">
+        <div class="print-section-label px-5 pt-4 pb-1 font-bold text-sm" style="color:#dc2626;">
+            ✗ Inactive Members <span class="text-gray-500 font-normal">(missed 3+ Sundays)</span>
+        </div>
         @if($inactiveCount)
         <div class="overflow-x-auto">
         <table class="w-full text-sm">
@@ -480,6 +519,9 @@
             </div>
         </div>
         <div class="section-body" id="body-irregular">
+        <div class="print-section-label px-5 pt-4 pb-1 font-bold text-sm" style="color:#d97706;">
+            ⚠ Irregular / At Risk <span class="text-gray-500 font-normal">(attended 1–2 Sundays)</span>
+        </div>
         <div class="overflow-x-auto">
         <table class="w-full text-sm">
             <thead class="bg-yellow-50">
@@ -698,14 +740,15 @@ function printSection(type) {
     if (type !== 'all') document.body.classList.add('print-' + type);
     // Update print header label
     const labels = { all: 'Full Report', active: 'Active Members', inactive: 'Inactive Members', irregular: 'Irregular Members' };
-    document.querySelector('.print-header p[style*="font-size:15px"]').textContent =
-        'Sunday Attendance Report — {{ $monthName }} — ' + labels[type];
+    const titleEl = document.getElementById('print-report-title');
+    titleEl.textContent = type === 'all'
+        ? 'Sunday Attendance Report — {{ $monthName }}'
+        : 'Sunday Attendance Report — {{ $monthName }} — ' + labels[type];
     window.print();
     // Clean up after print dialog closes
     setTimeout(() => {
         document.body.classList.remove('print-active', 'print-inactive', 'print-irregular');
-        document.querySelector('.print-header p[style*="font-size:15px"]').textContent =
-            'Sunday Attendance Report — {{ $monthName }}';
+        titleEl.textContent = 'Sunday Attendance Report — {{ $monthName }}';
     }, 1000);
 }
 </script>
