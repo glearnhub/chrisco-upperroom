@@ -4,8 +4,10 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Models\AttendanceFollowup;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class MemberController extends Controller
@@ -168,6 +170,7 @@ class MemberController extends Controller
             'name'                    => 'required|string|max:255',
             'middle_name'             => 'nullable|string|max:255',
             'last_name'               => 'nullable|string|max:255',
+            'member_type'             => 'nullable|in:adult,child',
             'gender'                  => 'nullable|in:male,female',
             'marital_status'          => 'nullable|in:single,married,widowed,divorced,separated',
             'email'                   => 'required|email|unique:users,email',
@@ -175,31 +178,53 @@ class MemberController extends Controller
             'date_of_birth'           => 'nullable|date',
             'membership_date'         => 'nullable|date',
             'role'                    => 'nullable|in:member',
-            'password'                => 'required|string|min:8|confirmed',
+            'password'                => 'nullable|string|min:8',
             'county'                  => 'nullable|string|max:100',
             'sub_county'              => 'nullable|string|max:100',
             'sub_location'            => 'nullable|string|max:255',
             'salvation_date'          => 'nullable|string|max:50',
-            'is_committed_member'     => 'boolean',
+            'is_born_again'           => 'boolean',
+            'is_baptized'             => 'boolean',
+            'baptism_date'            => 'nullable|string|max:50',
+            'commitment_status'       => 'nullable|in:committed,in_class,none',
             'committed_date'          => 'nullable|string|max:50',
+            'transfer_type'           => 'nullable|in:in',
+            'transfer_church'         => 'nullable|string|max:200',
             'department'              => 'nullable|string|max:100',
             'department2'             => 'nullable|string|max:100',
             'department3'             => 'nullable|string|max:100',
             'occupation'              => 'nullable|string|max:255',
-            'next_of_kin_name'        => 'nullable|string|max:255',
-            'next_of_kin_relationship'=> 'nullable|string|max:100',
-            'next_of_kin_phone'       => 'nullable|string|max:20',
-            'belongs_to_home_cell'    => 'boolean',
+            'next_of_kin_name'         => 'nullable|string|max:255',
+            'next_of_kin_relationship' => 'nullable|string|max:100',
+            'next_of_kin_phone'        => 'nullable|string|max:20',
+            'next_of_kin2_name'        => 'nullable|string|max:255',
+            'next_of_kin2_relationship'=> 'nullable|string|max:100',
+            'next_of_kin2_phone'       => 'nullable|string|max:20',
+            'belongs_to_home_cell'     => 'boolean',
             'home_cell'               => 'nullable|string|max:255',
             'assigned_to_deacon'      => 'boolean',
             'deacon_name'             => 'nullable|string|max:255',
-            'office'                  => 'nullable|in:presbyter,pastor,elder,deacon,deaconess',
+            'office'                       => 'nullable|in:presbyter,pastor,elder,deacon,deaconess',
+            'has_medical_condition'        => 'boolean',
+            'medical_conditions'           => 'nullable|string',
+            'medications'                  => 'nullable|string',
+            'allergies'                    => 'nullable|string|max:500',
+            'emergency_medical_contact'    => 'nullable|string|max:255',
+            'emergency_medical_phone'      => 'nullable|string|max:20',
+            'special_needs'                => 'nullable|string',
         ]);
 
-        $validated['belongs_to_home_cell'] = $request->boolean('belongs_to_home_cell');
-        $validated['assigned_to_deacon']   = $request->boolean('assigned_to_deacon');
-        $validated['is_committed_member']  = $request->boolean('is_committed_member');
-        $validated['password']             = Hash::make($validated['password']);
+        $validated['belongs_to_home_cell']    = $request->boolean('belongs_to_home_cell');
+        $validated['assigned_to_deacon']      = $request->boolean('assigned_to_deacon');
+        $validated['is_committed_member']     = $request->input('commitment_status') === 'committed';
+        $validated['in_commitment_class']     = $request->input('commitment_status') === 'in_class';
+        $validated['has_medical_condition']   = $request->boolean('has_medical_condition');
+        $validated['is_born_again']           = $request->boolean('is_born_again');
+        $validated['is_baptized']             = $request->boolean('is_baptized');
+        $passwordProvided                     = isset($validated['password']);
+        $validated['password']                = Hash::make($validated['password'] ?? Str::random(12));
+        $validated['must_change_password']    = !$passwordProvided;
+        unset($validated['commitment_status']);
         $validated['membership_date']      = $validated['membership_date'] ?? now()->toDateString();
         $validated['role']                 = 'member'; // always member — admins created via Settings > System Users
 
@@ -228,6 +253,7 @@ class MemberController extends Controller
             'name'                    => 'required|string|max:255',
             'middle_name'             => 'nullable|string|max:255',
             'last_name'               => 'nullable|string|max:255',
+            'member_type'             => 'nullable|in:adult,child',
             'gender'                  => 'nullable|in:male,female',
             'marital_status'          => 'nullable|in:single,married,widowed,divorced,separated',
             'email'                   => 'required|email|unique:users,email,' . $user->id,
@@ -238,23 +264,43 @@ class MemberController extends Controller
             'sub_county'              => 'nullable|string|max:100',
             'sub_location'            => 'nullable|string|max:255',
             'salvation_date'          => 'nullable|string|max:50',
-            'is_committed_member'     => 'boolean',
+            'is_born_again'           => 'boolean',
+            'is_baptized'             => 'boolean',
+            'baptism_date'            => 'nullable|string|max:50',
+            'commitment_status'       => 'nullable|in:committed,in_class,none',
             'committed_date'          => 'nullable|string|max:50',
+            'transfer_type'           => 'nullable|in:in',
+            'transfer_church'         => 'nullable|string|max:200',
             'department'              => 'nullable|string|max:100',
             'department2'             => 'nullable|string|max:100',
             'department3'             => 'nullable|string|max:100',
             'occupation'              => 'nullable|string|max:255',
-            'next_of_kin_name'        => 'nullable|string|max:255',
-            'next_of_kin_relationship'=> 'nullable|string|max:100',
-            'next_of_kin_phone'       => 'nullable|string|max:20',
-            'home_cell'               => 'nullable|string|max:255',
+            'next_of_kin_name'         => 'nullable|string|max:255',
+            'next_of_kin_relationship' => 'nullable|string|max:100',
+            'next_of_kin_phone'        => 'nullable|string|max:20',
+            'next_of_kin2_name'        => 'nullable|string|max:255',
+            'next_of_kin2_relationship'=> 'nullable|string|max:100',
+            'next_of_kin2_phone'       => 'nullable|string|max:20',
+            'home_cell'                => 'nullable|string|max:255',
             'deacon_name'             => 'nullable|string|max:255',
-            'office'                  => 'nullable|in:presbyter,pastor,elder,deacon,deaconess',
+            'office'                       => 'nullable|in:presbyter,pastor,elder,deacon,deaconess',
+            'has_medical_condition'        => 'boolean',
+            'medical_conditions'           => 'nullable|string',
+            'medications'                  => 'nullable|string',
+            'allergies'                    => 'nullable|string|max:500',
+            'emergency_medical_contact'    => 'nullable|string|max:255',
+            'emergency_medical_phone'      => 'nullable|string|max:20',
+            'special_needs'                => 'nullable|string',
         ]);
 
-        $validated['is_committed_member'] = $request->boolean('is_committed_member');
-        $validated['belongs_to_home_cell'] = $request->boolean('belongs_to_home_cell');
-        $validated['assigned_to_deacon']   = $request->boolean('assigned_to_deacon');
+        $validated['is_committed_member']     = $request->input('commitment_status') === 'committed';
+        $validated['in_commitment_class']     = $request->input('commitment_status') === 'in_class';
+        unset($validated['commitment_status']);
+        $validated['belongs_to_home_cell']    = $request->boolean('belongs_to_home_cell');
+        $validated['assigned_to_deacon']      = $request->boolean('assigned_to_deacon');
+        $validated['has_medical_condition']   = $request->boolean('has_medical_condition');
+        $validated['is_born_again']           = $request->boolean('is_born_again');
+        $validated['is_baptized']             = $request->boolean('is_baptized');
 
         $user->update($validated);
 
@@ -272,5 +318,32 @@ class MemberController extends Controller
 
         $user->update(['role' => $validated['role']]);
         return back()->with('success', "Role updated for {$user->name}.");
+    }
+
+    public function transferredIn(Request $request)
+    {
+        $members = User::where('role', 'member')
+            ->where('is_active', true)
+            ->where('transfer_type', 'in')
+            ->orderBy('name')
+            ->get(['id', 'name', 'middle_name', 'last_name', 'phone', 'department', 'office', 'transfer_church', 'created_at']);
+
+        return view('admin.members.transferred-in', compact('members'));
+    }
+
+    public function transferredOut(Request $request)
+    {
+        // Members flagged as transferred out via follow-up records (reason = 'transferred')
+        $followups = AttendanceFollowup::where('reason', 'transferred')
+            ->with(['member', 'recordedBy'])
+            ->orderByDesc('year')
+            ->orderByDesc('month')
+            ->get()
+            // Deduplicate: keep only the most recent follow-up per member
+            ->groupBy('user_id')
+            ->map(fn($group) => $group->first())
+            ->values();
+
+        return view('admin.members.transferred-out', compact('followups'));
     }
 }

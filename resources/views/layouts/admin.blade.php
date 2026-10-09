@@ -235,9 +235,11 @@
                     <span class="no-perm-tip">You have no permissions</span>
                 </span>
                 @endif
+                @if($u->hasPermission('calendar.manage'))
                 <a href="{{ route('admin.calendar.index') }}" class="sidebar-link text-sm {{ request()->routeIs('admin.calendar.*') ? 'active' : '' }}">
                     <i class="fas fa-calendar-week main-icon"></i> Church Calendar
                 </a>
+                @endif
                 @if($u->hasPermission('announcements.view'))
                 <a href="{{ route('admin.announcements.index') }}" class="sidebar-link text-sm {{ request()->routeIs('admin.announcements.*') ? 'active' : '' }}">
                     <i class="fas fa-bullhorn main-icon"></i> Announcements
@@ -263,7 +265,7 @@
             </span>
             @endif
 
-            @if($u->hasPermission('donations.view'))
+            @if($u->hasPermission('givings.view'))
             <a href="{{ route('admin.donations.index') }}" class="sidebar-link {{ request()->routeIs('admin.donations.*') ? 'active' : '' }}">
                 <i class="fas fa-hand-holding-usd main-icon"></i> Givings
             </a>
@@ -278,7 +280,7 @@
             {{-- People Group --}}
             <p class="px-4 pt-4 pb-1 text-xs font-bold uppercase tracking-widest" style="color: #4a6fa5;">People</p>
 
-            @if($u->hasPermission('about.view'))
+            @if($u->hasPermission('about.manage'))
             @php $aboutOpen = request()->routeIs('admin.about.*') || request()->routeIs('admin.settings.social.*'); @endphp
             <button onclick="toggleSidebarGroup('about-group', this)"
                     class="sidebar-link w-full text-left flex items-center justify-between {{ $aboutOpen ? 'active' : '' }}"
@@ -308,25 +310,16 @@
             <a href="{{ route('admin.members.index') }}" class="sidebar-link {{ request()->routeIs('admin.members.index') || request()->routeIs('admin.members.show') || request()->routeIs('admin.members.create') || request()->routeIs('admin.members.edit') ? 'active' : '' }}">
                 <i class="fas fa-users main-icon"></i> Members (Adults)
             </a>
+            @endif
+            @if($u->hasPermission('children.view'))
             <a href="{{ route('admin.children.index') }}" class="sidebar-link {{ request()->routeIs('admin.children.*') && !request()->routeIs('admin.children.attendance*') ? 'active' : '' }}">
                 <i class="fas fa-child main-icon"></i> Members (Children)
             </a>
             <a href="{{ route('admin.children.attendance') }}" class="sidebar-link {{ request()->routeIs('admin.children.attendance') ? 'active' : '' }}" style="padding-left:2.5rem;">
                 <i class="fas fa-camera-retro main-icon"></i> Child Attendance
             </a>
-            <a href="{{ route('admin.children.attendance.report') }}" class="sidebar-link {{ request()->routeIs('admin.children.attendance.report') ? 'active' : '' }}" style="padding-left:2.5rem;">
-                <i class="fas fa-chart-bar main-icon"></i> Attendance Report
-            </a>
-            @php $pendingCorrections = \App\Models\CorrectionRequest::where('status','pending')->count(); @endphp
-            <a href="{{ route('admin.corrections.index') }}" class="sidebar-link {{ request()->routeIs('admin.corrections.*') ? 'active' : '' }}" style="position:relative;">
-                <i class="fas fa-edit main-icon"></i> Correction Requests
-                @if($pendingCorrections)
-                    <span style="position:absolute; right:10px; top:50%; transform:translateY(-50%); background:#c0392b; color:#fff; font-size:0.65rem; font-weight:700; min-width:18px; height:18px; border-radius:9999px; display:flex; align-items:center; justify-content:center; padding:0 4px;">
-                        <i class="fas fa-bell mr-0.5" style="font-size:0.55rem;"></i>{{ $pendingCorrections }}
-                    </span>
-                @endif
-            </a>
-            @else
+            @endif
+            @if(!$u->hasPermission('members.view') && !$u->hasPermission('children.view'))
             <span class="sidebar-link-disabled">
                 <i class="fas fa-users main-icon"></i> Members (Adults)
                 <i class="fas fa-lock lock-icon"></i>
@@ -334,11 +327,6 @@
             </span>
             <span class="sidebar-link-disabled">
                 <i class="fas fa-child main-icon"></i> Members (Children)
-                <i class="fas fa-lock lock-icon"></i>
-                <span class="no-perm-tip">You have no permissions</span>
-            </span>
-            <span class="sidebar-link-disabled">
-                <i class="fas fa-edit main-icon"></i> Correction Requests
                 <i class="fas fa-lock lock-icon"></i>
                 <span class="no-perm-tip">You have no permissions</span>
             </span>
@@ -369,83 +357,35 @@
             </span>
             @endif
 
+            {{-- Correction Requests --}}
+            @if($u->hasPermission('members.view'))
+            @php $pendingCorrections = \App\Models\CorrectionRequest::where('status','pending')->count(); @endphp
+            <a href="{{ route('admin.corrections.index') }}" class="sidebar-link {{ request()->routeIs('admin.corrections.*') ? 'active' : '' }}" style="position:relative;">
+                <i class="fas fa-edit main-icon"></i> Correction Requests
+                @if($pendingCorrections)
+                    <span style="position:absolute; right:10px; top:50%; transform:translateY(-50%); background:#c0392b; color:#fff; font-size:0.65rem; font-weight:700; min-width:18px; height:18px; border-radius:9999px; display:flex; align-items:center; justify-content:center; padding:0 4px;">
+                        <i class="fas fa-bell mr-0.5" style="font-size:0.55rem;"></i>{{ $pendingCorrections }}
+                    </span>
+                @endif
+            </a>
+            @else
+            <span class="sidebar-link-disabled">
+                <i class="fas fa-edit main-icon"></i> Correction Requests
+                <i class="fas fa-lock lock-icon"></i>
+                <span class="no-perm-tip">You have no permissions</span>
+            </span>
+            @endif
+
             {{-- Reports Group --}}
             <p class="px-4 pt-4 pb-1 text-xs font-bold uppercase tracking-widest" style="color: #4a6fa5;">Reports</p>
 
-            @if($u->hasPermission('reports.view'))
-            @php
-            $memberReportRoutes = ['admin.reports.membership','admin.reports.leaders','admin.reports.mentorship','admin.reports.children-parent','admin.reports.by-department','admin.reports.committed','admin.reports.in-commitment','admin.reports.young-converts','admin.reports.not-baptised','admin.reports.married','admin.reports.pearls','admin.reports.singles-youths','admin.reports.transferred-in','admin.reports.transferred-out','admin.reports.active-members','admin.reports.inactive-members'];
-            $memberReportOpen = request()->routeIs(...$memberReportRoutes);
-            @endphp
-            {{-- Members dropdown --}}
-            <button onclick="toggleSidebarGroup('members-report-group', this)"
-                    class="sidebar-link w-full text-left flex items-center justify-between {{ $memberReportOpen ? 'active' : '' }}"
-                    style="background:none; border:none; cursor:pointer;">
-                <span><i class="fas fa-users main-icon"></i> Members</span>
-                <i class="fas fa-chevron-down text-xs transition-transform {{ $memberReportOpen ? 'rotate-180' : '' }}" style="margin-left:auto; opacity:.6;"></i>
-            </button>
-            <div id="members-report-group" style="{{ $memberReportOpen ? 'display:block;' : 'display:none;' }} padding-left:12px;">
-                <a href="{{ route('admin.reports.membership') }}" class="sidebar-link text-sm {{ request()->routeIs('admin.reports.membership') ? 'active' : '' }}">
-                    <i class="fas fa-users main-icon"></i> Full Membership
-                </a>
-                <a href="{{ route('admin.reports.leaders') }}" class="sidebar-link text-sm {{ request()->routeIs('admin.reports.leaders') ? 'active' : '' }}">
-                    <i class="fas fa-crown main-icon"></i> Leaders
-                </a>
-                <a href="{{ route('admin.reports.mentorship') }}" class="sidebar-link text-sm {{ request()->routeIs('admin.reports.mentorship') ? 'active' : '' }}">
-                    <i class="fas fa-user-shield main-icon"></i> Mentorship
-                </a>
-                <a href="{{ route('admin.reports.children-parent') }}" class="sidebar-link text-sm {{ request()->routeIs('admin.reports.children-parent') ? 'active' : '' }}">
-                    <i class="fas fa-child main-icon"></i> Children by Parent
-                </a>
-                <a href="{{ route('admin.reports.by-department') }}" class="sidebar-link text-sm {{ request()->routeIs('admin.reports.by-department') ? 'active' : '' }}">
-                    <i class="fas fa-layer-group main-icon"></i> By Department
-                </a>
-                <div style="height:1px; background:rgba(255,255,255,0.08); margin:4px 12px;"></div>
-                <a href="{{ route('admin.reports.committed') }}" class="sidebar-link text-sm {{ request()->routeIs('admin.reports.committed') ? 'active' : '' }}">
-                    <i class="fas fa-certificate main-icon"></i> Committed
-                </a>
-                <a href="{{ route('admin.reports.in-commitment') }}" class="sidebar-link text-sm {{ request()->routeIs('admin.reports.in-commitment') ? 'active' : '' }}">
-                    <i class="fas fa-book-open main-icon"></i> In Commitment
-                </a>
-                <a href="{{ route('admin.reports.young-converts') }}" class="sidebar-link text-sm {{ request()->routeIs('admin.reports.young-converts') ? 'active' : '' }}">
-                    <i class="fas fa-seedling main-icon"></i> Young Converts
-                </a>
-                <a href="{{ route('admin.reports.not-baptised') }}" class="sidebar-link text-sm {{ request()->routeIs('admin.reports.not-baptised') ? 'active' : '' }}">
-                    <i class="fas fa-water main-icon"></i> Not Baptised
-                </a>
-                <a href="{{ route('admin.reports.married') }}" class="sidebar-link text-sm {{ request()->routeIs('admin.reports.married') ? 'active' : '' }}">
-                    <i class="fas fa-rings-wedding main-icon"></i> Married
-                </a>
-                <a href="{{ route('admin.reports.pearls') }}" class="sidebar-link text-sm {{ request()->routeIs('admin.reports.pearls') ? 'active' : '' }}">
-                    <i class="fas fa-gem main-icon"></i> Pearls Fellowship
-                </a>
-                <a href="{{ route('admin.reports.singles-youths') }}" class="sidebar-link text-sm {{ request()->routeIs('admin.reports.singles-youths') ? 'active' : '' }}">
-                    <i class="fas fa-users main-icon"></i> Singles / Youths
-                </a>
-                <a href="{{ route('admin.reports.transferred-in') }}" class="sidebar-link text-sm {{ request()->routeIs('admin.reports.transferred-in') ? 'active' : '' }}">
-                    <i class="fas fa-sign-in-alt main-icon"></i> Transferred In
-                </a>
-                <a href="{{ route('admin.reports.transferred-out') }}" class="sidebar-link text-sm {{ request()->routeIs('admin.reports.transferred-out') ? 'active' : '' }}">
-                    <i class="fas fa-sign-out-alt main-icon"></i> Transferred Out
-                </a>
-                <a href="{{ route('admin.reports.active-members') }}" class="sidebar-link text-sm {{ request()->routeIs('admin.reports.active-members') ? 'active' : '' }}">
-                    <i class="fas fa-circle-check main-icon"></i> Active Members
-                </a>
-                <a href="{{ route('admin.reports.inactive-members') }}" class="sidebar-link text-sm {{ request()->routeIs('admin.reports.inactive-members') ? 'active' : '' }}">
-                    <i class="fas fa-circle-xmark main-icon"></i> Inactive Members
-                </a>
-            </div>
-            <a href="{{ route('admin.reports.events') }}" class="sidebar-link {{ request()->routeIs('admin.reports.events*') ? 'active' : '' }}">
-                <i class="fas fa-calendar-check main-icon"></i> Event Reports
+            @if($u->hasPermission('reports.membership') || $u->hasPermission('reports.children'))
+            <a href="{{ route('admin.reports.membership') }}" class="sidebar-link {{ request()->routeIs('admin.reports.*') ? 'active' : '' }}">
+                <i class="fas fa-users main-icon"></i> Members
             </a>
             @else
             <span class="sidebar-link-disabled">
                 <i class="fas fa-users main-icon"></i> Members
-                <i class="fas fa-lock lock-icon"></i>
-                <span class="no-perm-tip">You have no permissions</span>
-            </span>
-            <span class="sidebar-link-disabled">
-                <i class="fas fa-calendar-check main-icon"></i> Event Reports
                 <i class="fas fa-lock lock-icon"></i>
                 <span class="no-perm-tip">You have no permissions</span>
             </span>

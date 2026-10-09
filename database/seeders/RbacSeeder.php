@@ -31,6 +31,14 @@ class RbacSeeder extends Seeder
             ['module' => 'Children',       'slug' => 'children.edit',              'name' => 'Edit Children'],
             ['module' => 'Children',       'slug' => 'children.delete',            'name' => 'Delete Children'],
 
+            // Calendar
+            ['module' => 'Calendar',       'slug' => 'calendar.manage',            'name' => 'Manage Church Calendar'],
+
+            // Attendance
+            ['module' => 'Attendance',     'slug' => 'attendance.view',            'name' => 'View Attendance'],
+            ['module' => 'Attendance',     'slug' => 'attendance.manage',          'name' => 'Manage Attendance Sessions'],
+            ['module' => 'Attendance',     'slug' => 'attendance.followup',        'name' => 'Record Attendance Follow-Up'],
+
             // Sermons
             ['module' => 'Sermons',        'slug' => 'sermons.view',               'name' => 'View Sermons'],
             ['module' => 'Sermons',        'slug' => 'sermons.create',             'name' => 'Upload Sermons'],
@@ -134,7 +142,7 @@ class RbacSeeder extends Seeder
             'name' => 'Events Administrator', 'description' => 'Manages events and registrations',
         ]);
         $events->permissions()->syncWithoutDetaching(
-            Permission::whereIn('slug', ['events.view','events.create','events.edit','events.delete','events.reports','reports.events'])->pluck('id')
+            Permission::whereIn('slug', ['events.view','events.create','events.edit','events.delete','events.reports','reports.events','calendar.manage'])->pluck('id')
         );
 
         $announcements = Role::firstOrCreate(['slug' => 'cur_announcements'], [
@@ -148,7 +156,7 @@ class RbacSeeder extends Seeder
             'name' => 'Membership Administrator', 'description' => 'Manages members and membership data',
         ]);
         $membership->permissions()->syncWithoutDetaching(
-            Permission::whereIn('slug', ['members.view','members.create','members.edit','members.delete','members.import','visitors.view','visitors.create','visitors.edit','visitors.delete','corrections.view','corrections.manage','reports.membership'])->pluck('id')
+            Permission::whereIn('slug', ['members.view','members.create','members.edit','members.delete','members.import','visitors.view','visitors.create','visitors.edit','visitors.delete','corrections.view','corrections.manage','reports.membership','attendance.view','attendance.manage','attendance.followup','calendar.manage'])->pluck('id')
         );
 
         $visitors = Role::firstOrCreate(['slug' => 'cur_visitors'], [
@@ -173,7 +181,7 @@ class RbacSeeder extends Seeder
                 'name'      => 'Super',
                 'last_name' => 'Admin',
                 'email'     => 'superadmin@chrisco-upper-room.org',
-                'password'  => Hash::make('SuperAdmin@2024!'),
+                'password'  => Hash::make(env('SUPER_ADMIN_PASSWORD', 'SuperAdmin@2024!')),
                 'role'      => 'admin',
                 'is_active' => true,
             ]);
@@ -182,6 +190,6 @@ class RbacSeeder extends Seeder
         $superUser->roles()->syncWithoutDetaching([$superAdmin->id]);
 
         $this->command->info('✓ RBAC seeded successfully.');
-        $this->command->info('  Super Admin: superadmin@chrisco-upper-room.org / SuperAdmin@2024!');
+        $this->command->info('  Super Admin: superadmin@chrisco-upper-room.org (password from SUPER_ADMIN_PASSWORD in .env)');
     }
 }

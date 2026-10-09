@@ -30,7 +30,6 @@ use App\Http\Controllers\Admin\ResourceController as AdminResource;
 use App\Http\Controllers\GalleryController;
 use App\Http\Controllers\Admin\GalleryController as AdminGallery;
 use App\Http\Controllers\MemberLookupController;
-use App\Http\Controllers\Admin\EventReportController as AdminEventReport;
 use App\Http\Controllers\Admin\CorrectionRequestController as AdminCorrection;
 use App\Http\Controllers\AnnouncementController;
 use App\Http\Controllers\Admin\Settings\SocialMediaController as AdminSocial;
@@ -172,10 +171,6 @@ Route::middleware(['auth', 'admin'])
         Route::get('/reports/transferred-out',  [AdminReport::class, 'transferredOut'])->middleware('permission:reports.membership')->name('reports.transferred-out');
         Route::get('/reports/active-members',   [AdminReport::class, 'activeMembers'])->middleware('permission:reports.membership')->name('reports.active-members');
         Route::get('/reports/inactive-members', [AdminReport::class, 'inactiveMembers'])->middleware('permission:reports.membership')->name('reports.inactive-members');
-        Route::get('/reports/events',                                              [AdminEventReport::class, 'index'])->middleware('permission:reports.events')->name('reports.events');
-        Route::get('/reports/events/{event}',                                      [AdminEventReport::class, 'show'])->middleware('permission:reports.events')->name('reports.events.show');
-        Route::get('/reports/events/{event}/attendance/search',                    [AdminEventReport::class, 'searchAttendee'])->middleware('permission:reports.events')->name('reports.events.attendance.search');
-        Route::post('/reports/events/{event}/attendance/{registration}',           [AdminEventReport::class, 'markAttendance'])->middleware('permission:reports.events')->name('reports.events.attendance.mark');
 
         // Visitors
         Route::get('/visitors/import/template', [AdminVisitor::class, 'downloadTemplate'])->middleware('permission:visitors.view')->name('visitors.import.template');
@@ -190,13 +185,16 @@ Route::middleware(['auth', 'admin'])
         Route::delete('/visitors/{visitor}',   [AdminVisitor::class, 'destroy'])->middleware('permission:visitors.delete')->name('visitors.destroy');
 
         // Child Attendance
-        Route::get('/children/attendance',              [AdminChildAttendance::class, 'scanner'])->middleware('permission:children.view')->name('children.attendance');
-        Route::get('/children/attendance/history',      [AdminChildAttendance::class, 'history'])->middleware('permission:children.view')->name('children.attendance.history');
-        Route::get('/children/attendance/report',       [AdminChildAttendance::class, 'report'])->middleware('permission:children.view')->name('children.attendance.report');
-        Route::get('/children/attendance/descriptors',  [AdminChildAttendance::class, 'descriptors'])->middleware('permission:children.view')->name('children.attendance.descriptors');
-        Route::post('/children/attendance/save',        [AdminChildAttendance::class, 'saveAttendance'])->middleware('permission:children.create')->name('children.attendance.save');
-        Route::delete('/children/attendance/{attendance}', [AdminChildAttendance::class, 'remove'])->middleware('permission:children.edit')->name('children.attendance.remove');
-        Route::post('/children/{child}/save-descriptor', [AdminChildAttendance::class, 'saveDescriptor'])->middleware('permission:children.edit')->name('children.save-descriptor');
+        Route::get('/children/attendance',                  [AdminChildAttendance::class, 'scanner'])->middleware('permission:children.view')->name('children.attendance');
+        Route::get('/children/attendance/history',          [AdminChildAttendance::class, 'history'])->middleware('permission:children.view')->name('children.attendance.history');
+        Route::get('/children/attendance/report',           [AdminChildAttendance::class, 'report'])->middleware('permission:children.view')->name('children.attendance.report');
+        Route::get('/children/attendance/search',           [AdminChildAttendance::class, 'searchChild'])->middleware('permission:children.view')->name('children.attendance.search');
+        Route::post('/children/attendance/checkin',         [AdminChildAttendance::class, 'checkin'])->middleware('permission:children.create')->name('children.attendance.checkin');
+        Route::delete('/children/attendance/undo/{attendance}', [AdminChildAttendance::class, 'undoCheckin'])->middleware('permission:children.edit')->name('children.attendance.undo');
+        Route::get('/children/attendance/descriptors',      [AdminChildAttendance::class, 'descriptors'])->middleware('permission:children.view')->name('children.attendance.descriptors');
+        Route::post('/children/attendance/save',            [AdminChildAttendance::class, 'saveAttendance'])->middleware('permission:children.create')->name('children.attendance.save');
+        Route::delete('/children/attendance/{attendance}',  [AdminChildAttendance::class, 'remove'])->middleware('permission:children.edit')->name('children.attendance.remove');
+        Route::post('/children/{child}/save-descriptor',    [AdminChildAttendance::class, 'saveDescriptor'])->middleware('permission:children.edit')->name('children.save-descriptor');
 
         // Children
         Route::get('/children/print',   [AdminChild::class, 'printList'])->middleware('permission:children.view')->name('children.print');
@@ -296,19 +294,21 @@ Route::middleware(['auth', 'admin'])
         Route::post('/livestreams/end-all',               [AdminLivestream::class, 'endAll'])->middleware('permission:livestream.manage')->name('livestreams.endAll');
 
         // Church Calendar
-        Route::get('/calendar',                    [AdminCalendar::class, 'index'])->name('calendar.index');
-        Route::get('/calendar/create',             [AdminCalendar::class, 'create'])->name('calendar.create');
-        Route::post('/calendar',                   [AdminCalendar::class, 'store'])->name('calendar.store');
-        Route::get('/calendar/print',              [AdminCalendar::class, 'print'])->name('calendar.print');
-        Route::get('/calendar/import',             [AdminCalendarImport::class, 'showForm'])->name('calendar.import.form');
-        Route::post('/calendar/import',            [AdminCalendarImport::class, 'import'])->name('calendar.import.store');
-        Route::get('/calendar/import/template',    [AdminCalendarImport::class, 'downloadTemplate'])->name('calendar.import.template');
-        Route::get('/calendar/{calendar}/edit',         [AdminCalendar::class, 'edit'])->name('calendar.edit');
-        Route::put('/calendar/{calendar}',              [AdminCalendar::class, 'update'])->name('calendar.update');
-        Route::delete('/calendar/{calendar}',           [AdminCalendar::class, 'destroy'])->name('calendar.destroy');
-        Route::patch('/calendar/{calendar}/visibility', [AdminCalendar::class, 'toggleVisibility'])->name('calendar.toggle-visibility');
-        Route::get('/calendar/{calendar}/publish-event',  [AdminCalendar::class, 'publishEventForm'])->name('calendar.publish-event.form');
-        Route::post('/calendar/{calendar}/publish-event', [AdminCalendar::class, 'publishEventStore'])->name('calendar.publish-event.store');
+        Route::middleware('permission:calendar.manage')->group(function () {
+            Route::get('/calendar',                    [AdminCalendar::class, 'index'])->name('calendar.index');
+            Route::get('/calendar/create',             [AdminCalendar::class, 'create'])->name('calendar.create');
+            Route::post('/calendar',                   [AdminCalendar::class, 'store'])->name('calendar.store');
+            Route::get('/calendar/print',              [AdminCalendar::class, 'print'])->name('calendar.print');
+            Route::get('/calendar/import',             [AdminCalendarImport::class, 'showForm'])->name('calendar.import.form');
+            Route::post('/calendar/import',            [AdminCalendarImport::class, 'import'])->name('calendar.import.store');
+            Route::get('/calendar/import/template',    [AdminCalendarImport::class, 'downloadTemplate'])->name('calendar.import.template');
+            Route::get('/calendar/{calendar}/edit',         [AdminCalendar::class, 'edit'])->name('calendar.edit');
+            Route::put('/calendar/{calendar}',              [AdminCalendar::class, 'update'])->name('calendar.update');
+            Route::delete('/calendar/{calendar}',           [AdminCalendar::class, 'destroy'])->name('calendar.destroy');
+            Route::patch('/calendar/{calendar}/visibility', [AdminCalendar::class, 'toggleVisibility'])->name('calendar.toggle-visibility');
+            Route::get('/calendar/{calendar}/publish-event',  [AdminCalendar::class, 'publishEventForm'])->name('calendar.publish-event.form');
+            Route::post('/calendar/{calendar}/publish-event', [AdminCalendar::class, 'publishEventStore'])->name('calendar.publish-event.store');
+        });
 
         // Prayer Requests
         Route::get('/prayers',                       [AdminPrayer::class, 'index'])->middleware('permission:prayers.view')->name('prayers.index');
@@ -355,8 +355,9 @@ Route::middleware(['auth', 'admin'])
         Route::get('/attendance/session/{session}/count',                  fn(\App\Models\ServiceSession $session) => response()->json(['count' => $session->attendanceCount()]))->middleware('permission:attendance.view')->name('attendance.session.count');
         Route::post('/attendance/session/{session}/checkin',               [AdminAttendance::class, 'ushercheckin'])->middleware('permission:attendance.manage')->name('attendance.session.checkin');
         Route::delete('/attendance/checkin/{attendance}',                  [AdminAttendance::class, 'undoCheckin'])->middleware('permission:attendance.manage')->name('attendance.checkin.undo');
-        Route::post('/attendance/followup',                                [AdminAttendance::class, 'saveFollowup'])->middleware('permission:attendance.view')->name('attendance.followup.save');
-        Route::delete('/attendance/followup',                              [AdminAttendance::class, 'deleteFollowup'])->middleware('permission:attendance.view')->name('attendance.followup.delete');
+        Route::post('/attendance/followup',                                [AdminAttendance::class, 'saveFollowup'])->middleware('permission:attendance.followup')->name('attendance.followup.save');
+        Route::delete('/attendance/followup',                              [AdminAttendance::class, 'deleteFollowup'])->middleware('permission:attendance.followup')->name('attendance.followup.delete');
+        Route::get('/attendance/followup-team',                            [AdminAttendance::class, 'followupTeam'])->middleware('permission:attendance.followup')->name('attendance.followup.team');
 
         // My Profile (all admin users)
         Route::get('/my-profile',          [AdminMyProfile::class, 'edit'])->name('my-profile.edit');
@@ -397,7 +398,9 @@ Route::middleware(['auth', 'admin'])
         });
 
         // Members
-        Route::get('/members/print',          [AdminMember::class, 'printList'])->middleware('permission:members.view')->name('members.print');
+        Route::get('/members/print',           [AdminMember::class, 'printList'])->middleware('permission:members.view')->name('members.print');
+        Route::get('/members/transferred-in',  [AdminMember::class, 'transferredIn'])->middleware('permission:members.view')->name('members.transferred-in');
+        Route::get('/members/transferred-out', [AdminMember::class, 'transferredOut'])->middleware('permission:members.view')->name('members.transferred-out');
         Route::get('/members/import',         [MemberImportController::class, 'showForm'])->middleware('permission:members.import')->name('members.import');
         Route::post('/members/import',        [MemberImportController::class, 'import'])->middleware('permission:members.import')->name('members.import.store');
         Route::get('/members',                [AdminMember::class, 'index'])->middleware('permission:members.view')->name('members.index');

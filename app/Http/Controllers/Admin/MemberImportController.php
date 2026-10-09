@@ -116,7 +116,8 @@ class MemberImportController extends Controller
                 'assigned_to_deacon'      => in_array($deaconAnswer, ['yes', 'y', '1', 'true']),
                 'deacon_name'             => $this->val($row, ['If yes, mention their name', 'Deacon Name', 'Deaconess Name', 'Deacon/Deaconess']),
                 'role'                    => 'member',
-                'password'                => Hash::make(Str::random(16)),
+                'password'                => Hash::make(Str::random(32)),
+                'must_change_password'    => true,
             ]);
 
             $imported++;

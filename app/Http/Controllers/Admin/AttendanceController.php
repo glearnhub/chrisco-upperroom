@@ -68,6 +68,11 @@ class AttendanceController extends Controller
     // POST /admin/attendance/close/{session}
     public function close(ServiceSession $session)
     {
+        if (!auth()->user()->isSuperAdmin()) {
+            return redirect()->route('admin.attendance.index')
+                ->with('error', 'Only a Super Admin can close an attendance session.');
+        }
+
         if (!$session->isOpen()) {
             return back()->with('error', 'This session is not open.');
         }
@@ -108,10 +113,16 @@ class AttendanceController extends Controller
             })
             ->select('id', 'name', 'middle_name', 'last_name', 'phone', 'profile_photo', 'department', 'office')
             ->limit(8)
+            ->get();
+
+        $memberIds   = $members->pluck('id');
+        $attendances = ServiceAttendance::where('session_id', $session->id)
+            ->whereIn('user_id', $memberIds)
             ->get()
-            ->map(function ($m) use ($session) {
-                $attendance = ServiceAttendance::where('session_id', $session->id)
-                    ->where('user_id', $m->id)->first();
+            ->keyBy('user_id');
+
+        $members = $members->map(function ($m) use ($attendances) {
+                $attendance = $attendances->get($m->id);
                 return [
                     'id'           => $m->id,
                     'name'         => $m->full_name,
@@ -289,6 +300,88 @@ class AttendanceController extends Controller
             'sessions', 'sundaysWithSession',
             'members', 'activeMembers', 'inactiveMembers', 'irregularMembers',
             'startOfMonth', 'followups', 'reasonLabels'
+        ));
+    }
+
+    // GET /admin/attendance/followup-team — restricted view for follow-up team members
+    public function followupTeam(Request $request)
+    {
+        $year  = (int) $request->get('year',  now()->year);
+        $month = (int) $request->get('month', now()->month);
+
+        $startOfMonth = Carbon::create($year, $month, 1)->startOfMonth();
+        $endOfMonth   = $startOfMonth->copy()->endOfMonth();
+
+        $sundays = [];
+        $cur = $startOfMonth->copy();
+        while ($cur->lte($endOfMonth)) {
+            if ($cur->isSunday()) { $sundays[] = $cur->toDateString(); }
+            $cur->addDay();
+        }
+        $totalSundays = count($sundays);
+
+        $sessions = ServiceSession::whereIn('service_date', $sundays)
+            ->whereIn('service_type', ['sunday_morning', 'sunday_afternoon'])
+            ->orderBy('service_date')->orderBy('service_type')
+            ->withCount('attendances')->get();
+
+        $sessionIds = $sessions->pluck('id')->toArray();
+
+        $allAttendances = ServiceAttendance::whereIn('session_id', $sessionIds)
+            ->get(['session_id', 'user_id']);
+
+        $sessionDateMap = [];
+        foreach ($sessions as $s) {
+            $sessionDateMap[$s->id] = $s->service_date instanceof \Carbon\Carbon
+                ? $s->service_date->toDateString() : $s->service_date;
+        }
+
+        $memberSundayMap = [];
+        foreach ($allAttendances as $att) {
+            $date = $sessionDateMap[$att->session_id] ?? null;
+            if ($date) { $memberSundayMap[$att->user_id][$date] = true; }
+        }
+
+        $members = User::where('role', 'member')->where('is_active', true)
+            ->orderBy('name')->get(['id', 'name', 'middle_name', 'last_name', 'phone', 'department', 'office']);
+
+        $inactiveMembers = [];
+        $irregularMembers = [];
+
+        foreach ($members as $member) {
+            $attended = count($memberSundayMap[$member->id] ?? []);
+            $missed   = $totalSundays - $attended;
+            $member->sundays_attended = $attended;
+            $member->sundays_missed   = $missed;
+            $member->attended_dates   = array_keys($memberSundayMap[$member->id] ?? []);
+
+            if ($attended >= 3) { continue; } // active — not shown
+            if ($missed >= 3)   { $inactiveMembers[] = $member; }
+            else                { $irregularMembers[] = $member; }
+        }
+        usort($inactiveMembers, fn($a, $b) => $b->sundays_missed <=> $a->sundays_missed);
+
+        $monthName = $startOfMonth->format('F Y');
+
+        $memberIds = array_merge(
+            array_column($inactiveMembers, null),
+            array_column($irregularMembers, null)
+        );
+        $memberIdList = collect($inactiveMembers)->merge($irregularMembers)->pluck('id')->toArray();
+
+        $followups = AttendanceFollowup::where('year', $year)
+            ->where('month', $month)
+            ->whereIn('user_id', $memberIdList)
+            ->with('recordedBy')
+            ->get()
+            ->keyBy('user_id');
+
+        $reasonLabels = AttendanceFollowup::$reasonLabels;
+
+        return view('admin.attendance.followup-team', compact(
+            'year', 'month', 'monthName', 'totalSundays',
+            'inactiveMembers', 'irregularMembers',
+            'followups', 'reasonLabels'
         ));
     }
 

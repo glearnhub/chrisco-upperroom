@@ -267,7 +267,7 @@ class ChildController extends Controller
     public function importStore(Request $request)
     {
         $request->validate([
-            'file' => 'required|file|mimes:xlsx,xls',
+            'file' => 'required|file|mimes:xlsx,xls|max:5120',
         ]);
 
         $reader = \PhpOffice\PhpSpreadsheet\IOFactory::createReaderForFile($request->file('file')->getPathname());

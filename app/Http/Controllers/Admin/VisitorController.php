@@ -165,10 +165,17 @@ class VisitorController extends Controller
         $rows = $spreadsheet->getActiveSheet()->toArray(null, true, true, true);
 
         $imported = 0;
+        $skipped  = 0;
         foreach (array_slice($rows, 2) as $row) { // skip header rows
-            $name = trim($row['A'] ?? '');
+            $name  = trim($row['A'] ?? '');
             $phone = trim($row['E'] ?? '');
             if (! $name || ! $phone) continue;
+
+            // Skip duplicates: same phone already exists in visitors table
+            if (Visitor::where('phone', $phone)->exists()) {
+                $skipped++;
+                continue;
+            }
 
             Visitor::create([
                 'full_name'    => $name,
@@ -183,10 +190,11 @@ class VisitorController extends Controller
             $imported++;
         }
 
-        SystemLog::record('import', 'visitors', "Imported {$imported} visitor records");
+        SystemLog::record('import', 'visitors', "Imported {$imported} visitor records, {$skipped} skipped as duplicates.");
 
-        return redirect()->route('admin.visitors.index')
-            ->with('success', "Imported {$imported} visitor records.");
+        $msg = "Imported {$imported} visitor records.";
+        if ($skipped > 0) $msg .= " {$skipped} skipped (duplicate phone numbers already on record).";
+        return redirect()->route('admin.visitors.index')->with('success', $msg);
     }
 
     public function downloadTemplate()

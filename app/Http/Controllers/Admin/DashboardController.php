@@ -17,14 +17,37 @@ class DashboardController extends Controller
 {
     public function index()
     {
+        $totalMembers = User::where('role', 'member')->count();
+
         $stats = [
-            'members'         => User::where('role', 'member')->count(),
+            'members'         => $totalMembers,
             'sermons'         => Sermon::count(),
             'events'          => Event::count(),
             'prayer_requests' => PrayerRequest::count(),
             'announcements'   => Announcement::count(),
             'registrations'   => EventRegistration::count(),
             'live_now'        => Livestream::where('is_live', true)->exists(),
+        ];
+
+        // Member breakdown cards
+        $memberStats = [
+            'total'            => $totalMembers,
+            'leaders'          => User::whereIn('office', ['presbyter','pastor','elder','deacon','deaconess'])->count(),
+            'presbyters'       => User::where('office', 'presbyter')->count(),
+            'pastors'          => User::where('office', 'pastor')->count(),
+            'elders'           => User::where('office', 'elder')->count(),
+            'deacons'          => User::where('office', 'deacon')->count(),
+            'deaconesses'      => User::where('office', 'deaconess')->count(),
+            'committed'        => User::where('role', 'member')->where('is_committed_member', true)->count(),
+            'in_class'         => User::where('role', 'member')->where('in_commitment_class', true)->count(),
+            'men'              => User::where('role', 'member')->where('gender', 'male')->count(),
+            'women'            => User::where('role', 'member')->where('gender', 'female')->count(),
+            'sunday_school'    => User::where('role', 'member')->where('member_type', 'child')->count(),
+            'young_converts'   => User::where('role', 'member')->where('is_committed_member', false)->where('in_commitment_class', false)->count(),
+            'not_baptised'     => User::where('role', 'member')->where('is_born_again', true)->where('is_baptized', false)->count(),
+            'youths'           => User::where('role', 'member')->whereNotNull('date_of_birth')->whereRaw('TIMESTAMPDIFF(YEAR, date_of_birth, CURDATE()) >= 18')->whereRaw('TIMESTAMPDIFF(YEAR, date_of_birth, CURDATE()) < 30')->whereNotIn('marital_status', ['married'])->count(),
+            'married'          => User::where('role', 'member')->where('marital_status', 'married')->count(),
+            'pearls'           => User::where('role', 'member')->whereNotNull('date_of_birth')->whereRaw('TIMESTAMPDIFF(YEAR, date_of_birth, CURDATE()) >= 30')->whereNotIn('marital_status', ['married'])->count(),
         ];
 
         // Visit stats — unique by session per day
@@ -49,24 +72,27 @@ class DashboardController extends Controller
             ->limit(8)
             ->get();
 
-        // Member demographics
-        $members = User::where('role', 'member')->whereNotNull('gender')->get(['gender', 'date_of_birth']);
+        // Member demographics — SQL aggregates instead of loading all records
+        $genderStats = User::where('role', 'member')
+            ->whereNotNull('gender')
+            ->selectRaw('gender, COUNT(*) as total')
+            ->groupBy('gender')
+            ->pluck('total', 'gender');
 
-        $genderStats = $members->groupBy('gender')->map->count();
-
-        $ageStats = $members->filter(fn($m) => $m->date_of_birth)
-            ->groupBy(function ($m) {
-                $age = \Carbon\Carbon::parse($m->date_of_birth)->age;
-                if ($age < 18)  return 'Under 18';
-                if ($age < 26)  return '18–25';
-                if ($age < 36)  return '26–35';
-                if ($age < 46)  return '36–45';
-                if ($age < 56)  return '46–55';
-                return '56+';
-            })->map->count();
+        $ageRows = User::where('role', 'member')
+            ->whereNotNull('date_of_birth')
+            ->selectRaw("
+                SUM(CASE WHEN TIMESTAMPDIFF(YEAR, date_of_birth, CURDATE()) < 18 THEN 1 ELSE 0 END) AS `Under 18`,
+                SUM(CASE WHEN TIMESTAMPDIFF(YEAR, date_of_birth, CURDATE()) BETWEEN 18 AND 25 THEN 1 ELSE 0 END) AS `18–25`,
+                SUM(CASE WHEN TIMESTAMPDIFF(YEAR, date_of_birth, CURDATE()) BETWEEN 26 AND 35 THEN 1 ELSE 0 END) AS `26–35`,
+                SUM(CASE WHEN TIMESTAMPDIFF(YEAR, date_of_birth, CURDATE()) BETWEEN 36 AND 45 THEN 1 ELSE 0 END) AS `36–45`,
+                SUM(CASE WHEN TIMESTAMPDIFF(YEAR, date_of_birth, CURDATE()) BETWEEN 46 AND 55 THEN 1 ELSE 0 END) AS `46–55`,
+                SUM(CASE WHEN TIMESTAMPDIFF(YEAR, date_of_birth, CURDATE()) >= 56 THEN 1 ELSE 0 END) AS `56+`
+            ")
+            ->first();
 
         $ageOrder = ['Under 18', '18–25', '26–35', '36–45', '46–55', '56+'];
-        $ageStats = collect($ageOrder)->mapWithKeys(fn($k) => [$k => $ageStats[$k] ?? 0]);
+        $ageStats = collect($ageOrder)->mapWithKeys(fn($k) => [$k => (int) ($ageRows->{$k} ?? 0)]);
 
         $recentMembers = User::where('role', 'member')
             ->orderBy('created_at', 'desc')
@@ -84,7 +110,8 @@ class DashboardController extends Controller
             'totalMembers', 'totalSermons', 'upcomingEvents',
             'pendingPrayers', 'activeLivestream',
             'totalVisits', 'todayVisits', 'weekVisits', 'yearVisits',
-            'topPages', 'geoStats', 'genderStats', 'ageStats'
+            'topPages', 'geoStats', 'genderStats', 'ageStats',
+            'memberStats'
         ));
     }
 }

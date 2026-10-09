@@ -5,7 +5,11 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\Child;
+use App\Models\AttendanceFollowup;
+use App\Models\ServiceSession;
+use App\Models\ServiceAttendance;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
@@ -503,6 +507,207 @@ class ReportController extends Controller
             'Content-Disposition' => "attachment; filename=\"{$filename}\"",
             'Cache-Control'       => 'max-age=0',
             'Pragma'              => 'no-cache',
+        ]);
+    }
+
+    // ── Committed Members ───────────────────────────────────────────────────
+    public function committed(Request $request)
+    {
+        $members = User::where('role', 'member')->where('is_committed_member', true)->orderByRaw($this->officeOrderSql())->orderBy('name')->get();
+        if ($request->boolean('export')) return $this->filterExport($members, 'Committed Members');
+        return view('admin.reports.filter', compact('members'), ['title' => 'Committed Members', 'subtitle' => 'Members who have completed the commitment class']);
+    }
+
+    // ── In Commitment Class ─────────────────────────────────────────────────
+    public function inCommitment(Request $request)
+    {
+        $members = User::where('role', 'member')->where('in_commitment_class', true)->orderByRaw($this->officeOrderSql())->orderBy('name')->get();
+        if ($request->boolean('export')) return $this->filterExport($members, 'In Commitment Class');
+        return view('admin.reports.filter', compact('members'), ['title' => 'In Commitment Class', 'subtitle' => 'Members currently attending commitment class']);
+    }
+
+    // ── Young Converts ──────────────────────────────────────────────────────
+    public function youngConverts(Request $request)
+    {
+        $members = User::where('role', 'member')->where('is_committed_member', false)->where('in_commitment_class', false)->orderByRaw($this->officeOrderSql())->orderBy('name')->get();
+        if ($request->boolean('export')) return $this->filterExport($members, 'Young Converts');
+        return view('admin.reports.filter', compact('members'), ['title' => 'Young Converts', 'subtitle' => 'Not committed & not in commitment class']);
+    }
+
+    // ── Not Baptised ────────────────────────────────────────────────────────
+    public function notBaptised(Request $request)
+    {
+        $members = User::where('role', 'member')->where('is_born_again', true)->where('is_baptized', false)->orderByRaw($this->officeOrderSql())->orderBy('name')->get();
+        if ($request->boolean('export')) return $this->filterExport($members, 'Not Baptised');
+        return view('admin.reports.filter', compact('members'), ['title' => 'Not Baptised', 'subtitle' => 'Born again but not yet baptised (full immersion)']);
+    }
+
+    // ── Married ─────────────────────────────────────────────────────────────
+    public function married(Request $request)
+    {
+        $members = User::where('role', 'member')->where('marital_status', 'married')->orderByRaw($this->officeOrderSql())->orderBy('name')->get();
+        if ($request->boolean('export')) return $this->filterExport($members, 'Married Members');
+        return view('admin.reports.filter', compact('members'), ['title' => 'Married Members', 'subtitle' => 'All married members']);
+    }
+
+    // ── Pearls Fellowship ───────────────────────────────────────────────────
+    public function pearls(Request $request)
+    {
+        $members = User::where('role', 'member')->whereNotNull('date_of_birth')
+            ->whereRaw('TIMESTAMPDIFF(YEAR, date_of_birth, CURDATE()) >= 30')
+            ->whereNotIn('marital_status', ['married'])->orderByRaw($this->officeOrderSql())->orderBy('name')->get();
+        if ($request->boolean('export')) return $this->filterExport($members, 'Pearls Fellowship');
+        return view('admin.reports.filter', compact('members'), ['title' => 'Pearls Fellowship', 'subtitle' => 'Above 30 years, not married']);
+    }
+
+    // ── Singles / Youths ────────────────────────────────────────────────────
+    public function singlesYouths(Request $request)
+    {
+        $members = User::where('role', 'member')->whereNotNull('date_of_birth')
+            ->whereRaw('TIMESTAMPDIFF(YEAR, date_of_birth, CURDATE()) >= 18')
+            ->whereRaw('TIMESTAMPDIFF(YEAR, date_of_birth, CURDATE()) < 30')
+            ->whereNotIn('marital_status', ['married'])->orderByRaw($this->officeOrderSql())->orderBy('name')->get();
+        if ($request->boolean('export')) return $this->filterExport($members, 'Singles / Youths');
+        return view('admin.reports.filter', compact('members'), ['title' => 'Singles / Youths', 'subtitle' => 'Above 18, not married']);
+    }
+
+    // ── Transferred In ──────────────────────────────────────────────────────
+    public function transferredIn(Request $request)
+    {
+        $members = User::where('role', 'member')->where('transfer_type', 'in')
+            ->orderByRaw($this->officeOrderSql())->orderBy('name')->get();
+        if ($request->boolean('export')) return $this->filterExport($members, 'Transferred In');
+        return view('admin.reports.filter', compact('members'), [
+            'title'    => 'Transferred In',
+            'subtitle' => 'Members who joined from another Chrisco Church',
+        ]);
+    }
+
+    // ── Shared Excel export for simple filter reports ───────────────────────
+    private function filterExport($members, string $title)
+    {
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet()->setTitle(substr($title, 0, 31));
+
+        $headers = ['#', 'Name', 'Gender', 'Phone', 'Email', 'Department', 'Office', 'Membership Date'];
+        foreach ($headers as $col => $h) {
+            $cell = chr(65 + $col) . '1';
+            $sheet->setCellValue($cell, $h);
+            $sheet->getStyle($cell)->getFont()->setBold(true);
+            $sheet->getStyle($cell)->getFill()->setFillType(Fill::FILL_SOLID)
+                ->getStartColor()->setARGB('FF0A1F44');
+            $sheet->getStyle($cell)->getFont()->getColor()->setARGB('FFFFFFFF');
+        }
+
+        foreach ($members as $i => $m) {
+            $row = $i + 2;
+            $sheet->setCellValue("A{$row}", $i + 1);
+            $sheet->setCellValue("B{$row}", trim("{$m->name} {$m->middle_name} {$m->last_name}"));
+            $sheet->setCellValue("C{$row}", ucfirst($m->gender ?? ''));
+            $sheet->setCellValue("D{$row}", $m->phone ?? '');
+            $sheet->setCellValue("E{$row}", $m->email ?? '');
+            $sheet->setCellValue("F{$row}", $m->department ?? '');
+            $sheet->setCellValue("G{$row}", $m->office ?? '');
+            $sheet->setCellValue("H{$row}", $m->membership_date ?? '');
+        }
+
+        foreach (range('A', 'H') as $col) {
+            $sheet->getColumnDimension($col)->setAutoSize(true);
+        }
+
+        $safe = preg_replace('/[^a-z0-9]+/', '_', strtolower($title));
+        return $this->streamExcel($spreadsheet, "{$safe}_" . now()->format('Y-m-d') . '.xlsx');
+    }
+
+    // ── Transferred Out ─────────────────────────────────────────────────────
+    public function transferredOut()
+    {
+        // Sourced from follow-up records where reason = 'transferred' (most recent per member)
+        $userIds = AttendanceFollowup::where('reason', 'transferred')
+            ->orderByDesc('year')->orderByDesc('month')
+            ->get()
+            ->groupBy('user_id')
+            ->keys();
+
+        $members = User::whereIn('id', $userIds)
+            ->orderByRaw($this->officeOrderSql())
+            ->orderBy('name')
+            ->get();
+
+        return view('admin.reports.filter', compact('members'), [
+            'title'    => 'Transferred Out',
+            'subtitle' => 'Members who transferred to another Chrisco Church',
+        ]);
+    }
+
+    // ── Active Members ──────────────────────────────────────────────────────
+    // Active = attended all but at most 1 of the last 4 closed Sunday sessions
+    public function activeMembers()
+    {
+        $last4 = ServiceSession::where('status', 'closed')
+            ->orderByDesc('service_date')
+            ->limit(4)
+            ->pluck('id');
+
+        if ($last4->isEmpty()) {
+            $members = collect();
+            return view('admin.reports.filter', compact('members'), [
+                'title'    => 'Active Members',
+                'subtitle' => 'No closed Sunday sessions on record yet',
+            ]);
+        }
+
+        // Threshold scales with available sessions: require all but at most 1 absence
+        $threshold = max(1, $last4->count() - 1);
+
+        $activeIds = ServiceAttendance::whereIn('session_id', $last4)
+            ->select('user_id', DB::raw('COUNT(*) as times'))
+            ->groupBy('user_id')
+            ->having('times', '>=', $threshold)
+            ->pluck('user_id');
+
+        $members = User::where('role', 'member')
+            ->whereIn('id', $activeIds)
+            ->orderByRaw($this->officeOrderSql())
+            ->orderBy('name')
+            ->get();
+
+        return view('admin.reports.filter', compact('members'), [
+            'title'    => 'Active Members',
+            'subtitle' => 'Attended ' . $threshold . ' or more of the last ' . $last4->count() . ' Sunday services',
+        ]);
+    }
+
+    // ── Inactive Members ────────────────────────────────────────────────────
+    // Inactive = attended 0 of the last 4 closed Sunday sessions
+    public function inactiveMembers()
+    {
+        $last4 = ServiceSession::where('status', 'closed')
+            ->orderByDesc('service_date')
+            ->limit(4)
+            ->pluck('id');
+
+        if ($last4->isEmpty()) {
+            $members = collect();
+            return view('admin.reports.filter', compact('members'), [
+                'title'    => 'Inactive Members',
+                'subtitle' => 'No closed Sunday sessions on record yet',
+            ]);
+        }
+
+        $attendedIds = ServiceAttendance::whereIn('session_id', $last4)
+            ->distinct()
+            ->pluck('user_id');
+
+        $members = User::where('role', 'member')
+            ->whereNotIn('id', $attendedIds)
+            ->orderByRaw($this->officeOrderSql())
+            ->orderBy('name')
+            ->get();
+
+        return view('admin.reports.filter', compact('members'), [
+            'title'    => 'Inactive Members',
+            'subtitle' => 'Have not attended any of the last ' . $last4->count() . ' Sunday services',
         ]);
     }
 }
