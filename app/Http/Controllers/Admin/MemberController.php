@@ -13,7 +13,7 @@ class MemberController extends Controller
 {
     public function index(Request $request)
     {
-        $query = User::orderBy('created_at', 'desc');
+        $query = User::where('role', 'member')->orderBy('created_at', 'desc');
 
         if ($request->filled('role')) {
             $query->where('role', $request->role);
