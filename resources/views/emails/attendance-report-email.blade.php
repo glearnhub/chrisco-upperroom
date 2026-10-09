@@ -34,15 +34,7 @@
 
     <div class="header">
         <div class="header-logo-row">
-            @php
-                $logoPath = public_path('images/logo-email.png');
-                $logoSrc  = file_exists($logoPath)
-                    ? 'data:image/png;base64,' . base64_encode(file_get_contents($logoPath))
-                    : null;
-            @endphp
-            @if($logoSrc)
-                <img src="{{ $logoSrc }}" alt="Logo" class="header-logo">
-            @endif
+            <img src="{{ rtrim(config('app.url'), '/') }}/images/logo-email.png" alt="Logo" class="header-logo">
             <div>
                 <div class="header-org">Chrisco Upperroom Fellowship</div>
                 <div class="header-tagline">Church Management System</div>
