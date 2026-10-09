@@ -18,6 +18,10 @@
     body.print-inactive .section-card-irregular  { display: none !important; }
     body.print-irregular .section-card-active,
     body.print-irregular .section-card-inactive  { display: none !important; }
+    /* Hide stats and sessions when printing a specific group */
+    body.print-active .print-hide-on-group,
+    body.print-inactive .print-hide-on-group,
+    body.print-irregular .print-hide-on-group   { display: none !important; }
 }
 .print-header { display: none; }
 /* Print dropdown */
@@ -131,7 +135,7 @@
     </div>
 
     {{-- Summary stats --}}
-    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-6 print-hide-on-group">
         @php
         $totalMembers    = count($members);
         $activeCount     = count($activeMembers);
@@ -188,7 +192,7 @@
 
     {{-- Sessions breakdown --}}
     @if($sessions->count())
-    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mb-6 section-card">
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mb-6 section-card print-hide-on-group">
         <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
             <h2 class="font-bold text-gray-800"><i class="fas fa-calendar-check mr-2 text-blue-600"></i>Sessions Held — {{ $monthName }}</h2>
         </div>
@@ -239,7 +243,7 @@
         </div>
     </div>
     @else
-    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-8 text-center text-gray-400 mb-6">
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-8 text-center text-gray-400 mb-6 print-hide-on-group">
         <i class="fas fa-calendar-times text-4xl mb-3 block"></i>
         <p class="font-medium">No sessions recorded for {{ $monthName }}</p>
         <p class="text-sm mt-1">Open and run Sunday sessions first, then return here to view the report.</p>
