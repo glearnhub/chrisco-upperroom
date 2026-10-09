@@ -215,6 +215,9 @@ class ChildAttendanceController extends Controller
     /** Remove one attendance record */
     public function remove(ChildAttendance $attendance)
     {
+        if ($attendance->attendance_date->toDateString() < today()->toDateString() && !auth()->user()->isSuperAdmin()) {
+            return back()->with('error', 'Cannot remove attendance from a previous date.');
+        }
         $attendance->delete();
         return back()->with('success', 'Attendance record removed.');
     }
@@ -223,8 +226,9 @@ class ChildAttendanceController extends Controller
     public function saveDescriptor(Request $request, Child $child)
     {
         $request->validate([
-            'descriptor' => 'required|array|size:128',
-            'photo'      => 'nullable|string', // base64 data URL
+            'descriptor'   => 'required|array|size:128',
+            'descriptor.*' => 'required|numeric|between:-1,1',
+            'photo'        => 'nullable|string', // base64 data URL
         ]);
 
         // Save base64 photo to disk if provided

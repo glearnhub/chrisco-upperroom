@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
+use App\Models\SystemLog;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -187,7 +188,7 @@ class MemberController extends Controller
             'baptism_date'            => 'nullable|string|max:50',
             'commitment_status'       => 'nullable|in:committed,in_class,none',
             'committed_date'          => 'nullable|string|max:50',
-            'transfer_type'           => 'nullable|in:in',
+            'transfer_type'           => 'nullable|in:in,out',
             'transfer_church'         => 'nullable|string|max:200',
             'department'              => 'nullable|string|max:100',
             'department2'             => 'nullable|string|max:100',
@@ -272,7 +273,7 @@ class MemberController extends Controller
             'baptism_date'            => 'nullable|string|max:50',
             'commitment_status'       => 'nullable|in:committed,in_class,none',
             'committed_date'          => 'nullable|string|max:50',
-            'transfer_type'           => 'nullable|in:in',
+            'transfer_type'           => 'nullable|in:in,out',
             'transfer_church'         => 'nullable|string|max:200',
             'department'              => 'nullable|string|max:100',
             'department2'             => 'nullable|string|max:100',
@@ -313,6 +314,7 @@ class MemberController extends Controller
 
     public function updateRole(Request $request, User $user)
     {
+        abort_if(!auth()->user()->isSuperAdmin(), 403);
         abort_if($user->role !== 'member' && !$user->isSuperAdmin(), 404);
 
         if ($user->isSuperAdmin()) {
@@ -326,6 +328,7 @@ class MemberController extends Controller
         }
 
         $user->update(['role' => $validated['role']]);
+        SystemLog::record('update', 'Members', "Role changed to '{$validated['role']}' for {$user->email}.", $user);
         return back()->with('success', "Role updated for {$user->name}.");
     }
 

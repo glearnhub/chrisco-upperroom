@@ -21,7 +21,38 @@ class AboutController extends Controller
             ->orderBy('name')
             ->get(['id','name','middle_name','last_name','office','profile_photo']);
 
-        return view('admin.about.index', compact('leaders', 'pillars', 'members'));
+        $serviceTimes = [];
+        for ($i = 1; $i <= 3; $i++) {
+            $serviceTimes[$i] = [
+                'name'     => ChurchSetting::get("service_{$i}_name"),
+                'subtitle' => ChurchSetting::get("service_{$i}_subtitle"),
+                'time'     => ChurchSetting::get("service_{$i}_time"),
+                'icon'     => ChurchSetting::get("service_{$i}_icon"),
+                'color'    => ChurchSetting::get("service_{$i}_color"),
+            ];
+        }
+
+        return view('admin.about.index', compact('leaders', 'pillars', 'members', 'serviceTimes'));
+    }
+
+    // ── Hero Image ────────────────────────────────────────────────────────────
+
+    public function updateHeroImage(Request $request)
+    {
+        $request->validate([
+            'hero_image' => 'required|image|mimes:jpeg,png,jpg,webp|max:5120',
+        ]);
+
+        // Delete old image from storage
+        $old = ChurchSetting::get('hero_image');
+        if ($old && \Storage::disk('public')->exists($old)) {
+            \Storage::disk('public')->delete($old);
+        }
+
+        $path = $request->file('hero_image')->store('hero', 'public');
+        ChurchSetting::set('hero_image', $path);
+
+        return back()->with('success', 'Hero background image updated successfully.');
     }
 
     // ── Church Info (Who We Are / Vision / Mission) ──────────────────────────
@@ -50,7 +81,7 @@ class AboutController extends Controller
             'title'      => 'required|string|max:255',
             'role'       => 'required|string|max:150',
             'bio'        => 'nullable|string',
-            'photo'      => 'nullable|image|max:2048',
+            'photo'      => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
             'sort_order' => 'nullable|integer|min:0',
         ]);
 
@@ -79,7 +110,7 @@ class AboutController extends Controller
             'title'      => 'required|string|max:255',
             'role'       => 'required|string|max:150',
             'bio'        => 'nullable|string',
-            'photo'      => 'nullable|image|max:2048',
+            'photo'      => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
             'sort_order' => 'nullable|integer|min:0',
             'is_active'  => 'nullable|boolean',
         ]);
@@ -100,6 +131,30 @@ class AboutController extends Controller
     {
         $leader->delete();
         return back()->with('success', 'Leader removed.');
+    }
+
+    // ── Service Times ─────────────────────────────────────────────────────────
+
+    public function updateServiceTimes(Request $request)
+    {
+        $request->validate([
+            'service.*.name'     => 'nullable|string|max:100',
+            'service.*.subtitle' => 'nullable|string|max:150',
+            'service.*.time'     => 'nullable|string|max:50',
+            'service.*.icon'     => 'nullable|string|max:100',
+            'service.*.color'    => ['nullable', 'string', 'regex:/^#[0-9A-Fa-f]{6}$/'],
+        ]);
+
+        foreach ([1, 2, 3] as $i) {
+            $data = $request->input("service.{$i}", []);
+            ChurchSetting::set("service_{$i}_name",     $data['name']     ?? null);
+            ChurchSetting::set("service_{$i}_subtitle", $data['subtitle'] ?? null);
+            ChurchSetting::set("service_{$i}_time",     $data['time']     ?? null);
+            ChurchSetting::set("service_{$i}_icon",     $data['icon']     ?? null);
+            ChurchSetting::set("service_{$i}_color",    $data['color']    ?? null);
+        }
+
+        return back()->with('success', 'Service times updated successfully.');
     }
 
     // ── Pillars ───────────────────────────────────────────────────────────────
