@@ -80,7 +80,7 @@ class AboutController extends Controller
             'name'       => 'required|string|max:255',
             'title'      => 'required|string|max:255',
             'role'       => 'required|string|max:150',
-            'bio'        => 'nullable|string',
+            'bio'        => 'nullable|string|max:2000',
             'photo'      => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
             'sort_order' => 'nullable|integer|min:0',
         ]);
@@ -109,7 +109,7 @@ class AboutController extends Controller
             'name'       => 'required|string|max:255',
             'title'      => 'required|string|max:255',
             'role'       => 'required|string|max:150',
-            'bio'        => 'nullable|string',
+            'bio'        => 'nullable|string|max:2000',
             'photo'      => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
             'sort_order' => 'nullable|integer|min:0',
             'is_active'  => 'nullable|boolean',

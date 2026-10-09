@@ -17,10 +17,10 @@ class SocialMediaController extends Controller
     public function update(Request $request)
     {
         $request->validate([
-            'facebook'  => 'nullable|url|max:255',
-            'instagram' => 'nullable|url|max:255',
-            'youtube'   => 'nullable|url|max:255',
-            'tiktok'    => 'nullable|url|max:255',
+            'facebook'  => ['nullable', 'url', 'max:255', 'regex:/^https:\/\/(www\.)?facebook\.com\//i'],
+            'instagram' => ['nullable', 'url', 'max:255', 'regex:/^https:\/\/(www\.)?instagram\.com\//i'],
+            'youtube'   => ['nullable', 'url', 'max:255', 'regex:/^https:\/\/(www\.)?youtube\.com\//i'],
+            'tiktok'    => ['nullable', 'url', 'max:255', 'regex:/^https:\/\/(www\.)?tiktok\.com\//i'],
         ]);
 
         foreach (['facebook', 'instagram', 'youtube', 'tiktok'] as $key) {

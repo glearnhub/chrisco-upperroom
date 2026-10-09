@@ -64,7 +64,7 @@ class ChurchCalendarController extends Controller
             'end_date'      => 'nullable|date|after_or_equal:start_date',
             'category'      => 'required|in:' . implode(',', array_keys(ChurchCalendarEvent::categories())),
             'color'         => ['required', 'string', 'regex:/^#[0-9A-Fa-f]{6}$/'],
-            'notes'         => 'nullable|string',
+            'notes'         => 'nullable|string|max:2000',
             'calendar_year' => 'required|integer|min:2000|max:2100',
             'is_published'  => 'boolean',
         ]);
@@ -92,7 +92,7 @@ class ChurchCalendarController extends Controller
             'end_date'      => 'nullable|date|after_or_equal:start_date',
             'category'      => 'required|in:' . implode(',', array_keys(ChurchCalendarEvent::categories())),
             'color'         => ['required', 'string', 'regex:/^#[0-9A-Fa-f]{6}$/'],
-            'notes'         => 'nullable|string',
+            'notes'         => 'nullable|string|max:2000',
             'calendar_year' => 'required|integer|min:2000|max:2100',
             'is_published'  => 'boolean',
         ]);
@@ -132,7 +132,7 @@ class ChurchCalendarController extends Controller
     {
         $request->validate([
             'poster'                => 'required|image|mimes:jpeg,png,jpg,webp|max:5120',
-            'description'           => 'nullable|string',
+            'description'           => 'nullable|string|max:10000',
             'location'              => 'nullable|string|max:255',
             'start_time'            => 'nullable|string|max:10',
             'end_time'              => 'nullable|string|max:10',

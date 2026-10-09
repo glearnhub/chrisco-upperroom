@@ -27,7 +27,7 @@ class EventController extends Controller
     {
         $validated = $request->validate([
             'title'                 => 'required|string|max:255',
-            'description'           => 'nullable|string',
+            'description'           => 'nullable|string|max:10000',
             'location'              => 'nullable|string|max:255',
             'start_datetime'        => 'required|date',
             'end_datetime'          => 'nullable|date|after_or_equal:start_datetime',
@@ -189,7 +189,7 @@ class EventController extends Controller
     {
         $validated = $request->validate([
             'title'                 => 'required|string|max:255',
-            'description'           => 'nullable|string',
+            'description'           => 'nullable|string|max:10000',
             'location'              => 'nullable|string|max:255',
             'start_datetime'        => 'required|date',
             'end_datetime'          => 'nullable|date|after_or_equal:start_datetime',

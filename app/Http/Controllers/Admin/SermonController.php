@@ -26,12 +26,12 @@ class SermonController extends Controller
         $validated = $request->validate([
             'title'       => 'required|string|max:255',
             'speaker'     => 'required|string|max:255',
-            'description' => 'nullable|string',
+            'description' => 'nullable|string|max:10000',
             'sermon_date' => 'required|date',
             'category'    => 'nullable|string|in:' . implode(',', array_keys(\App\Models\Sermon::CATEGORIES)),
             'scripture'   => 'nullable|string|max:255',
-            'audio_url'   => 'nullable|url|max:500',
-            'video_url'   => 'nullable|url|max:500',
+            'audio_url'   => ['nullable', 'url', 'max:500', 'regex:/^https:\/\//'],
+            'video_url'   => ['nullable', 'url', 'max:500', 'regex:/^https:\/\//'],
             'thumbnail'   => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
             'status'      => 'required|in:published,draft',
         ]);
@@ -62,12 +62,12 @@ class SermonController extends Controller
         $validated = $request->validate([
             'title'       => 'required|string|max:255',
             'speaker'     => 'required|string|max:255',
-            'description' => 'nullable|string',
+            'description' => 'nullable|string|max:10000',
             'sermon_date' => 'required|date',
             'category'    => 'nullable|string|in:' . implode(',', array_keys(\App\Models\Sermon::CATEGORIES)),
             'scripture'   => 'nullable|string|max:255',
-            'audio_url'   => 'nullable|url|max:500',
-            'video_url'   => 'nullable|url|max:500',
+            'audio_url'   => ['nullable', 'url', 'max:500', 'regex:/^https:\/\//'],
+            'video_url'   => ['nullable', 'url', 'max:500', 'regex:/^https:\/\//'],
             'thumbnail'   => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
             'status'      => 'required|in:published,draft',
         ]);

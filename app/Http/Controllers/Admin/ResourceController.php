@@ -26,7 +26,7 @@ class ResourceController extends Controller
         $validated = $request->validate([
             'title'       => 'required|string|max:255',
             'author'      => 'nullable|string|max:255',
-            'description' => 'nullable|string',
+            'description' => 'nullable|string|max:10000',
             'type'        => 'required|in:book,article',
             'cover_image' => 'nullable|image|max:2048',
             'file'        => 'required|mimes:pdf|max:20480',
@@ -56,7 +56,7 @@ class ResourceController extends Controller
         $validated = $request->validate([
             'title'       => 'required|string|max:255',
             'author'      => 'nullable|string|max:255',
-            'description' => 'nullable|string',
+            'description' => 'nullable|string|max:10000',
             'type'        => 'required|in:book,article',
             'cover_image' => 'nullable|image|max:2048',
             'file'        => 'nullable|mimes:pdf|max:20480',

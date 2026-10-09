@@ -72,7 +72,7 @@ class ChildController extends Controller
             'parent2_name'        => 'nullable|string|max:255',
             'parent2_contact'     => 'nullable|string|max:20',
             'sunday_school_class' => 'nullable|string|max:100',
-            'notes'               => 'nullable|string',
+            'notes'               => 'nullable|string|max:2000',
         ]);
 
         // If a member was selected, sync name/contact from their record
@@ -121,7 +121,7 @@ class ChildController extends Controller
             'parent2_name'        => 'nullable|string|max:255',
             'parent2_contact'     => 'nullable|string|max:20',
             'sunday_school_class' => 'nullable|string|max:100',
-            'notes'               => 'nullable|string',
+            'notes'               => 'nullable|string|max:2000',
         ]);
 
         if (!empty($validated['parent1_id'])) {
