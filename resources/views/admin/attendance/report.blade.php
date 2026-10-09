@@ -4,23 +4,45 @@
 @push('styles')
 <style>
 @media print {
-    * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-    .no-print, #fu-modal, .sidebar, header, nav { display: none !important; }
-    body { background: white !important; margin: 0 !important; }
+    * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; box-sizing: border-box; }
+    .no-print, #fu-modal, .sidebar, header, nav,
+    aside, [class*="sidebar"], [class*="navbar"], [class*="topbar"] { display: none !important; }
+
+    html, body {
+        margin: 0 !important; padding: 0 !important;
+        width: 100% !important; background: white !important;
+        font-size: 11px !important;
+    }
+    /* Force the main content wrapper to fill the full page */
+    main, [class*="main-content"], [class*="content-wrapper"],
+    .p-3, .p-6, .sm\:p-6 {
+        margin: 0 !important; padding: 0 !important;
+        width: 100% !important; max-width: 100% !important;
+    }
+    /* Outer print container — full width with neat page margins */
+    .print-root {
+        display: block !important;
+        width: 100% !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
 
     /* Always show print header and all section bodies */
     .print-header { display: block !important; }
     .section-body { display: block !important; max-height: none !important; opacity: 1 !important; overflow: visible !important; }
     .section-header { display: none !important; }  /* hide accordion toggles — section title shown via table header */
 
-    /* Clean card styling */
+    /* Clean card styling — full width */
     .section-card {
         box-shadow: none !important;
         border: 1px solid #e2e8f0 !important;
+        border-left-width: 4px !important;
         border-radius: 6px !important;
         margin-bottom: 16px !important;
+        width: 100% !important;
         page-break-inside: avoid;
     }
+    .overflow-x-auto { overflow: visible !important; width: 100% !important; }
 
     /* Only use page-break when printing ALL — suppress for single-group prints */
     .page-break { page-break-before: always; }
@@ -83,7 +105,7 @@
 @endpush
 
 @section('content')
-<div class="p-3 sm:p-6">
+<div class="p-3 sm:p-6 print-root">
 
     {{-- Print header --}}
     <div class="print-header" style="margin-bottom:18px;">
