@@ -152,7 +152,7 @@ Route::middleware(['auth', 'admin'])
         // All other admin routes require password to not need changing
         Route::middleware('force.password.change')->group(function () {
 
-        Route::get('/dashboard', [AdminDashboard::class, 'index'])->name('dashboard');
+        Route::get('/dashboard', [AdminDashboard::class, 'index'])->middleware('permission:dashboard.view')->name('dashboard');
 
         // Reports
         Route::get('/reports/membership',      [AdminReport::class, 'membership'])->middleware('permission:reports.membership')->name('reports.membership');
@@ -319,7 +319,7 @@ Route::middleware(['auth', 'admin'])
         // Announcements
         Route::get('/announcements',                                    [AdminAnnouncement::class, 'index'])->middleware('permission:announcements.view')->name('announcements.index');
         Route::get('/announcements/create',                             [AdminAnnouncement::class, 'create'])->middleware('permission:announcements.create')->name('announcements.create');
-        Route::get('/announcements/print',                              [AdminAnnouncement::class, 'printView'])->name('announcements.print');
+        Route::get('/announcements/print',                              [AdminAnnouncement::class, 'printView'])->middleware('permission:announcements.view')->name('announcements.print');
         Route::post('/announcements',                                   [AdminAnnouncement::class, 'store'])->middleware('permission:announcements.create')->name('announcements.store');
         Route::get('/announcements/{announcement}',                     [AdminAnnouncement::class, 'show'])->middleware('permission:announcements.view')->name('announcements.show');
         Route::get('/announcements/{announcement}/edit',                [AdminAnnouncement::class, 'edit'])->middleware('permission:announcements.edit')->name('announcements.edit');

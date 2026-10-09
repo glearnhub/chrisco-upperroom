@@ -171,6 +171,14 @@ class RbacSeeder extends Seeder
             Permission::whereIn('slug', ['prayers.view','prayers.manage'])->pluck('id')
         );
 
+        // ── Dashboard access — every role can see the dashboard ─────────────
+        $dashboardPerm = Permission::where('slug', 'dashboard.view')->first();
+        if ($dashboardPerm) {
+            foreach ([$media, $school, $events, $announcements, $membership, $visitors, $prayers] as $role) {
+                $role->permissions()->syncWithoutDetaching([$dashboardPerm->id]);
+            }
+        }
+
         // ── Default Super Admin User ────────────────────────────────────────
 
         $superPassword = env('SUPER_ADMIN_PASSWORD');
