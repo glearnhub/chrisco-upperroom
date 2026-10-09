@@ -175,13 +175,20 @@ class RbacSeeder extends Seeder
 
         // ── Default Super Admin User ────────────────────────────────────────
 
-        $superUser = User::where('email', 'superadmin@chrisco-upper-room.org')->first();
+        $superPassword = env('SUPER_ADMIN_PASSWORD');
+        if (empty($superPassword)) {
+            throw new \RuntimeException('SUPER_ADMIN_PASSWORD is not set in .env — refusing to seed without it.');
+        }
+
+        $superEmail = env('SUPER_ADMIN_EMAIL', 'superadmin@chrisco-upper-room.org');
+
+        $superUser = User::where('email', $superEmail)->first();
         if (!$superUser) {
             $superUser = User::create([
                 'name'      => 'Super',
                 'last_name' => 'Admin',
-                'email'     => 'superadmin@chrisco-upper-room.org',
-                'password'  => Hash::make(env('SUPER_ADMIN_PASSWORD', 'SuperAdmin@2024!')),
+                'email'     => $superEmail,
+                'password'  => Hash::make($superPassword),
                 'role'      => 'admin',
                 'is_active' => true,
             ]);
@@ -190,6 +197,6 @@ class RbacSeeder extends Seeder
         $superUser->roles()->syncWithoutDetaching([$superAdmin->id]);
 
         $this->command->info('✓ RBAC seeded successfully.');
-        $this->command->info('  Super Admin: superadmin@chrisco-upper-room.org (password from SUPER_ADMIN_PASSWORD in .env)');
+        $this->command->info("  Super Admin: {$superEmail} (password from SUPER_ADMIN_PASSWORD in .env)");
     }
 }
