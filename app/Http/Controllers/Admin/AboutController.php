@@ -60,7 +60,7 @@ class AboutController extends Controller
     public function updateInfo(Request $request)
     {
         $validated = $request->validate([
-            'who_we_are' => 'nullable|string',
+            'who_we_are' => 'nullable|string|max:5000',
             'vision'     => 'nullable|string|max:1000',
             'mission'    => 'nullable|string|max:1000',
         ]);
@@ -163,7 +163,7 @@ class AboutController extends Controller
     {
         $validated = $request->validate([
             'title'       => 'required|string|max:255',
-            'description' => 'required|string',
+            'description' => 'required|string|max:2000',
             'icon'        => 'nullable|string|max:100',
             'sort_order'  => 'nullable|integer|min:0',
         ]);
@@ -183,7 +183,7 @@ class AboutController extends Controller
     {
         $validated = $request->validate([
             'title'       => 'required|string|max:255',
-            'description' => 'required|string',
+            'description' => 'required|string|max:2000',
             'icon'        => 'nullable|string|max:100',
             'sort_order'  => 'nullable|integer|min:0',
             'is_active'   => 'nullable|boolean',

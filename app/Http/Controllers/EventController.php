@@ -82,7 +82,7 @@ class EventController extends Controller
             return response()->json(['success' => false, 'message' => 'Too many incorrect attempts. Please request a new code.']);
         }
 
-        if ($data['code'] !== $request->otp) {
+        if (!hash_equals((string) $data['code'], (string) $request->otp)) {
             $data['attempts']++;
             Cache::put($cacheKey, $data, now()->addMinutes(10));
             $remaining = 5 - $data['attempts'];

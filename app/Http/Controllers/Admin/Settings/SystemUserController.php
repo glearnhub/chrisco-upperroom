@@ -34,7 +34,6 @@ class SystemUserController extends Controller
     {
         $request->validate([
             'member_id' => 'required|exists:users,id',
-            'password'  => 'required|min:8|confirmed',
             'roles'     => 'nullable|array',
             'roles.*'   => 'exists:roles,id',
         ]);

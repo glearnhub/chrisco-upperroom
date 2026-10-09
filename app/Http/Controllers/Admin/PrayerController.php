@@ -53,7 +53,7 @@ class PrayerController extends Controller
         $request->validate([
             'prayer_ids'  => 'required|array|min:1',
             'prayer_ids.*' => 'exists:prayer_requests,id',
-            'assigned_to' => 'required|exists:users,id',
+            'assigned_to' => 'required|exists:users,id,role,admin',
         ]);
 
         $leader  = User::findOrFail($request->assigned_to);
@@ -91,7 +91,7 @@ class PrayerController extends Controller
     public function assign(Request $request, PrayerRequest $prayer)
     {
         $request->validate([
-            'assigned_to' => 'nullable|exists:users,id',
+            'assigned_to' => 'nullable|exists:users,id,role,admin',
         ]);
 
         $leaderId = $request->assigned_to ?: null;

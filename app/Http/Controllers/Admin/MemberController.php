@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use App\Models\SystemLog;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rules\Password;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class MemberController extends Controller
@@ -178,7 +179,7 @@ class MemberController extends Controller
             'date_of_birth'           => 'nullable|date',
             'membership_date'         => 'nullable|date',
             'role'                    => 'nullable|in:member',
-            'password'                => 'nullable|string|min:8',
+            'password'                => ['nullable', Password::min(12)->mixedCase()->numbers()],
             'county'                  => 'nullable|string|max:100',
             'sub_county'              => 'nullable|string|max:100',
             'sub_location'            => 'nullable|string|max:255',
