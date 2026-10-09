@@ -118,7 +118,7 @@ class SendMonthlyAttendanceReport extends Command
             'inactiveMembers' => $inactiveMembers,
             'irregularMembers'=> $irregularMembers,
             'generatedAt'     => $generatedAt,
-        ])->setPaper('a4', 'portrait');
+        ])->setPaper('a4', 'landscape')->setOption('margin_top', 0)->setOption('margin_bottom', 0)->setOption('margin_left', 0)->setOption('margin_right', 0);
 
         $pdfFilename = 'attendance_report_' . $startOfMonth->format('Y_m') . '.pdf';
         $pdfPath     = storage_path('app/' . $pdfFilename);

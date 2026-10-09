@@ -124,10 +124,10 @@ Route::post('/attend/event/{event}/checkin',[EventAttendanceController::class, '
 Route::post('/attend/event/{event}/walkin', [EventAttendanceController::class, 'walkin'])->name('attend.event.walkin')->middleware('throttle:20,1');
 
 // -------------------------------------------------------
-// Member Dashboard
+// Legacy /dashboard → redirect to admin dashboard
 // -------------------------------------------------------
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('/dashboard', [MemberController::class, 'dashboard'])->name('dashboard');
+    Route::get('/dashboard', fn() => redirect()->route('admin.dashboard'))->name('dashboard');
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
