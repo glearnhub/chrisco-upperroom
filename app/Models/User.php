@@ -12,15 +12,20 @@ class User extends Authenticatable
 
     protected $fillable = [
         'name', 'middle_name', 'last_name', 'gender', 'marital_status',
-        'email', 'password', 'role', 'is_active',
+        'email', 'password', 'member_type', 'is_active',
         'phone', 'address', 'date_of_birth', 'profile_photo', 'membership_date',
         'county', 'sub_county', 'sub_location',
-        'salvation_date', 'is_committed_member', 'committed_date',
+        'salvation_date', 'is_born_again', 'is_baptized', 'baptism_date',
+        'is_committed_member', 'in_commitment_class', 'committed_date',
         'department', 'department2', 'department3', 'occupation',
         'next_of_kin_name', 'next_of_kin_relationship', 'next_of_kin_phone',
+        'next_of_kin2_name', 'next_of_kin2_relationship', 'next_of_kin2_phone',
         'belongs_to_home_cell', 'home_cell',
         'assigned_to_deacon', 'deacon_name',
         'office',
+        'transfer_type', 'transfer_church',
+        'has_medical_condition', 'medical_conditions', 'medications',
+        'allergies', 'emergency_medical_contact', 'emergency_medical_phone', 'special_needs',
         'must_change_password',
     ];
 
@@ -35,9 +40,13 @@ class User extends Authenticatable
             'membership_date'      => 'date',
             'belongs_to_home_cell' => 'boolean',
             'assigned_to_deacon'   => 'boolean',
+            'is_born_again'        => 'boolean',
+            'is_baptized'          => 'boolean',
             'is_committed_member'  => 'boolean',
-            'is_active'            => 'boolean',
-            'must_change_password' => 'boolean',
+            'in_commitment_class'  => 'boolean',
+            'is_active'              => 'boolean',
+            'has_medical_condition'  => 'boolean',
+            'must_change_password'   => 'boolean',
         ];
     }
 
@@ -119,8 +128,9 @@ class User extends Authenticatable
 
     // ── Existing Relationships ───────────────────────────────────────────────
 
-    public function donations()      { return $this->hasMany(Donation::class); }
-    public function eventRegistrations() { return $this->hasMany(EventRegistration::class); }
-    public function prayerRequests() { return $this->hasMany(PrayerRequest::class); }
-    public function announcements()  { return $this->hasMany(Announcement::class); }
+    public function donations()           { return $this->hasMany(Donation::class); }
+    public function eventRegistrations()  { return $this->hasMany(EventRegistration::class); }
+    public function prayerRequests()      { return $this->hasMany(PrayerRequest::class); }
+    public function announcements()       { return $this->hasMany(Announcement::class); }
+    public function serviceAttendances()  { return $this->hasMany(ServiceAttendance::class); }
 }

@@ -17,7 +17,7 @@ class DonationController extends Controller
         $validated = $request->validate([
             'donor_name'       => 'required|string|max:255',
             'phone'            => 'required|string|max:20',
-            'amount'           => 'required|numeric|min:1',
+            'amount'           => 'required|numeric|min:1|max:999999',
             'giving_type'      => 'required|in:tithe,offering,thanksgiving,building_fund,missions,other',
             'payment_method'   => 'required|string|max:100',
             'transaction_code' => 'nullable|string|max:100',

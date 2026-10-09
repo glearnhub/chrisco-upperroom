@@ -69,14 +69,17 @@ class SermonImportController extends Controller
                 $category = null;
             }
 
+            $safeVideoUrl = ($videoUrl && filter_var($videoUrl, FILTER_VALIDATE_URL) && str_starts_with($videoUrl, 'https://')) ? $videoUrl : null;
+            $safeAudioUrl = ($audioUrl && filter_var($audioUrl, FILTER_VALIDATE_URL) && str_starts_with($audioUrl, 'https://')) ? $audioUrl : null;
+
             Sermon::create([
                 'title'       => $title,
                 'speaker'     => $speaker,
                 'sermon_date' => $parsedDate,
                 'category'    => $category ?: null,
                 'scripture'   => $scripture ?: null,
-                'video_url'   => $videoUrl ?: null,
-                'audio_url'   => $audioUrl ?: null,
+                'video_url'   => $safeVideoUrl,
+                'audio_url'   => $safeAudioUrl,
                 'description' => $description ?: null,
                 'status'      => $status,
             ]);

@@ -36,6 +36,7 @@ class VisitorController extends Controller
         }
 
         if ($request->export === 'excel') {
+            abort_if(!auth()->user()->hasPermission('visitors.delete'), 403);
             return $this->exportExcel($query->get());
         }
 

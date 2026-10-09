@@ -32,9 +32,8 @@ class AnnouncementController extends Controller
 
         $monday = now()->startOfWeek(\Carbon\Carbon::MONDAY);
         $sunday = now()->endOfWeek(\Carbon\Carbon::SUNDAY);
-        $dateLabel = $request->input('date_label',
-            $monday->format('j') . ' ' . $monday->format('M') . ' – ' . $sunday->format('j') . ' ' . $sunday->format('M') . ' ' . $sunday->format('Y')
-        );
+        $defaultLabel = $monday->format('j') . ' ' . $monday->format('M') . ' – ' . $sunday->format('j') . ' ' . $sunday->format('M') . ' ' . $sunday->format('Y');
+        $dateLabel = substr(strip_tags($request->input('date_label', $defaultLabel)), 0, 100);
 
         return view('admin.announcements.print', compact('announcements', 'dateLabel'));
     }
