@@ -22,7 +22,6 @@ class RbacSeeder extends Seeder
             ['module' => 'Members',        'slug' => 'members.view',               'name' => 'View Members'],
             ['module' => 'Members',        'slug' => 'members.create',             'name' => 'Create Members'],
             ['module' => 'Members',        'slug' => 'members.edit',               'name' => 'Edit Members'],
-            ['module' => 'Members',        'slug' => 'members.delete',             'name' => 'Delete Members'],
             ['module' => 'Members',        'slug' => 'members.import',             'name' => 'Import Members'],
 
             // Children
@@ -156,7 +155,7 @@ class RbacSeeder extends Seeder
             'name' => 'Membership Administrator', 'description' => 'Manages members and membership data',
         ]);
         $membership->permissions()->syncWithoutDetaching(
-            Permission::whereIn('slug', ['members.view','members.create','members.edit','members.delete','members.import','visitors.view','visitors.create','visitors.edit','visitors.delete','corrections.view','corrections.manage','reports.membership','attendance.view','attendance.manage','attendance.followup','calendar.manage'])->pluck('id')
+            Permission::whereIn('slug', ['members.view','members.create','members.edit','members.import','visitors.view','visitors.create','visitors.edit','visitors.delete','corrections.view','corrections.manage','reports.membership','attendance.view','attendance.manage','attendance.followup','calendar.manage'])->pluck('id')
         );
 
         $visitors = Role::firstOrCreate(['slug' => 'cur_visitors'], [

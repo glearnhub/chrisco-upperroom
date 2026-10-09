@@ -25,7 +25,7 @@ class LivestreamController extends Controller
         $validated = $request->validate([
             'title'        => 'required|string|max:255',
             'description'  => 'nullable|string',
-            'embed_url'    => 'required|url|max:500',
+            'embed_url'    => ['required', 'url', 'max:500', 'regex:/^https:\/\/(www\.)?(youtube\.com|youtu\.be|facebook\.com)\//i'],
             'platform'     => 'nullable|string|max:100',
             'is_live'      => 'boolean',
             'scheduled_at' => 'nullable|date',
@@ -54,7 +54,7 @@ class LivestreamController extends Controller
         $validated = $request->validate([
             'title'        => 'required|string|max:255',
             'description'  => 'nullable|string',
-            'embed_url'    => 'required|url|max:500',
+            'embed_url'    => ['required', 'url', 'max:500', 'regex:/^https:\/\/(www\.)?(youtube\.com|youtu\.be|facebook\.com)\//i'],
             'platform'     => 'nullable|string|max:100',
             'is_live'      => 'boolean',
             'scheduled_at' => 'nullable|date',

@@ -116,10 +116,7 @@ class EventController extends Controller
         return response()->json([
             'found'     => true,
             'full_name' => $user->full_name,
-            'phone'     => $user->phone ?? '',
-            'email'     => $user->email,
             'category'  => $category,
-            'member_id' => $user->id, // used only for form pre-fill, not exposed publicly
         ]);
     }
 

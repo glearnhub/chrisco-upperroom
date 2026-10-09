@@ -193,8 +193,8 @@ class AttendanceController extends Controller
     // GET /admin/attendance/report — monthly member activity report
     public function report(Request $request)
     {
-        $year  = (int) $request->get('year',  now()->year);
-        $month = (int) $request->get('month', now()->month);
+        $year  = max(2000, min(2100, (int) $request->get('year',  now()->year)));
+        $month = max(1,    min(12,   (int) $request->get('month', now()->month)));
 
         $startOfMonth = Carbon::create($year, $month, 1)->startOfMonth();
         $endOfMonth   = $startOfMonth->copy()->endOfMonth();
@@ -301,8 +301,8 @@ class AttendanceController extends Controller
     // GET /admin/attendance/followup-team — restricted view for follow-up team members
     public function followupTeam(Request $request)
     {
-        $year  = (int) $request->get('year',  now()->year);
-        $month = (int) $request->get('month', now()->month);
+        $year  = max(2000, min(2100, (int) $request->get('year',  now()->year)));
+        $month = max(1,    min(12,   (int) $request->get('month', now()->month)));
 
         $startOfMonth = Carbon::create($year, $month, 1)->startOfMonth();
         $endOfMonth   = $startOfMonth->copy()->endOfMonth();

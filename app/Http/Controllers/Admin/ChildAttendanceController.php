@@ -101,6 +101,9 @@ class ChildAttendanceController extends Controller
     /** AJAX: undo a check-in */
     public function undoCheckin(ChildAttendance $attendance)
     {
+        if ($attendance->attendance_date->toDateString() < today()->toDateString() && !auth()->user()->isSuperAdmin()) {
+            return response()->json(['error' => 'Cannot undo attendance from a previous date.'], 403);
+        }
         $attendance->delete();
         return response()->json(['success' => true]);
     }

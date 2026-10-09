@@ -45,6 +45,11 @@ class GalleryController extends Controller
         return redirect()->route('admin.gallery.index')->with('success', 'Photo(s) uploaded successfully.');
     }
 
+    public function show(GalleryItem $gallery)
+    {
+        return view('admin.gallery.show', compact('gallery'));
+    }
+
     public function edit(GalleryItem $gallery)
     {
         return view('admin.gallery.edit', compact('gallery'));

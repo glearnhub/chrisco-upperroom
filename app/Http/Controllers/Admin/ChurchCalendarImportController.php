@@ -109,10 +109,10 @@ class ChurchCalendarImportController extends Controller
                 }
             }
 
-            // Color
+            // Color — sanitize to valid hex only
             $colorRaw = trim((string) ($row[$colMap['color']] ?? ''));
-            $color    = $colorRaw ?: ($categories[$category]['color'] ?? '#1e3a6e');
-            if ($color && $color[0] !== '#') $color = '#' . $color;
+            if ($colorRaw && $colorRaw[0] !== '#') $colorRaw = '#' . $colorRaw;
+            $color = preg_match('/^#[0-9A-Fa-f]{6}$/', $colorRaw) ? $colorRaw : ($categories[$category]['color'] ?? '#1e3a6e');
 
             $notes = trim((string) ($row[$colMap['notes']] ?? ''));
 
