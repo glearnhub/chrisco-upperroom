@@ -32,7 +32,7 @@ class DonationController extends Controller
             'giving_type'      => $validated['giving_type'],
             'payment_method'   => $validated['payment_method'],
             'transaction_code' => $validated['transaction_code'] ?? null,
-            'status'           => 'completed',
+            'status'           => 'pending',
             'notes'            => $validated['notes'] ?? null,
         ]);
 

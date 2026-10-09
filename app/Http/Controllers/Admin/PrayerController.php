@@ -59,7 +59,7 @@ class PrayerController extends Controller
         $leader  = User::findOrFail($request->assigned_to);
         $prayers = PrayerRequest::whereIn('id', $request->prayer_ids)->get();
 
-        $prayers->each(fn($p) => $p->update(['assigned_to' => $leader->id]));
+        PrayerRequest::whereIn('id', $prayers->pluck('id'))->update(['assigned_to' => $leader->id]);
 
         if ($leader->email) {
             try {
