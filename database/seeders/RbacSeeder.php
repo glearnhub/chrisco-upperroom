@@ -72,7 +72,6 @@ class RbacSeeder extends Seeder
             ['module' => 'Events',         'slug' => 'events.create',              'name' => 'Create Events'],
             ['module' => 'Events',         'slug' => 'events.edit',                'name' => 'Edit Events'],
             ['module' => 'Events',         'slug' => 'events.delete',              'name' => 'Delete Events'],
-            ['module' => 'Events',         'slug' => 'events.reports',             'name' => 'View Event Reports'],
 
             // Announcements
             ['module' => 'Announcements',  'slug' => 'announcements.view',         'name' => 'View Announcements'],
@@ -92,7 +91,6 @@ class RbacSeeder extends Seeder
             // Reports
             ['module' => 'Reports',        'slug' => 'reports.membership',         'name' => 'View Membership Reports'],
             ['module' => 'Reports',        'slug' => 'reports.children',           'name' => 'View Children Reports'],
-            ['module' => 'Reports',        'slug' => 'reports.events',             'name' => 'View Event Reports'],
 
             // Settings
             ['module' => 'Settings',       'slug' => 'settings.social',            'name' => 'Manage Social Media Links'],
@@ -142,7 +140,7 @@ class RbacSeeder extends Seeder
             'name' => 'Events Administrator', 'description' => 'Manages events and registrations',
         ]);
         $events->permissions()->syncWithoutDetaching(
-            Permission::whereIn('slug', ['events.view','events.create','events.edit','events.delete','events.reports','reports.events','calendar.manage'])->pluck('id')
+            Permission::whereIn('slug', ['events.view','events.create','events.edit','events.delete','calendar.manage'])->pluck('id')
         );
 
         $announcements = Role::firstOrCreate(['slug' => 'cur_announcements'], [
