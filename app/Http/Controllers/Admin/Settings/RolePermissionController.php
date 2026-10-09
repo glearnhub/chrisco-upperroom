@@ -41,6 +41,8 @@ class RolePermissionController extends Controller
         $request->validate([
             'name'        => 'required|string|max:100',
             'description' => 'nullable|string|max:255',
+            'permissions'   => 'nullable|array',
+            'permissions.*' => 'exists:permissions,id',
         ]);
 
         $role->update($request->only('name', 'description'));

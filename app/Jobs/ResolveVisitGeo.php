@@ -14,7 +14,8 @@ class ResolveVisitGeo implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    public int $tries = 2;
+    public int $tries   = 2;
+    public int $timeout = 10;
 
     public function __construct(
         public int    $visitId,
@@ -46,5 +47,10 @@ class ResolveVisitGeo implements ShouldQueue
         });
 
         $visit->update(['country' => $country, 'country_code' => $countryCode]);
+    }
+
+    public function failed(\Throwable $e): void
+    {
+        \Log::warning("ResolveVisitGeo failed for visit {$this->visitId} (IP: {$this->ip}): " . $e->getMessage());
     }
 }

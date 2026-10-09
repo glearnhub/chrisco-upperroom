@@ -72,6 +72,7 @@ class SystemUserController extends Controller
 
     public function edit(User $user)
     {
+        abort_if($user->role !== 'admin', 404);
         $roles = Role::orderBy('name')->get();
         $permissions = Permission::orderBy('module')->orderBy('name')->get()->groupBy('module');
         $userRoleIds = $user->roles->pluck('id')->toArray();
@@ -82,6 +83,7 @@ class SystemUserController extends Controller
 
     public function update(Request $request, User $user)
     {
+        abort_if($user->role !== 'admin', 404);
         $request->validate([
             'name'    => 'required|string|max:100',
             'email'   => 'required|email|unique:users,email,' . $user->id,
@@ -120,6 +122,7 @@ class SystemUserController extends Controller
 
     public function toggleActive(User $user)
     {
+        abort_if($user->role !== 'admin', 404);
         if ($user->isSuperAdmin()) {
             return back()->with('error', 'Cannot deactivate the Super Admin.');
         }
@@ -131,6 +134,7 @@ class SystemUserController extends Controller
 
     public function resetPassword(Request $request, User $user)
     {
+        abort_if($user->role !== 'admin', 404);
         $user->update([
             'password'             => Hash::make(Str::random(32)),
             'must_change_password' => true,
@@ -151,6 +155,7 @@ class SystemUserController extends Controller
 
     public function destroy(User $user)
     {
+        abort_if($user->role !== 'admin', 404);
         if ($user->isSuperAdmin()) {
             return back()->with('error', 'Cannot delete the Super Admin.');
         }

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Resource;
+use Illuminate\Support\Facades\Storage;
 
 class ResourceController extends Controller
 {
@@ -16,6 +17,7 @@ class ResourceController extends Controller
     public function download(Resource $resource)
     {
         abort_unless($resource->is_published, 404);
-        return response()->download(storage_path('app/public/' . $resource->file_path), $resource->title . '.pdf');
+        abort_unless(Storage::disk('public')->exists($resource->file_path), 404);
+        return Storage::disk('public')->download($resource->file_path, $resource->title . '.pdf');
     }
 }

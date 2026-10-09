@@ -23,16 +23,17 @@ class MemberImportController extends Controller
         ]);
 
         $path = $request->file('file')->getRealPath();
-        $ext  = strtolower($request->file('file')->getClientOriginalExtension());
+        $mime = $request->file('file')->getMimeType();
 
         try {
-            if ($ext === 'csv') {
+            if (in_array($mime, ['text/csv', 'text/plain'])) {
                 $rows = $this->readCsv($path);
             } else {
                 $rows = $this->readExcel($path);
             }
         } catch (\Exception $e) {
-            return back()->with('error', 'Could not read file: ' . $e->getMessage());
+            \Log::error('Member import failed: ' . $e->getMessage());
+            return back()->with('error', 'Could not read the uploaded file. Please ensure it is a valid Excel or CSV file.');
         }
 
         $imported = 0;
