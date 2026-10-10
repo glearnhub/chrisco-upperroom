@@ -108,55 +108,6 @@ class ChildAttendanceController extends Controller
         return response()->json(['success' => true]);
     }
 
-    /** Return all face descriptors for a class (used by JS) */
-    public function descriptors(Request $request)
-    {
-        $query = Child::whereNotNull('face_descriptor')->whereNotNull('photo');
-        if ($request->class) {
-            $query->where('sunday_school_class', $request->class);
-        }
-
-        $data = $query->get(['id', 'first_name', 'last_name', 'photo', 'face_descriptor'])
-            ->map(fn($c) => [
-                'id'          => $c->id,
-                'name'        => $c->full_name,
-                'photo'       => $c->photo_url,
-                'descriptor'  => $c->face_descriptor,
-            ]);
-
-        return response()->json($data);
-    }
-
-    /** Save attendance records sent from JS after face matching */
-    public function saveAttendance(Request $request)
-    {
-        $request->validate([
-            'date'          => 'required|date|before_or_equal:today|after:2020-01-01',
-            'matches'       => 'required|array',
-            'matches.*.id'  => 'required|exists:children,id',
-            'matches.*.confidence' => 'required|numeric|min:0|max:100',
-            'matches.*.method'     => 'required|in:face,manual',
-        ]);
-
-        $saved = 0;
-        foreach ($request->matches as $match) {
-            ChildAttendance::updateOrCreate(
-                ['child_id' => $match['id'], 'attendance_date' => $request->date],
-                [
-                    'method'     => $match['method'],
-                    'confidence' => $match['confidence'],
-                    'marked_by'  => auth()->id(),
-                ]
-            );
-            $saved++;
-        }
-
-        SystemLog::record('attendance', 'Children',
-            "Marked {$saved} child(ren) present on {$request->date}");
-
-        return response()->json(['saved' => $saved]);
-    }
-
     /** Attendance history / report */
     public function history(Request $request)
     {
@@ -222,53 +173,4 @@ class ChildAttendanceController extends Controller
         return back()->with('success', 'Attendance record removed.');
     }
 
-    /** Save face descriptor sent from child edit/create page */
-    public function saveDescriptor(Request $request, Child $child)
-    {
-        $request->validate([
-            'descriptor'   => 'required|array|size:128',
-            'descriptor.*' => 'required|numeric|between:-1,1',
-            'photo'        => 'nullable|string', // base64 data URL
-        ]);
-
-        // Save base64 photo to disk if provided
-        if ($request->photo) {
-            // Only accept known image MIME prefixes
-            if (!preg_match('/^data:image\/(jpeg|png|webp);base64,/', $request->photo)) {
-                return response()->json(['error' => 'Invalid image format.'], 422);
-            }
-
-            $data    = preg_replace('/^data:image\/\w+;base64,/', '', $request->photo);
-            $decoded = base64_decode($data, strict: true);
-
-            if ($decoded === false) {
-                return response()->json(['error' => 'Invalid base64 data.'], 422);
-            }
-
-            // Reject payloads over 2 MB
-            if (strlen($decoded) > 2 * 1024 * 1024) {
-                return response()->json(['error' => 'Image exceeds 2 MB limit.'], 422);
-            }
-
-            // Verify the decoded bytes are actually an image
-            if (!@getimagesizefromstring($decoded)) {
-                return response()->json(['error' => 'Uploaded file is not a valid image.'], 422);
-            }
-
-            $filename = 'children/' . $child->id . '_' . time() . '.jpg';
-            \Illuminate\Support\Facades\Storage::disk('public')->put($filename, $decoded);
-
-            // Delete old photo
-            if ($child->photo && $child->photo !== $filename) {
-                \Illuminate\Support\Facades\Storage::disk('public')->delete($child->photo);
-            }
-
-            $child->photo = $filename;
-        }
-
-        $child->face_descriptor = $request->descriptor;
-        $child->save();
-
-        return response()->json(['success' => true, 'photo_url' => $child->photo_url]);
-    }
 }

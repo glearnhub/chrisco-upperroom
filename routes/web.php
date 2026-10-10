@@ -193,10 +193,7 @@ Route::middleware(['auth', 'admin'])
         Route::get('/children/attendance/search',           [AdminChildAttendance::class, 'searchChild'])->middleware('permission:children.view')->name('children.attendance.search');
         Route::post('/children/attendance/checkin',         [AdminChildAttendance::class, 'checkin'])->middleware('permission:children.create')->name('children.attendance.checkin');
         Route::delete('/children/attendance/undo/{attendance}', [AdminChildAttendance::class, 'undoCheckin'])->middleware('permission:children.edit')->name('children.attendance.undo');
-        Route::get('/children/attendance/descriptors',      [AdminChildAttendance::class, 'descriptors'])->middleware('permission:children.edit')->name('children.attendance.descriptors');
-        Route::post('/children/attendance/save',            [AdminChildAttendance::class, 'saveAttendance'])->middleware('permission:children.create')->name('children.attendance.save');
         Route::delete('/children/attendance/{attendance}',  [AdminChildAttendance::class, 'remove'])->middleware('permission:children.edit')->name('children.attendance.remove');
-        Route::post('/children/{child}/save-descriptor',    [AdminChildAttendance::class, 'saveDescriptor'])->middleware('permission:children.edit')->name('children.save-descriptor');
 
         // Children
         Route::get('/children/print',   [AdminChild::class, 'printList'])->middleware('permission:children.view')->name('children.print');

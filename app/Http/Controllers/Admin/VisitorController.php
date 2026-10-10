@@ -80,6 +80,7 @@ class VisitorController extends Controller
             'how_heard'           => 'nullable|in:Friend,Family,Social Media,Website,Walk In,Evangelism,Other',
             'prayer_request'      => 'nullable|string|max:2000',
             'notes'               => 'nullable|string|max:2000',
+            'consent'             => 'accepted',
         ]);
 
         $data['visited_before']       = $request->boolean('visited_before');
