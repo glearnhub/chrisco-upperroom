@@ -62,35 +62,64 @@
 
     {{-- Column Guide --}}
     <div class="bg-white rounded-xl shadow p-6">
-        <h2 class="font-bold text-lg mb-4" style="color: #0a1f44;">Expected Column Headers</h2>
-        <p class="text-xs text-gray-500 mb-3">Your file's first row must have these exact column headers (same as the Membership Details form):</p>
-        <ol class="space-y-1.5 text-xs text-gray-700">
-            @php
-            $cols = [
-                'First Name', 'Middle Name', 'Last Name', 'Gender', 'DOB',
-                'Phone Number', 'Email', 'County of Residence', 'Sub County',
-                'Sub Location/Estate', 'Month and year when of Salvation',
-                'Date of Joining CUR', 'Month and year Committed',
-                'Department', 'Career/Occupation',
+        <h2 class="font-bold text-lg mb-1" style="color: #0a1f44;">Supported Column Headers</h2>
+        <p class="text-xs text-gray-500 mb-4">All columns are optional except <strong>Email</strong>. Use these exact names in your file's first row. Yes/No columns accept: Yes, No, Y, N, 1, 0.</p>
+
+        @php
+        $groups = [
+            'Basic Info' => [
+                'First Name', 'Middle Name', 'Last Name', 'Gender', 'Marital Status',
+                'DOB', 'Phone Number', 'Email', 'Address',
+            ],
+            'Location' => [
+                'County of Residence', 'Sub County', 'Sub Location/Estate',
+            ],
+            'Faith & Membership' => [
+                'Month and year when of Salvation',
+                'Born Again',
+                'Baptized', 'Baptism Date',
+                'Date of Joining CUR',
+                'Committed Member', 'Month and year Committed',
+                'In Commitment Class',
+                'Member Type', 'Office',
+            ],
+            'Ministry' => [
+                'Department', 'Department 2', 'Department 3',
+                'Career/Occupation',
+                'Do you belong to a Home Cell?', 'If Yes, which one?',
+                'Are you assigned to any Deacon or Deaconess?', 'If yes, mention their name',
+            ],
+            'Next of Kin' => [
                 'Next of Kin that can be reached in case of an emergency',
                 'Relationship with the next of Kin',
                 'Phone Number of the Next of Kin',
-                'Do you belong to a Home Cell?',
-                'If Yes, which one?',
-                'Are you assigned to any Deacon or Deaconess?',
-                'If yes, mention their name',
-            ];
-            @endphp
-            @foreach($cols as $i => $col)
-            <li class="flex items-start space-x-2">
-                <span class="w-5 h-5 rounded-full text-white text-xs flex items-center justify-center flex-shrink-0 mt-0.5"
-                      style="background: #0a1f44; font-size: 9px;">{{ $i+1 }}</span>
-                <span>{{ $col }}</span>
-            </li>
+                'Second Next of Kin', 'Next of Kin 2 Relationship', 'Next of Kin 2 Phone',
+            ],
+            'Transfer' => [
+                'Transfer Type', 'Transfer Church',
+            ],
+            'Medical' => [
+                'Has Medical Condition', 'Medical Conditions', 'Medications',
+                'Allergies', 'Emergency Medical Contact', 'Emergency Medical Phone',
+                'Special Needs',
+            ],
+        ];
+        @endphp
+
+        <div class="space-y-4 text-xs max-h-[60vh] overflow-y-auto pr-1">
+            @foreach($groups as $group => $cols)
+            <div>
+                <p class="font-bold text-gray-500 uppercase tracking-wide mb-1" style="font-size:9px;">{{ $group }}</p>
+                <ul class="space-y-0.5">
+                    @foreach($cols as $col)
+                    <li class="text-gray-700 flex items-start gap-1.5">
+                        <i class="fas fa-minus text-gray-300 mt-0.5 flex-shrink-0" style="font-size:8px;"></i>
+                        {{ $col }}
+                    </li>
+                    @endforeach
+                </ul>
+            </div>
             @endforeach
-        </ol>
-        <div class="mt-4 pt-4 border-t">
-            <p class="text-xs text-gray-500"><strong>Tip:</strong> Use Yes/No for columns 19 and 21. The system will map them automatically.</p>
         </div>
     </div>
 
