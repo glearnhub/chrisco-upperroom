@@ -135,7 +135,7 @@
     <div class="relative z-10 text-center px-4 max-w-4xl mx-auto">
 
         <h1 class="text-3xl sm:text-4xl md:text-6xl font-bold mb-4 leading-tight" style="font-family: 'Playfair Display', serif;">
-            Welcome to Chrisco Upper Room Fellowship
+            Welcome to<br>Chrisco Upper Room Fellowship
         </h1>
         <p class="text-lg sm:text-xl md:text-2xl mb-3 italic text-yellow-400">"Where God Dwells"</p>
         <p class="text-base sm:text-lg text-gray-300 mb-8">
