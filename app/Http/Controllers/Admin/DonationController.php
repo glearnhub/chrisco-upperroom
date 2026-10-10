@@ -31,7 +31,7 @@ class DonationController extends Controller
 
         $donations = $query->paginate(20)->withQueryString();
 
-        $totalCompleted = Donation::where('status', 'completed')->sum('amount');
+        $totalCompleted = Donation::where('status', 'confirmed')->sum('amount');
 
         return view('admin.donations.index', compact('donations', 'totalCompleted'));
     }
@@ -45,7 +45,7 @@ class DonationController extends Controller
     public function updateStatus(Request $request, Donation $donation)
     {
         $validated = $request->validate([
-            'status' => 'required|in:pending,completed,failed',
+            'status' => 'required|in:pending,confirmed,rejected',
         ]);
 
         $donation->update(['status' => $validated['status']]);

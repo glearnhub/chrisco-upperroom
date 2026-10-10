@@ -20,7 +20,7 @@ return new class extends Migration
             $table->enum('giving_type', ['tithe', 'offering', 'thanksgiving', 'building_fund', 'missions', 'other'])->default('offering');
             $table->string('payment_method')->default('mpesa');
             $table->string('transaction_code')->nullable();
-            $table->enum('status', ['pending', 'completed', 'failed'])->default('pending');
+            $table->enum('status', ['pending', 'confirmed', 'rejected'])->default('pending');
             $table->text('notes')->nullable();
             $table->timestamps();
         });
