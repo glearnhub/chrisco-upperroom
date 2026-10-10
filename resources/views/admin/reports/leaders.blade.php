@@ -29,7 +29,7 @@
 <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4 report-actions no-print">
     <div>
         <h1 class="text-2xl font-bold" style="color: #0a1f44;">Leaders Report</h1>
-        <p class="text-gray-500 text-sm mt-1">Presbyters, Pastors, Elders, Deacons & Deaconesses &mdash; {{ $leaders->count() }} total</p>
+        <p class="text-gray-500 text-sm mt-1">Presbyters, Pastors, Elders, Deacons & Deaconesses — {{ $leaders->count() }} total</p>
     </div>
     <div class="flex gap-2 flex-wrap">
         <div class="relative group">
@@ -94,7 +94,7 @@
            style="background:#1d6f42;">
             <i class="fas fa-file-excel"></i> Export Excel
         </a>
-        <button onclick="openPrintDialogMulti('.report-card table', 'Leaders Report', 'Presbyters, Pastors, Elders, Deacons &amp; Deaconesses &mdash; {{ $leaders->count() }} total')"
+        <button onclick="openPrintDialogMulti('.report-card table', 'Leaders Report', 'Presbyters, Pastors, Elders, Deacons &amp; Deaconesses — {{ $leaders->count() }} total')"
                 class="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold text-white"
                 style="background:#0a1f44;">
             <i class="fas fa-print"></i> Print / PDF
@@ -142,7 +142,7 @@
          style="background:{{ match($officeName) { 'Presbyter'=>'#0a1f44','Pastor'=>'#c0392b','Elder'=>'#1d6f42','Deacon'=>'#b7950b','Deaconess'=>'#6c3483',default=>'#555' } }}">
         <h3 class="text-white font-bold text-base">
             <i class="fas {{ match($officeName) { 'Presbyter'=>'fa-star','Pastor'=>'fa-cross','Elder'=>'fa-user-tie','Deacon'=>'fa-hands-helping','Deaconess'=>'fa-hands-helping',default=>'fa-user' } }} mr-2"></i>
-            {{ $officeName }}{{ $group->count() !== 1 ? 's' : '' }}
+            {{ $officeName === 'Deaconess' ? 'Deaconesses' : $officeName . 's' }}
         </h3>
         <span class="text-xs font-bold px-2 py-0.5 rounded-full bg-white" style="color:#0a1f44;">{{ $group->count() }}</span>
     </div>
@@ -167,11 +167,11 @@
                     <td class="px-4 py-2 font-medium text-gray-800">
                         {{ $m->name }} {{ $m->middle_name }} {{ $m->last_name }}
                     </td>
-                    <td class="px-4 py-2 capitalize text-gray-600">{{ $m->gender ?: 'â€”' }}</td>
-                    <td class="px-4 py-2 text-gray-600">{{ $m->phone ?: 'â€”' }}</td>
+                    <td class="px-4 py-2 capitalize text-gray-600">{{ $m->gender ?: '—' }}</td>
+                    <td class="px-4 py-2 text-gray-600">{{ $m->phone ?: '—' }}</td>
                     <td class="px-4 py-2 text-gray-500 text-xs">{{ $m->email }}</td>
-                    <td class="px-4 py-2 text-gray-600">{{ $m->department ?: 'â€”' }}</td>
-                    <td class="px-4 py-2 text-gray-600">{{ $m->county ?: 'â€”' }}</td>
+                    <td class="px-4 py-2 text-gray-600">{{ $m->department ?: '—' }}</td>
+                    <td class="px-4 py-2 text-gray-600">{{ $m->county ?: '—' }}</td>
                 </tr>
                 @endforeach
             </tbody>

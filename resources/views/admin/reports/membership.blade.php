@@ -31,7 +31,7 @@
 <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4 report-actions no-print">
     <div>
         <h1 class="text-2xl font-bold" style="color: #0a1f44;">Full Membership Report</h1>
-        <p class="text-gray-500 text-sm mt-1">All members sorted by office hierarchy &mdash; {{ $members->count() }} total</p>
+        <p class="text-gray-500 text-sm mt-1">All members sorted by office hierarchy — {{ $members->count() }} total</p>
     </div>
     <div class="flex gap-2 flex-wrap">
         {{-- Reports dropdown --}}
@@ -141,7 +141,7 @@
                 };
             @endphp
             <i class="fas {{ $icon }} mr-2" style="color:#f0a500;"></i>
-            {{ $officeName }}s
+            {{ $officeName === 'Deaconess' ? 'Deaconesses' : $officeName . 's' }}
         </h3>
         <span class="text-sm font-semibold px-2 py-0.5 rounded-full" style="background:#f0a500;color:#0a1f44;">
             {{ $group->count() }}
@@ -171,15 +171,15 @@
                     <td class="px-4 py-2 font-medium text-gray-800">
                         {{ $m->name }} {{ $m->middle_name }} {{ $m->last_name }}
                     </td>
-                    <td class="px-4 py-2 text-gray-600 capitalize">{{ $m->gender ?: 'â€”' }}</td>
-                    <td class="px-4 py-2 text-gray-600 capitalize">{{ $m->marital_status ?: 'â€”' }}</td>
-                    <td class="px-4 py-2 text-gray-600">{{ $m->phone ?: 'â€”' }}</td>
-                    <td class="px-4 py-2 text-gray-600">{{ $m->county ?: 'â€”' }}</td>
-                    <td class="px-4 py-2 text-gray-600">{{ $m->department ?: 'â€”' }}</td>
-                    <td class="px-4 py-2 text-gray-600">{{ $m->home_cell ?: 'â€”' }}</td>
-                    <td class="px-4 py-2 text-gray-600">{{ $m->deacon_name ?: 'â€”' }}</td>
+                    <td class="px-4 py-2 text-gray-600 capitalize">{{ $m->gender ?: '—' }}</td>
+                    <td class="px-4 py-2 text-gray-600 capitalize">{{ $m->marital_status ?: '—' }}</td>
+                    <td class="px-4 py-2 text-gray-600">{{ $m->phone ?: '—' }}</td>
+                    <td class="px-4 py-2 text-gray-600">{{ $m->county ?: '—' }}</td>
+                    <td class="px-4 py-2 text-gray-600">{{ $m->department ?: '—' }}</td>
+                    <td class="px-4 py-2 text-gray-600">{{ $m->home_cell ?: '—' }}</td>
+                    <td class="px-4 py-2 text-gray-600">{{ $m->deacon_name ?: '—' }}</td>
                     <td class="px-4 py-2 text-gray-500 text-xs">
-                        {{ $m->membership_date ? $m->membership_date->format('M Y') : 'â€”' }}
+                        {{ $m->membership_date ? $m->membership_date->format('M Y') : '—' }}
                     </td>
                 </tr>
                 @endforeach

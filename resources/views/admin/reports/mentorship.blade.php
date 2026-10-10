@@ -95,7 +95,7 @@
            style="background:#1d6f42;">
             <i class="fas fa-file-excel"></i> Export Excel
         </a>
-        <button onclick="openPrintDialog('#report-table', 'Mentorship Report', 'Deacon / Deaconess: {{ $selectedMentor }} &mdash; {{ $mentees->count() }} members')"
+        <button onclick="openPrintDialog('#report-table', 'Mentorship Report', 'Deacon / Deaconess: {{ $selectedMentor }} — {{ $mentees->count() }} members')"
                 class="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold text-white"
                 style="background:#0a1f44;">
             <i class="fas fa-print"></i> Print / PDF
@@ -113,7 +113,7 @@
                 Select Deacon / Deaconess
             </label>
             <select name="mentor" class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400" required>
-                <option value="">â€” Choose a Deacon or Deaconess â€”</option>
+                <option value="">— Choose a Deacon or Deaconess —</option>
                 @foreach($mentorNames as $name)
                     <option value="{{ $name }}" {{ $selectedMentor === $name ? 'selected' : '' }}>{{ $name }}</option>
                 @endforeach
@@ -161,7 +161,7 @@
             </div>
             <div>
                 <p class="text-white font-bold text-lg">{{ $selectedMentor }}</p>
-                <p class="text-yellow-400 text-sm">Deacon / Deaconess &mdash; Mentorship Report</p>
+                <p class="text-yellow-400 text-sm">Deacon / Deaconess — Mentorship Report</p>
             </div>
             <div class="ml-auto text-right">
                 <p class="text-3xl font-bold text-white">{{ $mentees->count() }}</p>
@@ -192,12 +192,12 @@
                         <td class="px-4 py-2 font-medium text-gray-800">
                             {{ $m->name }} {{ $m->middle_name }} {{ $m->last_name }}
                         </td>
-                        <td class="px-4 py-2 capitalize text-gray-600">{{ $m->gender ?: 'â€”' }}</td>
-                        <td class="px-4 py-2 capitalize text-gray-600">{{ $m->marital_status ?: 'â€”' }}</td>
-                        <td class="px-4 py-2 text-gray-600">{{ $m->phone ?: 'â€”' }}</td>
-                        <td class="px-4 py-2 text-gray-600">{{ $m->county ?: 'â€”' }}</td>
-                        <td class="px-4 py-2 text-gray-600">{{ $m->department ?: 'â€”' }}</td>
-                        <td class="px-4 py-2 text-gray-600">{{ $m->home_cell ?: 'â€”' }}</td>
+                        <td class="px-4 py-2 capitalize text-gray-600">{{ $m->gender ?: '—' }}</td>
+                        <td class="px-4 py-2 capitalize text-gray-600">{{ $m->marital_status ?: '—' }}</td>
+                        <td class="px-4 py-2 text-gray-600">{{ $m->phone ?: '—' }}</td>
+                        <td class="px-4 py-2 text-gray-600">{{ $m->county ?: '—' }}</td>
+                        <td class="px-4 py-2 text-gray-600">{{ $m->department ?: '—' }}</td>
+                        <td class="px-4 py-2 text-gray-600">{{ $m->home_cell ?: '—' }}</td>
                         <td class="px-4 py-2">
                             @if($m->is_committed_member)
                                 <span class="text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-700">Yes</span>

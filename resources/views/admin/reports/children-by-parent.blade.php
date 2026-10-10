@@ -96,7 +96,7 @@
            style="background:#1d6f42;">
             <i class="fas fa-file-excel"></i> Export Excel
         </a>
-        <button onclick="openPrintDialog('#report-table', 'Children by Parent Report', '{{ $selectedParent }} &mdash; {{ $children->count() }} children')"
+        <button onclick="openPrintDialog('#report-table', 'Children by Parent Report', '{{ $selectedParent }} — {{ $children->count() }} children')"
                 class="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold text-white"
                 style="background:#0a1f44;">
             <i class="fas fa-print"></i> Print / PDF
@@ -114,7 +114,7 @@
                 Select Parent / Guardian
             </label>
             <select name="parent" class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400" required>
-                <option value="">â€” Choose a parent â€”</option>
+                <option value="">— Choose a parent —</option>
                 @foreach($allParentNames as $name)
                     <option value="{{ $name }}" {{ $selectedParent === $name ? 'selected' : '' }}>{{ $name }}</option>
                 @endforeach
@@ -164,7 +164,7 @@
             </div>
             <div>
                 <p class="text-white font-bold text-lg">{{ $selectedParent }}</p>
-                <p class="text-yellow-400 text-sm">Parent / Guardian &mdash; Children Report</p>
+                <p class="text-yellow-400 text-sm">Parent / Guardian — Children Report</p>
             </div>
             <div class="ml-auto text-right">
                 <p class="text-3xl font-bold text-white">{{ $children->count() }}</p>
@@ -197,9 +197,9 @@
                         <td class="px-4 py-3 font-medium text-gray-800">
                             {{ $c->full_name }}
                         </td>
-                        <td class="px-4 py-3 capitalize text-gray-600">{{ $c->gender ?: 'â€”' }}</td>
+                        <td class="px-4 py-3 capitalize text-gray-600">{{ $c->gender ?: '—' }}</td>
                         <td class="px-4 py-3 text-gray-600">
-                            {{ $c->date_of_birth ? $c->date_of_birth->format('d M Y') : 'â€”' }}
+                            {{ $c->date_of_birth ? $c->date_of_birth->format('d M Y') : '—' }}
                         </td>
                         <td class="px-4 py-3">
                             @if($c->sunday_school_class)
@@ -208,7 +208,7 @@
                                     {{ $c->sunday_school_class }}
                                 </span>
                             @else
-                                <span class="text-gray-400">â€”</span>
+                                <span class="text-gray-400">—</span>
                             @endif
                         </td>
                         <td class="px-4 py-3">
