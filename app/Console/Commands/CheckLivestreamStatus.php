@@ -15,13 +15,6 @@ class CheckLivestreamStatus extends Command
 
     public function handle(): int
     {
-        $apiKey = config('services.youtube.api_key');
-
-        if (!$apiKey) {
-            $this->warn('YOUTUBE_API_KEY not set — skipping auto-end check.');
-            return self::SUCCESS;
-        }
-
         $active = Livestream::where('is_live', true)->get();
 
         if ($active->isEmpty()) {
@@ -36,22 +29,22 @@ class CheckLivestreamStatus extends Command
                 continue;
             }
 
-            $status = $this->fetchLiveBroadcastStatus($videoId, $apiKey);
+            $isLive = $this->isVideoCurrentlyLive($videoId);
 
-            if ($status === null) {
-                // API error — leave stream marked live; log and continue
+            if ($isLive === null) {
+                // Network error — leave stream marked live; log and continue
                 Log::warning("livestream:check-status — could not fetch status for video {$videoId}");
                 continue;
             }
 
-            if ($status !== 'live') {
+            if (!$isLive) {
                 $ls->update(['is_live' => false]);
                 SystemLog::record(
                     'update',
                     'Livestream',
-                    "Auto-ended livestream \"{$ls->title}\" (YouTube status: {$status})."
+                    "Auto-ended livestream \"{$ls->title}\" (no longer live on YouTube)."
                 );
-                $this->info("Auto-ended: {$ls->title} (status: {$status})");
+                $this->info("Auto-ended: {$ls->title}");
             }
         }
 
@@ -81,30 +74,38 @@ class CheckLivestreamStatus extends Command
     }
 
     /**
-     * Call YouTube Data API and return liveBroadcastContent: 'live', 'upcoming', or 'none'.
-     * Returns null on any HTTP / API error.
+     * Fetch the YouTube watch page and look for the liveBroadcastContent flag
+     * that YouTube embeds in its page-level JSON. Returns true if live, false
+     * if ended/upcoming/not found, null on network error.
+     * No API key required — reads the public watch page HTML.
      */
-    private function fetchLiveBroadcastStatus(string $videoId, string $apiKey): ?string
+    private function isVideoCurrentlyLive(string $videoId): ?bool
     {
         try {
-            $response = Http::timeout(10)->get('https://www.googleapis.com/youtube/v3/videos', [
-                'part' => 'snippet',
-                'id'   => $videoId,
-                'key'  => $apiKey,
-            ]);
+            $response = Http::timeout(15)
+                ->withHeaders(['Accept-Language' => 'en-US,en;q=0.9'])
+                ->withUserAgent('Mozilla/5.0 (compatible; ChriscoCMS/1.0)')
+                ->get("https://www.youtube.com/watch?v={$videoId}");
 
             if (!$response->successful()) {
                 return null;
             }
 
-            $items = $response->json('items', []);
+            $html = $response->body();
 
-            if (empty($items)) {
-                // Video deleted or private — treat as ended
-                return 'none';
+            // YouTube serialises page data as ytInitialData / ytInitialPlayerResponse JSON
+            // The liveBroadcastContent field appears as: "liveBroadcastContent":"live"
+            if (preg_match('/"liveBroadcastContent"\s*:\s*"([^"]+)"/', $html, $m)) {
+                return $m[1] === 'live';
             }
 
-            return $items[0]['snippet']['liveBroadcastContent'] ?? 'none';
+            // Fallback: older page format uses isLive:true
+            if (preg_match('/"isLive"\s*:\s*(true|false)/', $html, $m)) {
+                return $m[1] === 'true';
+            }
+
+            // Flag not present — stream has ended
+            return false;
         } catch (\Throwable) {
             return null;
         }
