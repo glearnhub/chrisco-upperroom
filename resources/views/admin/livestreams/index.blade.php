@@ -77,7 +77,7 @@
                         @if($ls->is_live)
                         <form method="POST" action="{{ route('admin.livestreams.toggleLive', $ls) }}"
                               data-confirm="End this livestream? It will no longer show as live on the website." data-confirm-ok="End Stream" data-confirm-type="warning">
-                            @csrf @method('PATCH')
+                            @csrf
                             <button type="submit" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-red-600 text-white hover:bg-red-700">
                                 <i class="fas fa-stop-circle"></i> End Stream
                             </button>
@@ -85,7 +85,7 @@
                         @else
                         <form method="POST" action="{{ route('admin.livestreams.toggleLive', $ls) }}"
                               data-confirm="Go live with this stream? It will appear as LIVE on the website." data-confirm-ok="Go Live" data-confirm-type="info">
-                            @csrf @method('PATCH')
+                            @csrf
                             <button type="submit" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-gray-200 text-gray-700 hover:bg-green-100 hover:text-green-800">
                                 <i class="fas fa-play-circle"></i> Go Live
                             </button>

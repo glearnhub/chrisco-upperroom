@@ -22,9 +22,10 @@
                 <span class="text-gray-400 font-normal">(you can select multiple)</span>
             </label>
             <input type="file" name="images[]" accept="image/*" multiple required
-                   class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm @error('images.*') border-red-400 @enderror"
+                   class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm {{ $errors->hasAny(['images','images.*']) ? 'border-red-400' : '' }}"
                    id="photo-input" onchange="previewPhotos(this)">
             <p class="text-xs text-gray-400 mt-1">Max 5MB per photo. JPG, PNG, WEBP.</p>
+            @error('images')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
             @error('images.*')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
         </div>
 

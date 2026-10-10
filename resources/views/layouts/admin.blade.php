@@ -33,12 +33,6 @@
         .sidebar-link { display: flex; align-items: center; padding: 0.65rem 1.25rem; color: #cbd5e1; font-size: 0.875rem; transition: background 0.2s, color 0.2s; }
         .sidebar-link:hover, .sidebar-link.active { background: rgba(255,255,255,0.1); color: #f0a500; }
         .sidebar-link i { width: 20px; margin-right: 10px; }
-        .sidebar-link-disabled { display:flex; align-items:center; padding:0.65rem 1.25rem; color:rgba(255,255,255,0.25); font-size:0.875rem; cursor:not-allowed; position:relative; }
-        .sidebar-link-disabled i.main-icon { width:20px; margin-right:10px; }
-        .sidebar-link-disabled .lock-icon { margin-left:auto; font-size:0.65rem; color:rgba(255,255,255,0.2); }
-        .sidebar-link-disabled:hover { background:rgba(255,0,0,0.05); }
-        .sidebar-link-disabled .no-perm-tip { display:none; position:absolute; left:calc(100% + 6px); top:50%; transform:translateY(-50%); background:#1e293b; color:#f0a500; font-size:0.7rem; white-space:nowrap; padding:4px 8px; border-radius:4px; z-index:100; border:1px solid rgba(240,165,0,0.3); pointer-events:none; }
-        .sidebar-link-disabled:hover .no-perm-tip { display:block; }
         @media (max-width: 768px) {
             .sidebar { transform: translateX(-100%); transition: transform 0.3s; }
             .sidebar.open { transform: translateX(0); }
@@ -136,20 +130,39 @@
                 <i class="fas fa-tachometer-alt"></i> Dashboard
             </a>
 
-            @php $u = auth()->user(); @endphp
+            @php
+                $u = auth()->user();
 
-            {{-- Helper macro: outputs enabled link or disabled padlock span --}}
-            {{-- Used inline below --}}
+                // Pre-compute permission flags once
+                $canSermons       = $u->hasPermission('sermons.view');
+                $canTeachings     = $u->hasPermission('teachings.view');
+                $canResources     = $u->hasPermission('resources.view');
+                $canLivestream    = $u->hasPermission('livestream.view');
+                $canGallery       = $u->hasPermission('gallery.view');
+                $canEvents        = $u->hasPermission('events.view');
+                $canCalendar      = $u->hasPermission('calendar.manage');
+                $canAnnouncements = $u->hasPermission('announcements.view');
+                $canPrayers       = $u->hasPermission('prayers.view');
+                $canGivings       = $u->hasPermission('givings.view');
+                $canAbout         = $u->hasPermission('about.manage');
+                $canMembers       = $u->hasPermission('members.view');
+                $canChildren      = $u->hasPermission('children.view');
+                $canVisitors      = $u->hasPermission('visitors.view');
+                $canAttendance    = $u->hasPermission('attendance.view');
+                $canCorrections   = $u->hasPermission('corrections.view');
+                $canReports       = $u->hasPermission('reports.membership') || $u->hasPermission('reports.children');
 
-            {{-- Media Group --}}
+                $canAnyMedia      = $canSermons || $canTeachings || $canResources || $canLivestream || $canGallery;
+                $canAnyChurchLife = $canEvents || $canCalendar || $canAnnouncements || $canPrayers || $canGivings;
+                $canAnyPeople     = $canAbout || $canMembers || $canChildren || $canVisitors || $canAttendance || $canCorrections;
+            @endphp
+
+            {{-- ── MEDIA ────────────────────────────────────────── --}}
+            @if($canAnyMedia)
             <p class="px-4 pt-4 pb-1 text-xs font-bold uppercase tracking-widest" style="color: #4a6fa5;">Media</p>
 
-            {{-- Resources dropdown: Sermons, Teachings, Books & Articles, Apostle Das --}}
-            @php
-            $resourcesOpen = request()->routeIs('admin.sermons.*') || request()->routeIs('admin.teachings.*') || request()->routeIs('admin.resources.*') || request()->routeIs('admin.apostle.*');
-            $canResources  = $u->hasPermission('sermons.view') || $u->hasPermission('teachings.view') || $u->hasPermission('resources.view');
-            @endphp
-            @if($canResources)
+            @if($canSermons || $canTeachings || $canResources)
+            @php $resourcesOpen = request()->routeIs('admin.sermons.*') || request()->routeIs('admin.teachings.*') || request()->routeIs('admin.resources.*') || request()->routeIs('admin.apostle.*'); @endphp
             <button onclick="toggleSidebarGroup('resources-group', this)"
                     class="sidebar-link w-full text-left flex items-center justify-between {{ $resourcesOpen ? 'active' : '' }}"
                     style="background:none; border:none; cursor:pointer;">
@@ -157,66 +170,48 @@
                 <i class="fas fa-chevron-down text-xs {{ $resourcesOpen ? 'rotate-180' : '' }}" style="margin-left:auto; opacity:.6;"></i>
             </button>
             <div id="resources-group" style="{{ $resourcesOpen ? 'display:block;' : 'display:none;' }} padding-left:12px;">
-                @if($u->hasPermission('sermons.view'))
+                @if($canSermons)
                 <a href="{{ route('admin.sermons.index') }}" class="sidebar-link text-sm {{ request()->routeIs('admin.sermons.*') ? 'active' : '' }}">
                     <i class="fas fa-bible main-icon"></i> Sermons
                 </a>
                 @endif
-                @if($u->hasPermission('teachings.view'))
+                @if($canTeachings)
                 <a href="{{ route('admin.teachings.index') }}" class="sidebar-link text-sm {{ request()->routeIs('admin.teachings.*') ? 'active' : '' }}">
                     <i class="fas fa-book-open main-icon"></i> Teachings
                 </a>
                 @endif
-                @if($u->hasPermission('resources.view'))
+                @if($canResources)
                 <a href="{{ route('admin.resources.index') }}" class="sidebar-link text-sm {{ request()->routeIs('admin.resources.*') ? 'active' : '' }}">
                     <i class="fas fa-file-pdf main-icon"></i> Books & Articles
                 </a>
                 @endif
-                @if($u->hasPermission('sermons.view'))
+                @if($canSermons)
                 <a href="{{ route('admin.apostle.index') }}" class="sidebar-link text-sm {{ request()->routeIs('admin.apostle.*') ? 'active' : '' }}">
                     <i class="fas fa-video main-icon"></i> Apostle Das
                 </a>
                 @endif
             </div>
-            @else
-            <span class="sidebar-link-disabled">
-                <i class="fas fa-folder-open main-icon"></i> Resources
-                <i class="fas fa-lock lock-icon"></i>
-                <span class="no-perm-tip">You have no permissions</span>
-            </span>
             @endif
 
-            @if($u->hasPermission('livestream.view'))
+            @if($canLivestream)
             <a href="{{ route('admin.livestreams.index') }}" class="sidebar-link {{ request()->routeIs('admin.livestreams.*') ? 'active' : '' }}">
                 <i class="fas fa-broadcast-tower main-icon"></i> Livestream
             </a>
-            @else
-            <span class="sidebar-link-disabled">
-                <i class="fas fa-broadcast-tower main-icon"></i> Livestream
-                <i class="fas fa-lock lock-icon"></i>
-                <span class="no-perm-tip">You have no permissions</span>
-            </span>
             @endif
 
-            @if($u->hasPermission('gallery.view'))
+            @if($canGallery)
             <a href="{{ route('admin.gallery.index') }}" class="sidebar-link {{ request()->routeIs('admin.gallery.*') ? 'active' : '' }}">
                 <i class="fas fa-images main-icon"></i> Gallery
             </a>
-            @else
-            <span class="sidebar-link-disabled">
-                <i class="fas fa-images main-icon"></i> Gallery
-                <i class="fas fa-lock lock-icon"></i>
-                <span class="no-perm-tip">You have no permissions</span>
-            </span>
             @endif
+            @endif {{-- end canAnyMedia --}}
 
-            {{-- Church Life Group --}}
+            {{-- ── CHURCH LIFE ──────────────────────────────────── --}}
+            @if($canAnyChurchLife)
             <p class="px-4 pt-4 pb-1 text-xs font-bold uppercase tracking-widest" style="color: #4a6fa5;">Church Life</p>
 
-            {{-- Updates dropdown: Events, Church Calendar, Announcements --}}
-            @php
-            $updatesOpen = request()->routeIs('admin.events.*') || request()->routeIs('admin.calendar.*') || request()->routeIs('admin.announcements.*');
-            @endphp
+            @if($canEvents || $canCalendar || $canAnnouncements)
+            @php $updatesOpen = request()->routeIs('admin.events.*') || request()->routeIs('admin.calendar.*') || request()->routeIs('admin.announcements.*'); @endphp
             <button onclick="toggleSidebarGroup('updates-group', this)"
                     class="sidebar-link w-full text-left flex items-center justify-between {{ $updatesOpen ? 'active' : '' }}"
                     style="background:none; border:none; cursor:pointer;">
@@ -224,63 +219,42 @@
                 <i class="fas fa-chevron-down text-xs {{ $updatesOpen ? 'rotate-180' : '' }}" style="margin-left:auto; opacity:.6;"></i>
             </button>
             <div id="updates-group" style="{{ $updatesOpen ? 'display:block;' : 'display:none;' }} padding-left:12px;">
-                @if($u->hasPermission('events.view'))
+                @if($canEvents)
                 <a href="{{ route('admin.events.index') }}" class="sidebar-link text-sm {{ request()->routeIs('admin.events.*') ? 'active' : '' }}">
                     <i class="fas fa-calendar-alt main-icon"></i> Events
                 </a>
-                @else
-                <span class="sidebar-link-disabled text-sm">
-                    <i class="fas fa-calendar-alt main-icon"></i> Events
-                    <i class="fas fa-lock lock-icon"></i>
-                    <span class="no-perm-tip">You have no permissions</span>
-                </span>
                 @endif
-                @if($u->hasPermission('calendar.manage'))
+                @if($canCalendar)
                 <a href="{{ route('admin.calendar.index') }}" class="sidebar-link text-sm {{ request()->routeIs('admin.calendar.*') ? 'active' : '' }}">
                     <i class="fas fa-calendar-week main-icon"></i> Church Calendar
                 </a>
                 @endif
-                @if($u->hasPermission('announcements.view'))
+                @if($canAnnouncements)
                 <a href="{{ route('admin.announcements.index') }}" class="sidebar-link text-sm {{ request()->routeIs('admin.announcements.*') ? 'active' : '' }}">
                     <i class="fas fa-bullhorn main-icon"></i> Announcements
                 </a>
-                @else
-                <span class="sidebar-link-disabled text-sm">
-                    <i class="fas fa-bullhorn main-icon"></i> Announcements
-                    <i class="fas fa-lock lock-icon"></i>
-                    <span class="no-perm-tip">You have no permissions</span>
-                </span>
                 @endif
             </div>
+            @endif
 
-            @if($u->hasPermission('prayers.view'))
+            @if($canPrayers)
             <a href="{{ route('admin.prayers.index') }}" class="sidebar-link {{ request()->routeIs('admin.prayers.*') ? 'active' : '' }}">
                 <i class="fas fa-praying-hands main-icon"></i> Prayers
             </a>
-            @else
-            <span class="sidebar-link-disabled">
-                <i class="fas fa-praying-hands main-icon"></i> Prayers
-                <i class="fas fa-lock lock-icon"></i>
-                <span class="no-perm-tip">You have no permissions</span>
-            </span>
             @endif
 
-            @if($u->hasPermission('givings.view'))
+            @if($canGivings)
             <a href="{{ route('admin.donations.index') }}" class="sidebar-link {{ request()->routeIs('admin.donations.*') ? 'active' : '' }}">
                 <i class="fas fa-hand-holding-usd main-icon"></i> Givings
             </a>
-            @else
-            <span class="sidebar-link-disabled">
-                <i class="fas fa-hand-holding-usd main-icon"></i> Givings
-                <i class="fas fa-lock lock-icon"></i>
-                <span class="no-perm-tip">You have no permissions</span>
-            </span>
             @endif
+            @endif {{-- end canAnyChurchLife --}}
 
-            {{-- People Group --}}
+            {{-- ── PEOPLE ───────────────────────────────────────── --}}
+            @if($canAnyPeople)
             <p class="px-4 pt-4 pb-1 text-xs font-bold uppercase tracking-widest" style="color: #4a6fa5;">People</p>
 
-            @if($u->hasPermission('about.manage'))
+            @if($canAbout)
             @php $aboutOpen = request()->routeIs('admin.about.*') || request()->routeIs('admin.settings.social.*'); @endphp
             <button onclick="toggleSidebarGroup('about-group', this)"
                     class="sidebar-link w-full text-left flex items-center justify-between {{ $aboutOpen ? 'active' : '' }}"
@@ -298,20 +272,15 @@
                 </a>
                 @endif
             </div>
-            @else
-            <span class="sidebar-link-disabled">
-                <i class="fas fa-church main-icon"></i> About Us
-                <i class="fas fa-lock lock-icon"></i>
-                <span class="no-perm-tip">You have no permissions</span>
-            </span>
             @endif
 
-            @if($u->hasPermission('members.view'))
+            @if($canMembers)
             <a href="{{ route('admin.members.index') }}" class="sidebar-link {{ request()->routeIs('admin.members.index') || request()->routeIs('admin.members.show') || request()->routeIs('admin.members.create') || request()->routeIs('admin.members.edit') ? 'active' : '' }}">
                 <i class="fas fa-users main-icon"></i> Members (Adults)
             </a>
             @endif
-            @if($u->hasPermission('children.view'))
+
+            @if($canChildren)
             <a href="{{ route('admin.children.index') }}" class="sidebar-link {{ request()->routeIs('admin.children.*') && !request()->routeIs('admin.children.attendance*') ? 'active' : '' }}">
                 <i class="fas fa-child main-icon"></i> Members (Children)
             </a>
@@ -319,46 +288,21 @@
                 <i class="fas fa-camera-retro main-icon"></i> Child Attendance
             </a>
             @endif
-            @if(!$u->hasPermission('members.view') && !$u->hasPermission('children.view'))
-            <span class="sidebar-link-disabled">
-                <i class="fas fa-users main-icon"></i> Members (Adults)
-                <i class="fas fa-lock lock-icon"></i>
-                <span class="no-perm-tip">You have no permissions</span>
-            </span>
-            <span class="sidebar-link-disabled">
-                <i class="fas fa-child main-icon"></i> Members (Children)
-                <i class="fas fa-lock lock-icon"></i>
-                <span class="no-perm-tip">You have no permissions</span>
-            </span>
-            @endif
 
-            @if($u->hasPermission('visitors.view'))
+            @if($canVisitors)
             <a href="{{ route('admin.visitors.index') }}" class="sidebar-link {{ request()->routeIs('admin.visitors.*') ? 'active' : '' }}">
                 <i class="fas fa-user-clock main-icon"></i> Visitors
             </a>
-            @else
-            <span class="sidebar-link-disabled">
-                <i class="fas fa-user-clock main-icon"></i> Visitors
-                <i class="fas fa-lock lock-icon"></i>
-                <span class="no-perm-tip">You have no permissions</span>
-            </span>
             @endif
 
-            {{-- Attendance --}}
-            @if($u->hasPermission('attendance.view'))
+            @if($canAttendance)
             <a href="{{ route('admin.attendance.index') }}" class="sidebar-link {{ request()->routeIs('admin.attendance.*') ? 'active' : '' }}">
                 <i class="fas fa-clipboard-check main-icon"></i> Attendance
             </a>
-            @else
-            <span class="sidebar-link-disabled">
-                <i class="fas fa-clipboard-check main-icon"></i> Attendance
-                <i class="fas fa-lock lock-icon"></i>
-                <span class="no-perm-tip">You have no permissions</span>
-            </span>
             @endif
 
             {{-- Correction Requests --}}
-            @if($u->hasPermission('corrections.view'))
+            @if($canCorrections)
             @php $pendingCorrections = \App\Models\CorrectionRequest::where('status','pending')->count(); @endphp
             <a href="{{ route('admin.corrections.index') }}" class="sidebar-link {{ request()->routeIs('admin.corrections.*') ? 'active' : '' }}" style="position:relative;">
                 <i class="fas fa-edit main-icon"></i> Correction Requests
@@ -368,27 +312,16 @@
                     </span>
                 @endif
             </a>
-            @else
-            <span class="sidebar-link-disabled">
-                <i class="fas fa-edit main-icon"></i> Correction Requests
-                <i class="fas fa-lock lock-icon"></i>
-                <span class="no-perm-tip">You have no permissions</span>
-            </span>
             @endif
+            @endif {{-- end canAnyPeople --}}
 
-            {{-- Reports Group --}}
+            {{-- ── REPORTS ──────────────────────────────────────── --}}
+            @if($canReports)
             <p class="px-4 pt-4 pb-1 text-xs font-bold uppercase tracking-widest" style="color: #4a6fa5;">Reports</p>
 
-            @if($u->hasPermission('reports.membership') || $u->hasPermission('reports.children'))
             <a href="{{ route('admin.reports.membership') }}" class="sidebar-link {{ request()->routeIs('admin.reports.*') ? 'active' : '' }}">
                 <i class="fas fa-users main-icon"></i> Members
             </a>
-            @else
-            <span class="sidebar-link-disabled">
-                <i class="fas fa-users main-icon"></i> Members
-                <i class="fas fa-lock lock-icon"></i>
-                <span class="no-perm-tip">You have no permissions</span>
-            </span>
             @endif
 
             {{-- Settings Group — Super Admin only --}}
